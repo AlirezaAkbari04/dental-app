@@ -1,0 +1,258 @@
+.container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px;
+    padding-bottom: 100px;
+  }
+  
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+  }
+  
+  .avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-left: 10px;
+    border: 2px solid #4a6bff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-color: #f0f3ff;
+  }
+  
+  .avatar svg {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .user-name {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .points {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 205, 0, 0.2);
+    padding: 8px 12px;
+    border-radius: 20px;
+  }
+  
+  .points-icon {
+    font-size: 20px;
+    margin-left: 5px;
+  }
+  
+  .points-value {
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .dashboard-card {
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .card-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #4a6bff;
+  }
+  
+  .badge {
+    background-color: #e8efff;
+    color: #4a6bff;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 12px;
+  }
+  
+  .brushing-times {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+  }
+  
+  .brushing-time {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .brushing-time.morning {
+    background-color: #fff8e0;
+    margin-left: 10px;
+  }
+  
+  .brushing-time.night {
+    background-color: #e0ecff;
+  }
+  
+  .brushing-time.done {
+    position: relative;
+  }
+  
+  .brushing-time.done::after {
+    content: "✓";
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 20px;
+    height: 20px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  
+  .brushing-icon {
+    font-size: 24px;
+    margin-bottom: 5px;
+  }
+  
+  .brushing-label {
+    font-size: 14px;
+    font-weight: bold;
+  }
+  
+  .food-game {
+    text-align: center;
+  }
+  
+  .food-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: center;
+  }
+  
+  .food-item {
+    width: 70px;
+    height: 70px;
+    border: 2px solid #ddd;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: move;
+    background-color: white;
+    transition: all 0.3s;
+  }
+  
+  .food-icon {
+    font-size: 30px;
+    margin-bottom: 5px;
+  }
+  
+  .food-name {
+    font-size: 10px;
+  }
+  
+  .food-categories {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  
+  .food-category {
+    flex: 1;
+    height: 120px;
+    border: 2px dashed #ddd;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 5px;
+    transition: all 0.3s;
+  }
+  
+  .category-icon {
+    font-size: 30px;
+    margin-bottom: 5px;
+  }
+  
+  .category-name {
+    font-size: 14px;
+    font-weight: bold;
+  }
+  
+  .healthy {
+    border-color: #4CAF50;
+    background-color: rgba(76, 175, 80, 0.1);
+  }
+  
+  .unhealthy {
+    border-color: #FF5252;
+    background-color: rgba(255, 82, 82, 0.1);
+  }
+  
+  .menu {
+    display: flex;
+    justify-content: space-around;
+    background-color: white;
+    border-radius: 15px 15px 0 0;
+    padding: 15px;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  
+  .menu-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+  }
+  
+  .menu-icon {
+    font-size: 24px;
+    margin-bottom: 5px;
+    color: #777;
+  }
+  
+  .menu-item.active .menu-icon {
+    color: #4a6bff;
+  }
+  
+  .menu-label {
+    font-size: 12px;
+    color: #777;
+  }
+  
+  .menu-item.active .menu-label {
+    color: #4a6bff;
+    font-weight: bold;
+  }
