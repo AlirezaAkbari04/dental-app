@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import '../../styles/RoleSelection.css';
 
 function RoleSelection() {
   const navigate = useNavigate();
@@ -11,7 +12,8 @@ function RoleSelection() {
 
   const handleContinue = () => {
     if (selectedRole) {
-      navigate(`/dashboard/${selectedRole}`);
+      // Navigate to the appropriate registration page based on role
+      navigate(`/register/${selectedRole}`);
     }
   };
 
@@ -74,4 +76,3 @@ function RoleSelection() {
 }
 
 export default RoleSelection;
-
