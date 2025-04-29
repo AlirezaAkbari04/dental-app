@@ -6,6 +6,9 @@ import './App.css';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import RoleSelection from './components/auth/RoleSelection';
+import ChildRegistration from './components/auth/ChildRegistration';
+import ParentRegistration from './components/auth/ParentRegistration';
+import HealthConsultantRegistration from './components/auth/HealthConsultantRegistration';
 import ChildDashboard from './components/dashboards/ChildDashboard';
 import ParentDashboard from './components/dashboards/ParentDashboard';
 import CaretakerDashboard from './components/dashboards/CaretakerDashboard';
@@ -18,9 +21,17 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/role-selection" element={<RoleSelection />} />
+          
+          {/* Registration routes for each role */}
+          <Route path="/register/child" element={<ChildRegistration />} />
+          <Route path="/register/parent" element={<ParentRegistration />} />
+          <Route path="/register/caretaker" element={<HealthConsultantRegistration />} />
+          
+          {/* Dashboard routes */}
           <Route path="/dashboard/child" element={<ChildDashboard />} />
           <Route path="/dashboard/parent" element={<ParentDashboard />} />
           <Route path="/dashboard/caretaker" element={<CaretakerDashboard />} />
+          
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
