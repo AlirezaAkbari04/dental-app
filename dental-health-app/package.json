@@ -1,4 +1,4 @@
-{
+  {
   "name": "dental-health-app",
   "version": "0.1.0",
   "private": true,
@@ -13,8 +13,9 @@
     "react-dom": "^19.1.0",
     "react-i18next": "^15.5.1",
     "react-router-dom": "^7.5.2",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^3.0.1",
     "styled-components": "^6.1.17",
+    "typescript": "^5.8.3",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
