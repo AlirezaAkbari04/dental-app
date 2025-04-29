@@ -1,4 +1,4 @@
-/* App.css - Updated version */
+/* App.css - Updated with additional styles for registration forms */
 
 @font-face {
   font-family: 'Vazir';
@@ -114,6 +114,31 @@ h1 {
   margin-bottom: 30px;
 }
 
+h2 {
+  font-size: 22px;
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+h3 {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 25px;
+}
+
+.section-title {
+  margin-top: 25px;
+  text-align: right;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
 .form-group {
   margin-bottom: 20px;
   text-align: right;
@@ -139,6 +164,81 @@ input, textarea, select {
 input:focus, textarea:focus, select:focus {
   border-color: var(--primary-color);
   outline: none;
+}
+
+/* Radio and Checkbox Styles */
+.radio-group, .checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.radio-label, .checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.radio-label input, .checkbox-label input {
+  width: auto;
+  margin-left: 8px;
+}
+
+/* Gender Selector */
+.gender-selector {
+  display: flex;
+  gap: 10px;
+}
+
+.gender-option {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.gender-option:hover {
+  background-color: #f5f5f5;
+}
+
+.gender-option.selected {
+  border-color: var(--primary-color);
+  background-color: #f0f5ff;
+}
+
+/* Avatar Selector */
+.avatar-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+}
+
+.avatar-option {
+  width: 70px;
+  height: 70px;
+  border: 2px solid #e0e0e0;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.avatar-option:hover {
+  transform: scale(1.05);
+}
+
+.avatar-option.selected {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(74, 107, 255, 0.2);
+}
+
+.avatar-option svg {
+  width: 100%;
+  height: 100%;
 }
 
 .btn-primary {
@@ -803,6 +903,15 @@ input:focus, textarea:focus, select:focus {
   
   .brushing-time {
     margin-left: 0 !important;
+  }
+
+  .register-card {
+    padding: 20px 15px;
+  }
+
+  .radio-group, .checkbox-group {
+    flex-direction: column;
+    gap: 10px;
   }
 }
 
