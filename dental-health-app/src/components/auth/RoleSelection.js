@@ -1,77 +1,81 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import '../styles/Auth.css';
+import logoImage from '../logo.svg';
 
-function RoleSelection() {
+const RoleSelection = () => {
   const navigate = useNavigate();
-  const [selectedRole, setSelectedRole] = useState(null);
 
   const handleRoleSelect = (role) => {
-    setSelectedRole(role);
-  };
-
-  const handleContinue = () => {
-    if (selectedRole) {
-      navigate(`/dashboard/${selectedRole}`);
+    // Store selected role in localStorage or state management system
+    localStorage.setItem('userRole', role);
+    
+    // Navigate to the appropriate profile completion page based on role
+    switch (role) {
+      case 'child':
+        navigate('/profile/child');
+        break;
+      case 'teacher':
+        navigate('/profile/teacher');
+        break;
+      case 'parent':
+        navigate('/profile/parent');
+        break;
+      default:
+        navigate('/profile/child');
     }
   };
 
   return (
-    <div className="container">
-      <div className="role-card">
-        <svg className="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <path d="M50 10C33.4 10 20 23.4 20 40v30c0 11 9 20 20 20s20-9 20-20V50h-10v20c0 5.5-4.5 10-10 10s-10-4.5-10-10V40c0-11 9-20 20-20s20 9 20 20v5h10v-5c0-16.6-13.4-30-30-30z" fill="#4a6bff"/>
-          <circle cx="35" cy="35" r="5" fill="#ffcc00"/>
-          <circle cx="65" cy="35" r="5" fill="#ffcc00"/>
-        </svg>
+    <div className="auth-container" dir="rtl">
+      <div className="auth-form-container">
+        <div className="logo-container">
+          <img src={logoImage} alt="لبخند شاد دندان سالم" className="app-logo" />
+          <h1 className="app-title">لبخند شاد دندان سالم</h1>
+        </div>
         
-        <h1>شما چه کسی هستید؟</h1>
-        
-        <div className="roles">
-          <div 
-            className={`role ${selectedRole === 'child' ? 'selected' : ''}`} 
-            onClick={() => handleRoleSelect('child')}
-          >
-            <div className="role-icon">👶</div>
-            <div className="role-title">کودک</div>
-            <div className="role-description">
-              بازی های جذاب و آموزشی برای سلامت دندان
-            </div>
-          </div>
+        <div className="role-selection">
+          <h2>لطفاً نقش خود را انتخاب کنید</h2>
+          <p className="role-instruction">برای ادامه، نقش خود را از گزینه‌های زیر انتخاب کنید</p>
           
-          <div 
-            className={`role ${selectedRole === 'parent' ? 'selected' : ''}`} 
-            onClick={() => handleRoleSelect('parent')}
-          >
-            <div className="role-icon">👪</div>
-            <div className="role-title">والدین</div>
-            <div className="role-description">
-              نظارت بر عملکرد و پیشرفت کودک
+          <div className="role-options">
+            <div 
+              className="role-option" 
+              onClick={() => handleRoleSelect('child')}
+            >
+              <span className="role-icon">👶</span>
+              <div className="role-info">
+                <div className="role-title">کودک</div>
+                <div className="role-description">آموزش بهداشت دهان و دندان برای کودکان</div>
+              </div>
             </div>
-          </div>
-          
-          <div 
-            className={`role ${selectedRole === 'caretaker' ? 'selected' : ''}`} 
-            onClick={() => handleRoleSelect('caretaker')}
-          >
-            <div className="role-icon">👨‍⚕️</div>
-            <div className="role-title">مراقب سلامت</div>
-            <div className="role-description">
-              مدیریت چندین کودک و گزارش‌گیری
+            
+            <div 
+              className="role-option" 
+              onClick={() => handleRoleSelect('teacher')}
+            >
+              <span className="role-icon">👨‍⚕️</span>
+              <div className="role-info">
+                <div className="role-title">معلم بهداشت</div>
+                <div className="role-description">مدیریت آموزش بهداشت دهان و دندان برای کودکان</div>
+              </div>
+            </div>
+            
+            <div 
+              className="role-option" 
+              onClick={() => handleRoleSelect('parent')}
+            >
+              <span className="role-icon">👪</span>
+              <div className="role-info">
+                <div className="role-title">والدین</div>
+                <div className="role-description">نظارت بر بهداشت دهان و دندان فرزندان</div>
+              </div>
             </div>
           </div>
         </div>
-        
-        <button 
-          className={`btn ${selectedRole ? 'btn-primary' : 'btn-disabled'}`}
-          disabled={!selectedRole}
-          onClick={handleContinue}
-        >
-          تایید و ادامه
-        </button>
       </div>
     </div>
   );
-}
+};
 
 export default RoleSelection;
-

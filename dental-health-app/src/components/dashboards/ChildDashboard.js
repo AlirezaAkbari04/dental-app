@@ -1,81 +1,130 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import '../styles/ChildDashboard.css';
+import logoImage from '../logo.svg';
+import ChildHome from './child/ChildHome';
+import BrushReminder from './child/BrushReminder';
+import ChildGames from './child/ChildGames';
+import ChildVideos from './child/ChildVideos';
 
-function ChildDashboard() {
-  const [activeTab, setActiveTab] = useState('overview');
-
+const ChildDashboard = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('home');
+  const [showMessage, setShowMessage] = useState(false);
+  const [childName, setChildName] = useState('');
+  
+  useEffect(() => {
+    // Get child profile from localStorage
+    const childProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
+    setChildName(childProfile.fullName || 'کودک عزیز');
+    
+    // Show the logo message after a short delay
+    const messageTimer = setTimeout(() => {
+      setShowMessage(true);
+      
+      // Hide the message after 5 seconds
+      const hideTimer = setTimeout(() => {
+        setShowMessage(false);
+      }, 5000);
+      
+      return () => clearTimeout(hideTimer);
+    }, 1000);
+    
+    return () => clearTimeout(messageTimer);
+  }, []);
+  
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+  
+  const handleLogout = () => {
+    // Clear auth data
+    localStorage.removeItem('userAuth');
+    localStorage.removeItem('userRole');
+    
+    // Navigate to login page
+    navigate('/login');
+  };
+  
+  // Render the appropriate content based on the active tab
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'home':
+        return <ChildHome childName={childName} />;
+      case 'brush':
+        return <BrushReminder />;
+      case 'games':
+        return <ChildGames />;
+      case 'videos':
+        return <ChildVideos />;
+      default:
+        return <ChildHome childName={childName} />;
+    }
+  };
+  
   return (
-    <div className="container">
-      <div className="header">
+    <div className="child-dashboard">
+      <header className="dashboard-header">
+        <div className="logo-container">
+          <img 
+            src={logoImage} 
+            alt="لبخند شاد دندان سالم" 
+            className="dashboard-logo" 
+          />
+          {showMessage && (
+            <div className="logo-message">
+              هر 6 ماه یک بار به دندان پزشک مراجعه کنید
+            </div>
+          )}
+        </div>
         <div className="user-info">
-          <div className="avatar">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="50" cy="40" r="30" fill="#4a6bff"/>
-              <circle cx="50" cy="110" r="50" fill="#4a6bff"/>
-              <circle cx="35" cy="35" r="5" fill="white"/>
-              <circle cx="65" cy="35" r="5" fill="white"/>
-              <path d="M40 45 Q50 55 60 45" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-            </svg>
-          </div>
-          <div className="user-name">سارا جان</div>
+          <span className="welcome-text">خوش آمدی {childName}!</span>
+          <button onClick={handleLogout} className="logout-button">خروج</button>
         </div>
-        
-        <div className="points">
-          <div className="points-icon">💎</div>
-          <div className="points-value">42</div>
-        </div>
-      </div>
+      </header>
       
-      <div className="dashboard-card">
-        <div className="card-header">
-          <div className="card-title">یادآوری مسواک</div>
-          <div className="badge">امروز</div>
-        </div>
-        
-        <div className="brushing-times">
-          <div className="brushing-time morning done">
-            <div className="brushing-icon">🌞</div>
-            <div className="brushing-label">صبح</div>
-          </div>
-          
-          <div className="brushing-time night">
-            <div className="brushing-icon">🌙</div>
-            <div className="brushing-label">شب</div>
-          </div>
-        </div>
-      </div>
+      <nav className="dashboard-nav">
+        <ul className="nav-list">
+          <li 
+            className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
+            onClick={() => handleTabChange('home')}
+          >
+            <span className="nav-icon">🏠</span>
+            <span className="nav-text">خانه</span>
+          </li>
+          <li 
+            className={`nav-item ${activeTab === 'brush' ? 'active' : ''}`}
+            onClick={() => handleTabChange('brush')}
+          >
+            <span className="nav-icon">🪥</span>
+            <span className="nav-text">یادآوری مسواک</span>
+          </li>
+          <li 
+            className={`nav-item ${activeTab === 'games' ? 'active' : ''}`}
+            onClick={() => handleTabChange('games')}
+          >
+            <span className="nav-icon">🎮</span>
+            <span className="nav-text">بازی</span>
+          </li>
+          <li 
+            className={`nav-item ${activeTab === 'videos' ? 'active' : ''}`}
+            onClick={() => handleTabChange('videos')}
+          >
+            <span className="nav-icon">🎬</span>
+            <span className="nav-text">ویدیوها</span>
+          </li>
+        </ul>
+      </nav>
       
-      <div className="dashboard-card">
-        <div className="card-header">
-          <div className="card-title">بازی انتخاب میان‌وعده</div>
-          <div className="badge">امتیاز: +5</div>
-        </div>
-        
-        <div>غذاها را به دسته مناسب بکشید</div>
-      </div>
+      <main className="dashboard-content">
+        {renderContent()}
+      </main>
       
-      <div className="menu">
-        <div className="menu-item active">
-          <div className="menu-icon">🏠</div>
-          <div className="menu-label">خانه</div>
-        </div>
-        
-        <div className="menu-item">
-          <div className="menu-icon">🎮</div>
-          <div className="menu-label">بازی‌ها</div>
-        </div>
-        
-        <div className="menu-item">
-          <div className="menu-icon">📚</div>
-          <div className="menu-label">آموزش</div>
-        </div>
-        
-        <div className="menu-item">
-          <div className="menu-icon">👤</div>
-          <div className="menu-label">پروفایل</div>
-        </div>
-      </div>
+      <footer className="dashboard-footer">
+        <p>لبخند شاد دندان سالم &copy; {new Date().getFullYear()}</p>
+      </footer>
     </div>
   );
-}
+};
 
 export default ChildDashboard;

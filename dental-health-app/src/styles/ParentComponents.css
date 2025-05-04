@@ -1,0 +1,671 @@
+/* ===== InfoGraphics Styles ===== */
+.infographics-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .infographics-header {
+    margin-bottom: 1rem;
+  }
+  
+  .infographics-header h2 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .infographics-description {
+    color: #666;
+  }
+  
+  .infographics-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .infographic-card {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .infographic-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .infographic-thumbnail {
+    height: 180px;
+    background-color: var(--light-gray);
+    position: relative;
+  }
+  
+  .thumbnail-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
+  
+  .placeholder-icon {
+    font-size: 3rem;
+    color: #666;
+  }
+  
+  .infographic-info {
+    padding: 1rem;
+  }
+  
+  .infographic-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+  }
+  
+  .infographic-description {
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.5;
+  }
+  
+  .infographic-detail {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .back-button {
+    background-color: var(--light-gray);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .back-button:hover {
+    background-color: #e0e0e0;
+  }
+  
+  .detail-title {
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: var(--primary-color);
+    margin: 0;
+  }
+  
+  .infographic-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .infographic-image-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .infographic-placeholder {
+    background-color: var(--light-gray);
+    border-radius: 8px;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .placeholder-text {
+    color: #666;
+  }
+  
+  .infographic-text {
+    line-height: 1.6;
+  }
+  
+  .infographic-text h2 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+  }
+  
+  .infographic-text h3 {
+    color: var(--primary-dark);
+    margin: 1.5rem 0 0.5rem;
+  }
+  
+  .infographic-text p {
+    margin-bottom: 1rem;
+  }
+  
+  .infographic-text ul {
+    padding-right: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .infographic-text li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .infographic-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+  
+  .action-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .action-icon {
+    font-size: 1.5rem;
+  }
+  
+  .action-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  .share-button {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+  }
+  
+  .share-button:hover {
+    background-color: rgba(33, 150, 243, 0.2);
+  }
+  
+  .download-button {
+    background-color: var(--secondary-light);
+    color: var(--secondary-color);
+  }
+  
+  .download-button:hover {
+    background-color: rgba(76, 175, 80, 0.2);
+  }
+  
+  .print-button {
+    background-color: var(--accent-light);
+    color: var(--accent-color);
+  }
+  
+  .print-button:hover {
+    background-color: rgba(255, 87, 34, 0.2);
+  }
+  
+  .infographics-tips {
+    background-color: var(--primary-light);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 1.5rem;
+  }
+  
+  .infographics-tips h3 {
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .infographics-tips ul {
+    padding-right: 1.5rem;
+    margin: 0;
+    line-height: 1.6;
+  }
+  
+  .infographics-tips li {
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .report-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    
+    .report-stats {
+      flex-direction: column;
+    }
+    
+    .reminder-details {
+      flex-direction: column;
+    }
+    
+    .infographic-content {
+      flex-direction: column;
+    }
+    
+    .infographic-actions {
+      flex-wrap: wrap;
+    }
+    
+    .action-button {
+      flex: 1;
+      min-width: 120px;
+    }
+  }
+  
+  /* Print styles */
+  @media print {
+    .dashboard-header,
+    .dashboard-sidebar,
+    .dashboard-footer,
+    .report-actions,
+    .reminder-actions,
+    .infographic-actions,
+    .back-button,
+    .report-tips,
+    .reminder-tips,
+    .infographics-tips {
+      display: none !important;
+    }
+    
+    .dashboard-content {
+      padding: 0;
+    }
+    
+    .brushing-report-container,
+    .reminder-settings-container,
+    .infographics-container {
+      gap: 1rem;
+    }
+    
+    .report-table-container,
+    .reminder-card,
+    .infographic-detail {
+      box-shadow: none;
+      border: 1px solid #ddd;
+    }
+    
+    body {
+      font-size: 11pt;
+    }
+  }/* ParentComponents.css - Styles for parent dashboard components */
+  
+  /* ===== Brushing Report Styles ===== */
+  .brushing-report-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .report-header h2 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin: 0;
+  }
+  
+  .report-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .date-range-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .date-range-filter select {
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: white;
+  }
+  
+  .print-button {
+    padding: 0.5rem 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .print-button:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  .report-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .stat-card {
+    flex: 1;
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+  }
+  
+  .stat-label {
+    color: #666;
+  }
+  
+  .report-table-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+  }
+  
+  .loading-indicator {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
+  
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .report-table th {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 0.75rem;
+    text-align: right;
+    font-weight: 500;
+  }
+  
+  .report-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .report-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .report-table tr:nth-child(even) {
+    background-color: var(--light-gray);
+  }
+  
+  .status-indicator {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    font-weight: bold;
+  }
+  
+  .status-indicator.success {
+    background-color: var(--secondary-light);
+    color: var(--secondary-color);
+  }
+  
+  .status-indicator.error {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: var(--error-color);
+  }
+  
+  .report-tips {
+    background-color: var(--primary-light);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .report-tips h3 {
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .report-tips ul {
+    padding-right: 1.5rem;
+    margin: 0;
+    line-height: 1.6;
+  }
+  
+  .report-tips li {
+    margin-bottom: 0.5rem;
+  }
+  
+  /* ===== Reminder Settings Styles ===== */
+  .reminder-settings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .settings-header {
+    margin-bottom: 1rem;
+  }
+  
+  .settings-header h2 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .settings-description {
+    color: #666;
+  }
+  
+  .phone-number-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+  }
+  
+  .phone-input-container {
+    margin-top: 0.5rem;
+  }
+  
+  .phone-input {
+    width: 100%;
+    max-width: 300px;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .reminders-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .reminders-section h3 {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    margin: 1rem 0 0.5rem;
+  }
+  
+  .reminder-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .reminder-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .reminder-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  
+  /* Switch styles already defined in ChildComponents.css */
+  
+  .reminder-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .reminder-field {
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  .reminder-field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .reminder-field input,
+  .reminder-field select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: 'Vazirmatn', sans-serif;
+  }
+  
+  .reminder-field input:focus,
+  .reminder-field select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+  }
+  
+  .reminder-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .test-button {
+    padding: 0.5rem 1rem;
+    background-color: var(--light-gray);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .test-button:hover:not(:disabled) {
+    background-color: #e0e0e0;
+  }
+  
+  .test-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .settings-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .save-button {
+    padding: 0.75rem 2rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .save-button:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  .success-message {
+    background-color: var(--secondary-light);
+    color: var(--secondary-color);
+    padding: 1rem;
+    border-radius: 4px;
+    text-align: center;
+    margin: 1rem 0;
+    font-weight: 500;
+    animation: fadeIn 0.3s ease-in;
+  }
+  
+  .reminder-tips {
+    background-color: var(--primary-light);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 1.5rem;
+  }
+  
+  .reminder-tips h3 {
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .reminder-tips ul {
+    padding-right: 1.5rem;
+    margin: 0;
+    line-height: 1.6;
+  }
+  
+  .reminder-tips li {
+    margin-bottom: 0.5rem;
+  }
