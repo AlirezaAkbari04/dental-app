@@ -1,41 +1,109 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import './App.css';
-
-// Import components
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import './styles/App.css';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import RoleSelection from './components/auth/RoleSelection';
-import ChildRegistration from './components/auth/ChildRegistration';
-import ParentRegistration from './components/auth/ParentRegistration';
-import HealthConsultantRegistration from './components/auth/HealthConsultantRegistration';
+import ChildProfile from './components/auth/ChildProfile';
+import ParentProfile from './components/auth/ParentProfile';
+import TeacherProfile from './components/auth/TeacherProfile';
 import ChildDashboard from './components/dashboards/ChildDashboard';
-import ParentDashboard from './components/dashboards/ParentDashboard';
 import CaretakerDashboard from './components/dashboards/CaretakerDashboard';
+import ParentDashboard from './components/dashboards/ParentDashboard';
+
+// Simple auth check - in a real app, you would use a more robust solution
+const isAuthenticated = () => {
+  return localStorage.getItem('userAuth') !== null;
+};
+
+// Protected route component
+const ProtectedRoute = ({ children }) => {
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 
 function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <div className="app" dir="rtl">
         <Routes>
-          <Route path="/" element={<Login />} />
+          {/* Public routes */}
+          <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/role-selection" element={<RoleSelection />} />
           
-          {/* Registration routes for each role */}
-          <Route path="/register/child" element={<ChildRegistration />} />
-          <Route path="/register/parent" element={<ParentRegistration />} />
-          <Route path="/register/caretaker" element={<HealthConsultantRegistration />} />
+          {/* Protected routes */}
+          <Route 
+            path="/role-selection" 
+            element={
+              <ProtectedRoute>
+                <RoleSelection />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Profile completion routes */}
+          <Route 
+            path="/profile/child" 
+            element={
+              <ProtectedRoute>
+                <ChildProfile />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/profile/parent" 
+            element={
+              <ProtectedRoute>
+                <ParentProfile />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/profile/teacher" 
+            element={
+              <ProtectedRoute>
+                <TeacherProfile />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Dashboard routes */}
-          <Route path="/dashboard/child" element={<ChildDashboard />} />
-          <Route path="/dashboard/parent" element={<ParentDashboard />} />
-          <Route path="/dashboard/caretaker" element={<CaretakerDashboard />} />
+          <Route 
+            path="/dashboard/child" 
+            element={
+              <ProtectedRoute>
+                <ChildDashboard />
+              </ProtectedRoute>
+            } 
+          />
           
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route 
+            path="/dashboard/caretaker" 
+            element={
+              <ProtectedRoute>
+                <CaretakerDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/dashboard/parent" 
+            element={
+              <ProtectedRoute>
+                <ParentDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Redirect to login if no route matches */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
-    </BrowserRouter>
+    </Router>
   );
 }
 

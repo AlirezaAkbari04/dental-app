@@ -1,0 +1,346 @@
+/* CaretakerComponents.css - Styles for health teacher dashboard components */
+
+/* ===== My Schools Styles ===== */
+.my-schools-container,
+.students-list-container,
+.health-reports-container,
+.urgent-referrals-container,
+.parent-messages-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+}
+
+/* ===== Students List Styles ===== */
+.students-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.students-list-item:last-child {
+  border-bottom: none;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.student-name {
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.student-details {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* ===== Health Reports Styles ===== */
+.health-status-section {
+  margin-bottom: 1.5rem;
+}
+
+.range-value {
+  text-align: center;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.warning-flags-section {
+  background-color: #fff3e0;
+  border: 1px solid #ffcc80;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.warning-flags-section h4 {
+  color: #e65100;
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+.warning-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.warning-flags-cell {
+  max-width: 200px;
+  white-space: normal;
+  color: var(--error-color);
+}
+
+/* ===== Urgent Referrals Styles ===== */
+.resolved-row {
+  opacity: 0.7;
+  background-color: #f9f9f9 !important;
+}
+
+.referral-details {
+  margin-bottom: 1.5rem;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 0.5rem;
+}
+
+.detail-label {
+  width: 120px;
+  font-weight: 500;
+}
+
+.detail-value {
+  flex: 1;
+}
+
+.section-title {
+  color: var(--primary-color);
+  margin: 1.5rem 0 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.warning-flags-list ul {
+  padding-right: 1.5rem;
+  margin: 0;
+}
+
+.warning-flags-list li {
+  margin-bottom: 0.5rem;
+  color: var(--error-color);
+}
+
+.referral-notes {
+  background-color: var(--light-gray);
+  border-radius: 8px;
+  padding: 1rem;
+  white-space: pre-wrap;
+}
+
+.edit-button {
+  padding: 0.5rem 1rem;
+  background-color: var(--warning-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.edit-button:hover {
+  background-color: #f57c00;
+}
+
+/* ===== Parent Messages Styles ===== */
+.messages-section {
+  margin-bottom: 2rem;
+}
+
+.students-selection {
+  padding: 0.5rem;
+}
+
+.select-all-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.selected-count {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.checkbox-column {
+  width: 40px;
+}
+
+.empty-table-message {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.message-templates-section {
+  margin-bottom: 2rem;
+}
+
+.templates-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.template-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.template-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.template-title {
+  color: var(--primary-color);
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.template-text {
+  color: #333;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.template-actions {
+  text-align: left;
+}
+
+.copy-button {
+  background-color: var(--light-gray);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.copy-button:hover {
+  background-color: #e0e0e0;
+}
+
+.sent-messages-section {
+  margin-top: 2rem;
+}
+
+.recipients-count {
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.message-preview {
+  background-color: var(--light-gray);
+  border-radius: 8px;
+  padding: 1rem;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+/* Form date input styles */
+input[type="date"] {
+  font-family: 'Vazirmatn', sans-serif;
+}
+
+/* Range input styles */
+input[type="range"] {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  outline: none;
+  -webkit-appearance: none;
+  background: #e0e0e0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+  border: none;
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+  .templates-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .warning-checkboxes {
+    grid-template-columns: 1fr;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    margin-bottom: 1rem;
+  }
+  
+  .detail-label {
+    width: 100%;
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .dashboard-header,
+  .dashboard-sidebar,
+  .dashboard-footer,
+  .content-header,
+  .filter-container,
+  .table-action,
+  .modal-overlay,
+  .copy-button,
+  .template-actions {
+    display: none !important;
+  }
+  
+  .dashboard-content {
+    padding: 0;
+  }
+  
+  .card,
+  .template-card,
+  .referral-notes,
+  .message-preview {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  
+  body {
+    font-size: 11pt;
+  }
+  
+  .data-table th {
+    background-color: #f5f5f5 !important;
+    color: #333 !important;
+  }
+  
+  .status-badge {
+    border: 1px solid #ddd;
+    background-color: transparent !important;
+    color: #333 !important;
+  }
+}

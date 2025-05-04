@@ -1,56 +1,74 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import '../styles/Auth.css';
+import logoImage from '../logo.svg'; // Make sure the logo is saved as SVG in your project
 
-function Login() {
+const Login = () => {
+  const [credentials, setCredentials] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const handleInputChange = (e) => {
+    setCredentials(e.target.value);
+    setError('');
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // رفتن به صفحه انتخاب نقش
+    
+    // Validate input (email or phone number)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^09[0-9]{9}$/; // Persian mobile format: 09XXXXXXXXX
+    
+    if (!emailRegex.test(credentials) && !phoneRegex.test(credentials)) {
+      setError('لطفا ایمیل یا شماره موبایل معتبر وارد کنید');
+      return;
+    }
+    
+    // For demo purposes, simulate login success
+    // In a real app, you would call your authentication API here
+    console.log('Login attempt with:', credentials);
+    
+    // Navigate to role selection page upon successful login
     navigate('/role-selection');
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        {/* لوگو */}
-        <div className="logo">
-          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="logo-svg">
-            <path d="M50 10C33.4 10 20 23.4 20 40v30c0 11 9 20 20 20s20-9 20-20V50h-10v20c0 5.5-4.5 10-10 10s-10-4.5-10-10V40c0-11 9-20 20-20s20 9 20 20v5h10v-5c0-16.6-13.4-30-30-30z" fill="#4a6bff"/>
-            <circle cx="35" cy="35" r="5" fill="#ffcc00"/>
-            <circle cx="65" cy="35" r="5" fill="#ffcc00"/>
-          </svg>
+    <div className="auth-container" dir="rtl">
+      <div className="auth-form-container">
+        <div className="logo-container">
+          <img src={logoImage} alt="لبخند شاد دندان سالم" className="app-logo" />
+          <h1 className="app-title">لبخند شاد دندان سالم</h1>
         </div>
         
-        {/* کاراکتر کارتونی */}
-        <div className="character-container">
-          <svg className="character" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <path d="M100 30c-25 0-45 10-45 50 0 30 10 80 45 90 35-10 45-60 45-90 0-40-20-50-45-50z" fill="white" stroke="#4a6bff" strokeWidth="4"/>
-            <circle cx="80" cy="70" r="8" fill="#333"/>
-            <circle cx="120" cy="70" r="8" fill="#333"/>
-            <path d="M75 100c10 15 40 15 50 0" fill="none" stroke="#333" strokeWidth="4" strokeLinecap="round"/>
-            <circle cx="65" cy="85" r="10" fill="#ffaaaa" opacity="0.5"/>
-            <circle cx="135" cy="85" r="10" fill="#ffaaaa" opacity="0.5"/>
-          </svg>
-        </div>
-        
-        <h1>برنامه سلامت دندان کودکان</h1>
-        
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label htmlFor="email">ایمیل یا شماره موبایل</label>
-            <input type="text" id="email" name="email" placeholder="example@mail.com یا ۰۹۱۲۳۴۵۶۷۸۹" required />
+            <label htmlFor="credentials">ایمیل یا شماره موبایل</label>
+            <input
+              type="text"
+              id="credentials"
+              value={credentials}
+              onChange={handleInputChange}
+              placeholder="ایمیل یا شماره موبایل خود را وارد کنید"
+              className={error ? 'input-error' : ''}
+              dir="ltr" // Input direction is LTR even in RTL layout
+            />
+            {error && <div className="error-message">{error}</div>}
           </div>
           
-          <button type="submit" className="btn-primary">ادامه</button>
+          <button type="submit" className="auth-button">
+            ادامه
+          </button>
         </form>
         
-        <div className="link">
-          حساب ندارید؟ <a href="#" onClick={() => navigate('/register')}>ثبت‌نام کنید</a>
+        <div className="auth-links">
+          <Link to="/register" className="register-link">
+            حساب ندارید؟ ثبت‌نام کنید
+          </Link>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default Login;
