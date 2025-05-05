@@ -9,9 +9,7 @@ const MySchools = () => {
   const [formData, setFormData] = useState({
     name: '',
     type: 'boys',
-    address: '',
-    activityDays: [],
-    phone: ''
+    activityDays: []
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -60,9 +58,7 @@ const MySchools = () => {
       id: Date.now().toString(),
       name: formData.name,
       type: formData.type,
-      address: formData.address,
       activityDays: formData.activityDays,
-      phone: formData.phone,
       students: []
     };
     
@@ -84,9 +80,7 @@ const MySchools = () => {
             ...school,
             name: formData.name,
             type: formData.type,
-            address: formData.address,
-            activityDays: formData.activityDays,
-            phone: formData.phone
+            activityDays: formData.activityDays
           }
         : school
     );
@@ -110,9 +104,7 @@ const MySchools = () => {
     setFormData({
       name: school.name,
       type: school.type,
-      address: school.address,
-      activityDays: school.activityDays || [],
-      phone: school.phone || ''
+      activityDays: school.activityDays || []
     });
     setShowEditModal(true);
   };
@@ -122,9 +114,7 @@ const MySchools = () => {
     setFormData({
       name: '',
       type: 'boys',
-      address: '',
-      activityDays: [],
-      phone: ''
+      activityDays: []
     });
     setCurrentSchool(null);
   };
@@ -150,9 +140,7 @@ const MySchools = () => {
   
   // Filter and search schools
   const filteredSchools = schools.filter(school => {
-    const matchesSearch = school.name.includes(searchTerm) || 
-                         (school.address && school.address.includes(searchTerm));
-    
+    const matchesSearch = school.name.includes(searchTerm);
     const matchesType = filterType === 'all' || school.type === filterType;
     
     return matchesSearch && matchesType;
@@ -172,7 +160,7 @@ const MySchools = () => {
         <input
           type="text"
           className="search-input"
-          placeholder="جستجوی نام یا آدرس مدرسه..."
+          placeholder="جستجوی نام مدرسه..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -185,7 +173,6 @@ const MySchools = () => {
           <option value="all">همه مدارس</option>
           <option value="boys">مدارس پسرانه</option>
           <option value="girls">مدارس دخترانه</option>
-          <option value="mixed">مدارس مختلط</option>
         </select>
       </div>
       
@@ -200,9 +187,7 @@ const MySchools = () => {
               <tr>
                 <th>نام مدرسه</th>
                 <th>نوع مدرسه</th>
-                <th>آدرس</th>
                 <th>روزهای فعالیت</th>
-                <th>شماره تماس</th>
                 <th>تعداد دانش‌آموزان</th>
                 <th>عملیات</th>
               </tr>
@@ -212,12 +197,9 @@ const MySchools = () => {
                 <tr key={school.id}>
                   <td>{school.name}</td>
                   <td>
-                    {school.type === 'boys' ? 'پسرانه' : 
-                     school.type === 'girls' ? 'دخترانه' : 'مختلط'}
+                    {school.type === 'boys' ? 'پسرانه' : 'دخترانه'}
                   </td>
-                  <td>{school.address || '---'}</td>
                   <td>{formatActivityDays(school.activityDays)}</td>
-                  <td>{school.phone || '---'}</td>
                   <td>{school.students ? school.students.length : 0} نفر</td>
                   <td className="table-action">
                     <span className="action-link edit-link" onClick={() => openEditModal(school)}>
@@ -269,33 +251,8 @@ const MySchools = () => {
                   >
                     <option value="boys">پسرانه</option>
                     <option value="girls">دخترانه</option>
-                    <option value="mixed">مختلط</option>
                   </select>
                 </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="address">آدرس مدرسه</label>
-                <input
-                  type="text"
-                  id="address"
-                  name="address"
-                  className="form-control"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="phone">شماره تماس</label>
-                <input
-                  type="text"
-                  id="phone"
-                  name="phone"
-                  className="form-control"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                />
               </div>
               
               <div className="form-group">
@@ -362,33 +319,8 @@ const MySchools = () => {
                   >
                     <option value="boys">پسرانه</option>
                     <option value="girls">دخترانه</option>
-                    <option value="mixed">مختلط</option>
                   </select>
                 </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="edit-address">آدرس مدرسه</label>
-                <input
-                  type="text"
-                  id="edit-address"
-                  name="address"
-                  className="form-control"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="edit-phone">شماره تماس</label>
-                <input
-                  type="text"
-                  id="edit-phone"
-                  name="phone"
-                  className="form-control"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                />
               </div>
               
               <div className="form-group">

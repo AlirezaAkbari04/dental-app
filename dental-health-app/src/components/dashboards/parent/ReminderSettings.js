@@ -12,16 +12,6 @@ const ReminderSettings = ({ childName }) => {
       enabled: true,
       time: '20:00',
       message: 'یادآوری مسواک شب'
-    },
-    dentistVisit: {
-      enabled: true,
-      interval: '6',
-      message: 'یادآوری مراجعه به دندانپزشک'
-    },
-    toothbrushChange: {
-      enabled: true,
-      interval: '3',
-      message: 'یادآوری تعویض مسواک'
     }
   });
   
@@ -57,17 +47,6 @@ const ReminderSettings = ({ childName }) => {
       [type]: {
         ...prev[type],
         time: value
-      }
-    }));
-  };
-  
-  // Handle changing reminder interval
-  const handleIntervalChange = (type, value) => {
-    setReminders(prev => ({
-      ...prev,
-      [type]: {
-        ...prev[type],
-        interval: value
       }
     }));
   };
@@ -231,108 +210,6 @@ const ReminderSettings = ({ childName }) => {
             </button>
           </div>
         </div>
-        
-        <h3>یادآوری‌های دوره‌ای</h3>
-        
-        <div className="reminder-card">
-          <div className="reminder-header">
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={reminders.dentistVisit.enabled}
-                onChange={(e) => handleToggleReminder('dentistVisit', e.target.checked)}
-              />
-              <span className="slider round"></span>
-            </label>
-            <h4>یادآوری مراجعه به دندانپزشک</h4>
-          </div>
-          
-          <div className="reminder-details">
-            <div className="reminder-field">
-              <label>دوره (ماه):</label>
-              <select
-                value={reminders.dentistVisit.interval}
-                onChange={(e) => handleIntervalChange('dentistVisit', e.target.value)}
-                disabled={!reminders.dentistVisit.enabled}
-              >
-                <option value="3">3 ماه</option>
-                <option value="6">6 ماه</option>
-                <option value="12">12 ماه</option>
-              </select>
-            </div>
-            
-            <div className="reminder-field">
-              <label>متن پیامک:</label>
-              <input
-                type="text"
-                value={reminders.dentistVisit.message}
-                onChange={(e) => handleMessageChange('dentistVisit', e.target.value)}
-                disabled={!reminders.dentistVisit.enabled}
-                placeholder="متن پیامک یادآوری"
-              />
-            </div>
-          </div>
-          
-          <div className="reminder-actions">
-            <button 
-              className="test-button"
-              onClick={() => handleTestReminder('dentistVisit')}
-              disabled={!reminders.dentistVisit.enabled}
-            >
-              آزمایش پیامک
-            </button>
-          </div>
-        </div>
-        
-        <div className="reminder-card">
-          <div className="reminder-header">
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={reminders.toothbrushChange.enabled}
-                onChange={(e) => handleToggleReminder('toothbrushChange', e.target.checked)}
-              />
-              <span className="slider round"></span>
-            </label>
-            <h4>یادآوری تعویض مسواک</h4>
-          </div>
-          
-          <div className="reminder-details">
-            <div className="reminder-field">
-              <label>دوره (ماه):</label>
-              <select
-                value={reminders.toothbrushChange.interval}
-                onChange={(e) => handleIntervalChange('toothbrushChange', e.target.value)}
-                disabled={!reminders.toothbrushChange.enabled}
-              >
-                <option value="2">2 ماه</option>
-                <option value="3">3 ماه</option>
-                <option value="4">4 ماه</option>
-              </select>
-            </div>
-            
-            <div className="reminder-field">
-              <label>متن پیامک:</label>
-              <input
-                type="text"
-                value={reminders.toothbrushChange.message}
-                onChange={(e) => handleMessageChange('toothbrushChange', e.target.value)}
-                disabled={!reminders.toothbrushChange.enabled}
-                placeholder="متن پیامک یادآوری"
-              />
-            </div>
-          </div>
-          
-          <div className="reminder-actions">
-            <button 
-              className="test-button"
-              onClick={() => handleTestReminder('toothbrushChange')}
-              disabled={!reminders.toothbrushChange.enabled}
-            >
-              آزمایش پیامک
-            </button>
-          </div>
-        </div>
       </div>
       
       <div className="settings-actions">
@@ -354,8 +231,7 @@ const ReminderSettings = ({ childName }) => {
         <h3>نکات مفید</h3>
         <ul>
           <li>یادآوری مسواک صبح و شب به تنظیم عادت مسواک زدن منظم کمک می‌کند.</li>
-          <li>مراجعه به دندانپزشک هر 6 ماه یکبار برای بررسی سلامت دهان و دندان ضروری است.</li>
-          <li>تعویض مسواک هر 3 ماه یکبار برای بهداشت دهان و اثربخشی مسواک زدن توصیه می‌شود.</li>
+          <li>هر 6 ماه یک بار به دندانپزشک مراجعه کنید.</li>
         </ul>
       </div>
     </div>

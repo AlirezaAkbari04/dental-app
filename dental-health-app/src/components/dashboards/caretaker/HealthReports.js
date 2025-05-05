@@ -20,7 +20,9 @@ const HealthReports = () => {
       severePain: false,
       abscess: false,
       bleeding: false,
-      feverWithPain: false
+      feverWithPain: false,
+      fistula: false,
+      abnormalTissue: false
     },
     needsReferral: false,
     referralNotes: ''
@@ -94,7 +96,7 @@ const HealthReports = () => {
         needsReferral: true
       }));
     }
-  }, [formData.warningFlags]);
+  }, [formData.warningFlags, formData.needsReferral]);
   
   // Open the report modal for a student
   const openReportModal = (student) => {
@@ -113,12 +115,14 @@ const HealthReports = () => {
         hasHealthyGums: latestRecord.hasHealthyGums !== false, // Default to true if not specifically false
         score: latestRecord.score || 5,
         notes: '',
-        warningFlags: latestRecord.warningFlags || {
-          brokenTooth: false,
-          severePain: false,
-          abscess: false,
-          bleeding: false,
-          feverWithPain: false
+        warningFlags: {
+          brokenTooth: latestRecord.warningFlags?.brokenTooth || false,
+          severePain: latestRecord.warningFlags?.severePain || false,
+          abscess: latestRecord.warningFlags?.abscess || false,
+          bleeding: latestRecord.warningFlags?.bleeding || false,
+          feverWithPain: latestRecord.warningFlags?.feverWithPain || false,
+          fistula: latestRecord.warningFlags?.fistula || false,
+          abnormalTissue: latestRecord.warningFlags?.abnormalTissue || false
         },
         needsReferral: latestRecord.needsReferral || false,
         referralNotes: ''
@@ -137,7 +141,9 @@ const HealthReports = () => {
           severePain: false,
           abscess: false,
           bleeding: false,
-          feverWithPain: false
+          feverWithPain: false,
+          fistula: false,
+          abnormalTissue: false
         },
         needsReferral: false,
         referralNotes: ''
@@ -485,6 +491,26 @@ const HealthReports = () => {
                       onChange={handleInputChange}
                     />
                     تب همراه با درد دهان
+                  </label>
+                  
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="warningFlags.fistula"
+                      checked={formData.warningFlags.fistula}
+                      onChange={handleInputChange}
+                    />
+                    فیستول یا مجرای خروج چرک به صورت جوش رو لثه
+                  </label>
+                  
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="warningFlags.abnormalTissue"
+                      checked={formData.warningFlags.abnormalTissue}
+                      onChange={handleInputChange}
+                    />
+                    لثه زخمی یا هرنوع حالت غیرطبیعی داخل یا خارج دهان
                   </label>
                 </div>
               </div>

@@ -10,7 +10,6 @@ const BrushReminder = () => {
   const [timerRunning, setTimerRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(120); // 2 minutes in seconds
   const [showCongrats, setShowCongrats] = useState(false);
-  const [selectedQuadrants, setSelectedQuadrants] = useState([]);
   const [audioError, setAudioError] = useState(false);
   
   const audioRef = useRef(null);
@@ -111,11 +110,10 @@ const BrushReminder = () => {
     console.log("Resetting timer");
     stopTimer();
     setTimeLeft(120);
-    setSelectedQuadrants([]);
   };
   
   const showCongratulations = () => {
-    console.log("Showing congratulations, quadrants:", selectedQuadrants);
+    console.log("Showing congratulations");
     setShowCongrats(true);
     
     // Play congratulations sound
@@ -134,26 +132,13 @@ const BrushReminder = () => {
         stars: (achievements.stars || 0) + 1,
         regularBrushing: (achievements.regularBrushing || 0) + 1,
         diamonds: (achievements.diamonds || 0),
-        cleanedAreas: (achievements.cleanedAreas || 0) + selectedQuadrants.length,
+        cleanedAreas: (achievements.cleanedAreas || 0),
         healthySnacks: (achievements.healthySnacks || 0)
       };
-      
-      // Extra diamond for cleaning all 4 quadrants
-      if (selectedQuadrants.length === 4) {
-        updatedAchievements.diamonds += 1;
-      }
       
       localStorage.setItem('childAchievements', JSON.stringify(updatedAchievements));
     } catch (error) {
       console.error("Error updating achievements:", error);
-    }
-  };
-  
-  const toggleQuadrant = (quadrant) => {
-    if (selectedQuadrants.includes(quadrant)) {
-      setSelectedQuadrants(prev => prev.filter(q => q !== quadrant));
-    } else {
-      setSelectedQuadrants(prev => [...prev, quadrant]);
     }
   };
   
@@ -227,56 +212,21 @@ const BrushReminder = () => {
       <div className="timer-section">
         <h2>تایمر مسواک</h2>
         
-        <div className="teeth-quadrants">
-          <div 
-            className={`quadrant top-right ${selectedQuadrants.includes('top-right') ? 'selected' : ''}`}
-            onClick={() => toggleQuadrant('top-right')}
-            role="button"
-            aria-pressed={selectedQuadrants.includes('top-right')}
-            tabIndex={0}
-          >
-            بالا راست
-          </div>
-          <div 
-            className={`quadrant top-left ${selectedQuadrants.includes('top-left') ? 'selected' : ''}`}
-            onClick={() => toggleQuadrant('top-left')}
-            role="button"
-            aria-pressed={selectedQuadrants.includes('top-left')}
-            tabIndex={0}
-          >
-            بالا چپ
-          </div>
-          <div 
-            className={`quadrant bottom-right ${selectedQuadrants.includes('bottom-right') ? 'selected' : ''}`}
-            onClick={() => toggleQuadrant('bottom-right')}
-            role="button"
-            aria-pressed={selectedQuadrants.includes('bottom-right')}
-            tabIndex={0}
-          >
-            پایین راست
-          </div>
-          <div 
-            className={`quadrant bottom-left ${selectedQuadrants.includes('bottom-left') ? 'selected' : ''}`}
-            onClick={() => toggleQuadrant('bottom-left')}
-            role="button"
-            aria-pressed={selectedQuadrants.includes('bottom-left')}
-            tabIndex={0}
-          >
-            پایین چپ
-          </div>
-        </div>
-        
         <div className="timer-display">
           <div className="timer-time">{formatTime(timeLeft)}</div>
-          <div className="hourglass-animation">
-            <div 
-              className="hourglass-sand" 
-              style={{ 
-                height: `${(timeLeft / 120) * 100}%`,
-                transition: timerRunning ? 'height 1s linear' : 'none'
-              }}
-              aria-hidden="true"
-            ></div>
+          
+          <div className="hourglass-container">
+            <div className="real-hourglass">
+              <div className="hourglass-frame">
+                <div className="hourglass-top-chamber">
+                  <div className="hourglass-top-sand" style={{ height: `${(timeLeft / 120) * 100}%` }}></div>
+                </div>
+                <div className="hourglass-neck"></div>
+                <div className="hourglass-bottom-chamber">
+                  <div className="hourglass-bottom-sand" style={{ height: `${100 - (timeLeft / 120) * 100}%` }}></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -324,11 +274,6 @@ const BrushReminder = () => {
                 <span className="reward-item">
                   <span className="reward-icon" aria-hidden="true">⭐</span> 1 ستاره
                 </span>
-                {selectedQuadrants.length === 4 && (
-                  <span className="reward-item">
-                    <span className="reward-icon" aria-hidden="true">💎</span> 1 الماس
-                  </span>
-                )}
               </div>
               <button 
                 className="congrats-button"
@@ -343,11 +288,22 @@ const BrushReminder = () => {
       </div>
       
       <div className="educational-video">
-        <h3>ویدیوی آموزش مسواک زدن</h3>
-        <div className="video-container">
-          {/* In a real app, use video element with proper src attribute */}
-          <div className="video-placeholder">
-            <p>ویدیوی آموزشی مسواک زدن در اینجا قرار می‌گیرد</p>
+        <h3>آموزش مسواک زدن</h3>
+        <div className="videos-container">
+          <div className="video-item">
+            <div className="video-placeholder">
+              <p>ویدیوی آموزشی ۱</p>
+              <span className="play-icon">▶️</span>
+            </div>
+            <div className="video-caption">نحوه صحیح مسواک زدن</div>
+          </div>
+          
+          <div className="video-item">
+            <div className="video-placeholder">
+              <p>ویدیوی آموزشی ۲</p>
+              <span className="play-icon">▶️</span>
+            </div>
+            <div className="video-caption">روش مسواک زدن</div>
           </div>
         </div>
       </div>
@@ -362,6 +318,164 @@ const BrushReminder = () => {
         <source src="/assets/sounds/applause.mp3" type="audio/mpeg" />
         <source src="/assets/sounds/applause.ogg" type="audio/ogg" />
       </audio>
+      
+      <style jsx>{`
+        .hourglass-container {
+          display: flex;
+          justify-content: center;
+          margin: 15px 0;
+          height: 150px;
+        }
+        
+        .real-hourglass {
+          position: relative;
+          width: 80px;
+          height: 150px;
+        }
+        
+        .hourglass-frame {
+          position: relative;
+          width: 100%;
+          height: 100%;
+        }
+        
+        .hourglass-top-chamber {
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 70px;
+          height: 70px;
+          border-radius: 10px 10px 35px 35px;
+          background-color: rgba(236, 236, 236, 0.7);
+          overflow: hidden;
+          border: 2px solid #aaa;
+          box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .hourglass-neck {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 15px;
+          height: 15px;
+          background-color: #aaa;
+          border-radius: 50%;
+          z-index: 2;
+        }
+        
+        .hourglass-bottom-chamber {
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 70px;
+          height: 70px;
+          border-radius: 35px 35px 10px 10px;
+          background-color: rgba(236, 236, 236, 0.7);
+          overflow: hidden;
+          border: 2px solid #aaa;
+          box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .hourglass-top-sand {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          background: linear-gradient(to bottom, #FFD700, #FFA500);
+          transition: height 1s linear;
+        }
+        
+        .hourglass-bottom-sand {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          background: linear-gradient(to bottom, #FFD700, #FFA500);
+          transition: height 1s linear;
+        }
+        
+        /* Decorative elements to make it look more like glass */
+        .hourglass-top-chamber:before,
+        .hourglass-bottom-chamber:before {
+          content: '';
+          position: absolute;
+          top: 10%;
+          left: 10%;
+          width: 20%;
+          height: 20%;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.4);
+          z-index: 3;
+        }
+        
+        /* Connecting lines */
+        .hourglass-frame:before,
+        .hourglass-frame:after {
+          content: '';
+          position: absolute;
+          width: 2px;
+          height: 25px;
+          background-color: #aaa;
+          z-index: 1;
+        }
+        
+        .hourglass-frame:before {
+          top: 65px;
+          left: 24px;
+          transform: rotate(45deg);
+        }
+        
+        .hourglass-frame:after {
+          top: 65px;
+          right: 24px;
+          transform: rotate(-45deg);
+        }
+        
+        .videos-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 20px;
+          margin-top: 20px;
+        }
+        
+        .video-item {
+          flex: 1;
+          min-width: 250px;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .video-placeholder {
+          background-color: #f0f0f0;
+          height: 180px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          cursor: pointer;
+        }
+        
+        .video-placeholder:hover {
+          background-color: #e5e5e5;
+        }
+        
+        .play-icon {
+          font-size: 48px;
+          margin-top: 15px;
+        }
+        
+        .video-caption {
+          padding: 10px;
+          text-align: center;
+          background-color: #fff;
+          font-weight: bold;
+        }
+      `}</style>
     </div>
   );
 };

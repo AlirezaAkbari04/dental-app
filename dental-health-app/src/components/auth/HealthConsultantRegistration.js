@@ -249,10 +249,10 @@ function HealthConsultantRegistration() {
                 <input 
                   type="checkbox" 
                   name="schoolTypes" 
-                  value="mixed" 
+                  value="both" 
                   onChange={handleCheckboxChange}
                 />
-                <span>هر دو</span>
+                <span>هردو</span>
               </label>
             </div>
           </div>

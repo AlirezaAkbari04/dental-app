@@ -1,5 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../../../styles/ChildComponents.css';
+
+// Food items array defined outside the component to avoid dependency issues
+const FOOD_ITEMS = [
+  { id: 1, name: 'سیب', type: 'healthy', emoji: '🍎' },
+  { id: 2, name: 'موز', type: 'healthy', emoji: '🍌' },
+  { id: 3, name: 'پرتقال', type: 'healthy', emoji: '🍊' },
+  { id: 4, name: 'هویج', type: 'healthy', emoji: '🥕' },
+  { id: 5, name: 'خیار', type: 'healthy', emoji: '🥒' },
+  { id: 6, name: 'شیر', type: 'healthy', emoji: '🥛' },
+  { id: 7, name: 'نان و پنیر', type: 'healthy', emoji: '🧀' },
+  { id: 8, name: 'آب', type: 'healthy', emoji: '💧' },
+  { id: 9, name: 'شکلات', type: 'unhealthy', emoji: '🍫' },
+  { id: 10, name: 'چیپس', type: 'unhealthy', emoji: '🍟' },
+  { id: 11, name: 'پفک', type: 'unhealthy', emoji: '🍙' },
+  { id: 12, name: 'نوشابه', type: 'unhealthy', emoji: '🥤' },
+  { id: 13, name: 'آبمیوه صنعتی', type: 'unhealthy', emoji: '🧃' },
+  { id: 14, name: 'لواشک', type: 'unhealthy', emoji: '🍬' }
+];
 
 const ChildGames = () => {
   const [draggedItem, setDraggedItem] = useState(null);
@@ -9,28 +27,12 @@ const ChildGames = () => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [currentFoodItems, setCurrentFoodItems] = useState([]);
   const [touchDevice, setTouchDevice] = useState(false);
+  const [animationClass, setAnimationClass] = useState('');
+  const [feedbackImage, setFeedbackImage] = useState('');
   
   // Refs for drop zones
   const healthyZoneRef = useRef(null);
   const unhealthyZoneRef = useRef(null);
-  
-  // Food items for the game
-  const foodItems = [
-    { id: 1, name: 'سیب', type: 'healthy', emoji: '🍎' },
-    { id: 2, name: 'موز', type: 'healthy', emoji: '🍌' },
-    { id: 3, name: 'پرتقال', type: 'healthy', emoji: '🍊' },
-    { id: 4, name: 'هویج', type: 'healthy', emoji: '🥕' },
-    { id: 5, name: 'خیار', type: 'healthy', emoji: '🥒' },
-    { id: 6, name: 'شیر', type: 'healthy', emoji: '🥛' },
-    { id: 7, name: 'نان و پنیر', type: 'healthy', emoji: '🧀' },
-    { id: 8, name: 'آب', type: 'healthy', emoji: '💧' },
-    { id: 9, name: 'شکلات', type: 'unhealthy', emoji: '🍫' },
-    { id: 10, name: 'چیپس', type: 'unhealthy', emoji: '🍟' },
-    { id: 11, name: 'پفک', type: 'unhealthy', emoji: '🍙' },
-    { id: 12, name: 'نوشابه', type: 'unhealthy', emoji: '🥤' },
-    { id: 13, name: 'آبمیوه صنعتی', type: 'unhealthy', emoji: '🧃' },
-    { id: 14, name: 'لواشک', type: 'unhealthy', emoji: '🍬' }
-  ];
   
   // Load saved score from localStorage
   useEffect(() => {
@@ -41,9 +43,10 @@ const ChildGames = () => {
       }
       
       // Detect if device supports touch
-      setTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      setTouchDevice(isTouchDevice);
       
-      console.log("Game initialized, touch device:", 'ontouchstart' in window || navigator.maxTouchPoints > 0);
+      console.log("Game initialized, touch device:", isTouchDevice);
     } catch (error) {
       console.error("Error loading score:", error);
     }
@@ -71,22 +74,22 @@ const ChildGames = () => {
   }, [score]);
 
   // Get random food items for the game
-  const getRandomFoodItems = () => {
+  const getRandomFoodItems = useCallback(() => {
     // Get equal number of healthy and unhealthy items
-    const healthyItems = foodItems.filter(item => item.type === 'healthy');
-    const unhealthyItems = foodItems.filter(item => item.type === 'unhealthy');
+    const healthyItems = FOOD_ITEMS.filter(item => item.type === 'healthy');
+    const unhealthyItems = FOOD_ITEMS.filter(item => item.type === 'unhealthy');
     
     const randomHealthy = [...healthyItems].sort(() => 0.5 - Math.random()).slice(0, 2);
     const randomUnhealthy = [...unhealthyItems].sort(() => 0.5 - Math.random()).slice(0, 2);
     
     // Combine and shuffle
     return [...randomHealthy, ...randomUnhealthy].sort(() => 0.5 - Math.random());
-  };
+  }, []);
   
   // Initialize game with random food items
   useEffect(() => {
     setCurrentFoodItems(getRandomFoodItems());
-  }, []);
+  }, [getRandomFoodItems]);
   
   // Drag and drop handlers for mouse
   const handleDragStart = (e, item) => {
@@ -189,7 +192,7 @@ const ChildGames = () => {
   };
   
   // Common function to handle answer selection
-  const handleAnswerSelection = (item, targetType) => {
+  const handleAnswerSelection = useCallback((item, targetType) => {
     console.log("Answer selected:", item.name, "as", targetType);
     
     if (item.type === targetType) {
@@ -201,6 +204,8 @@ const ChildGames = () => {
           ? `آفرین! ${item.name} یک میان‌وعده سالم است.` 
           : `درست است! ${item.name} برای دندان‌های شما خوب نیست.`
       );
+      setAnimationClass('correct-answer-animation');
+      setFeedbackImage('✅');
     } else {
       // Wrong answer
       setIsCorrect(false);
@@ -209,23 +214,28 @@ const ChildGames = () => {
           ? `اشتباه! ${item.name} یک میان‌وعده ناسالم است.` 
           : `اشتباه! ${item.name} یک میان‌وعده سالم است.`
       );
+      setAnimationClass('wrong-answer-animation');
+      setFeedbackImage('❌');
     }
     
     setShowFeedback(true);
     
     // Load next food items after a delay
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setShowFeedback(false);
+      setAnimationClass('');
       setCurrentFoodItems(getRandomFoodItems());
     }, 2000);
-  };
+    
+    return () => clearTimeout(timer);
+  }, [getRandomFoodItems]);
   
   // For direct click/tap on mobile if drag not working
-  const handleDirectSelection = (item, type) => {
+  const handleDirectSelection = useCallback((item, type) => {
     if (touchDevice) {
       handleAnswerSelection(item, type);
     }
-  };
+  }, [touchDevice, handleAnswerSelection]);
   
   return (
     <div className="games-container">
@@ -244,7 +254,7 @@ const ChildGames = () => {
           </p>
         </div>
         
-        <div className="food-container">
+        <div className={`food-container ${animationClass}`}>
           {currentFoodItems.map(item => (
             <div
               key={item.id}
@@ -264,7 +274,7 @@ const ChildGames = () => {
         <div className="drop-zones">
           <div 
             ref={healthyZoneRef}
-            className="drop-zone healthy-zone"
+            className={`drop-zone healthy-zone ${showFeedback && isCorrect && draggedItem?.type === 'healthy' ? 'pulsing' : ''}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, 'healthy')}
             onClick={() => draggedItem && handleDirectSelection(draggedItem, 'healthy')}
@@ -275,7 +285,7 @@ const ChildGames = () => {
           
           <div 
             ref={unhealthyZoneRef}
-            className="drop-zone unhealthy-zone"
+            className={`drop-zone unhealthy-zone ${showFeedback && isCorrect && draggedItem?.type === 'unhealthy' ? 'pulsing' : ''}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, 'unhealthy')}
             onClick={() => draggedItem && handleDirectSelection(draggedItem, 'unhealthy')}
@@ -286,8 +296,16 @@ const ChildGames = () => {
         </div>
         
         {showFeedback && (
-          <div className={`feedback-message ${isCorrect ? 'correct' : 'incorrect'}`} role="alert">
-            {feedbackMessage}
+          <div className={`visual-feedback-container ${isCorrect ? 'correct' : 'incorrect'}`} role="alert">
+            <div className="feedback-icon">{feedbackImage}</div>
+            <div className="feedback-message">{feedbackMessage}</div>
+            {isCorrect && (
+              <div className="stars-container">
+                <span className="star">⭐</span>
+                <span className="star delayed-1">⭐</span>
+                <span className="star delayed-2">⭐</span>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -298,6 +316,123 @@ const ChildGames = () => {
         <p>غذاهای سالم مانند میوه، سبزیجات، شیر و آب را به سمت صورت خندان بکشید.</p>
         <p>غذاهای ناسالم مانند شکلات، چیپس، پفک و نوشابه را به سمت صورت ناراحت بکشید.</p>
       </div>
+      
+      {/* Add CSS for visual feedback */}
+      <style jsx>{`
+        .visual-feedback-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 15px;
+          border-radius: 10px;
+          margin-top: 20px;
+          animation: fadeIn 0.3s ease-in-out;
+          position: relative;
+        }
+        
+        .visual-feedback-container.correct {
+          background-color: rgba(76, 175, 80, 0.2);
+          border: 2px solid #4CAF50;
+        }
+        
+        .visual-feedback-container.incorrect {
+          background-color: rgba(244, 67, 54, 0.2);
+          border: 2px solid #F44336;
+        }
+        
+        .feedback-icon {
+          font-size: 3rem;
+          margin-bottom: 10px;
+          animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .feedback-message {
+          font-size: 1.2rem;
+          font-weight: bold;
+        }
+        
+        .stars-container {
+          position: absolute;
+          top: -20px;
+          right: 0;
+          left: 0;
+          display: flex;
+          justify-content: center;
+          pointer-events: none;
+        }
+        
+        .star {
+          font-size: 2rem;
+          animation: float 1.5s ease-in-out infinite, fadeInOut 2s ease-in-out;
+          margin: 0 5px;
+        }
+        
+        .delayed-1 {
+          animation-delay: 0.3s;
+        }
+        
+        .delayed-2 {
+          animation-delay: 0.6s;
+        }
+        
+        .correct-answer-animation {
+          animation: success-shake 0.5s ease-in-out;
+        }
+        
+        .wrong-answer-animation {
+          animation: error-shake 0.5s ease-in-out;
+        }
+        
+        .pulsing {
+          animation: pulse 0.5s ease-in-out 2;
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: scale(0.8); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes pop {
+          0% { transform: scale(0); }
+          70% { transform: scale(1.2); }
+          100% { transform: scale(1); }
+        }
+        
+        @keyframes float {
+          0% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+          100% { transform: translateY(0); }
+        }
+        
+        @keyframes fadeInOut {
+          0% { opacity: 0; }
+          20% { opacity: 1; }
+          80% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        
+        @keyframes success-shake {
+          0% { transform: scale(1); }
+          25% { transform: scale(1.05) rotate(2deg); }
+          50% { transform: scale(1.1) rotate(-2deg); }
+          75% { transform: scale(1.05) rotate(1deg); }
+          100% { transform: scale(1) rotate(0); }
+        }
+        
+        @keyframes error-shake {
+          0% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          50% { transform: translateX(5px); }
+          75% { transform: translateX(-3px); }
+          100% { transform: translateX(0); }
+        }
+        
+        @keyframes pulse {
+          0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+          50% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+      `}</style>
     </div>
   );
 };
