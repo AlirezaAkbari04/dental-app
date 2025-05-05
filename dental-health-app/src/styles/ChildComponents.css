@@ -1,460 +1,1068 @@
-/* ChildComponents.css - Styles for child dashboard components */
+/* ChildComponents.css with Parent Dashboard colors */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap');
 
-/* Common styles */
-.welcome-banner {
-    background-color: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .welcome-banner h1 {
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-    font-size: 1.8rem;
-  }
-  
-  .welcome-banner p {
-    color: #666;
-    font-size: 1.1rem;
-  }
-  
-  /* ===== Child Home Styles ===== */
-  .child-home-container {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-  
-  .achievement-summary {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .achievement-card {
-    background-color: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s;
-  }
-  
-  .achievement-card:hover {
-    transform: translateY(-5px);
-  }
-  
-  .achievement-icon {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .achievement-value {
-    font-size: 2rem;
-    font-weight: bold;
-    color: var(--primary-color);
-  }
-  
-  .achievement-label {
-    color: #666;
-    font-size: 1rem;
-  }
-  
-  .medals-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .medals-section h2 {
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-    font-size: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 0.5rem;
-  }
-  
-  .medals-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1rem;
-  }
-  
-  .medal-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    border-radius: 8px;
-    background-color: var(--light-gray);
-    position: relative;
-    opacity: 0.7;
-    transition: all 0.3s;
-  }
-  
-  .medal-card.earned {
-    background-color: var(--primary-light);
-    opacity: 1;
-    border: 1px solid var(--primary-color);
-  }
-  
-  .medal-card:hover {
-    transform: scale(1.02);
-  }
-  
-  .medal-icon {
-    font-size: 2rem;
-  }
-  
-  .medal-info {
-    flex: 1;
-  }
-  
-  .medal-name {
-    font-size: 1.1rem;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-  }
-  
-  .medal-description {
-    font-size: 0.9rem;
-    color: #666;
-  }
-  
-  .earned-badge {
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    background-color: var(--primary-color);
-    color: white;
-    font-size: 0.8rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-weight: 500;
-  }
-  
-  .tip-of-day {
-    background-color: var(--secondary-light);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border-right: 4px solid var(--secondary-color);
-  }
-  
-  .tip-of-day h3 {
-    color: var(--secondary-color);
-    margin-bottom: 1rem;
-  }
-  
-  .tip-content {
-    line-height: 1.6;
-  }
-  
-  /* ===== Brush Reminder Styles ===== */
-  .brush-reminder-container {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-  
-  .brush-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .brush-section h2 {
-    color: var(--primary-color);
-    margin-bottom: 1.5rem;
-    font-size: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 0.5rem;
-  }
-  
+:root {
+  --primary-color: #2196f3;
+  --primary-light: #e3f2fd;
+  --primary-dark: #1976d2;
+  --secondary-color: #4caf50;
+  --secondary-light: #e8f5e9;
+  --accent-color: #ff5722;
+  --accent-light: #ffccbc;
+  --text-color: #333;
+  --light-gray: #f5f5f5;
+  --border-color: #ddd;
+  --error-color: #f44336;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --info-color: #2196f3;
+}
+
+/* Brush Reminder Styles (Mobile Optimized) */
+.brush-reminder-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.brush-section {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.brush-section h2 {
+  color: var(--primary-color);
+  margin-bottom: 1.25rem;
+  font-size: 1.3rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+/* Alarm Cards */
+.alarm-cards {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-direction: column;
+}
+
+.alarm-card {
+  flex: 1;
+  background-color: var(--light-gray);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.3s;
+}
+
+.alarm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.alarm-header h3 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.alarm-time {
+  text-align: center;
+}
+
+.alarm-time input {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  font-size: 1.1rem;
+  text-align: center;
+  width: 100%;
+  max-width: 150px;
+  font-family: 'Vazirmatn', sans-serif;
+}
+
+/* Toggle switch styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--primary-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* Timer section */
+.timer-section {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.timer-section h2 {
+  color: var(--primary-color);
+  margin-bottom: 1.25rem;
+  font-size: 1.3rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+/* Teeth quadrants */
+.teeth-quadrants {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.quadrant {
+  background-color: var(--light-gray);
+  border-radius: 8px;
+  padding: 0.8rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+}
+
+.quadrant:hover {
+  background-color: #e0e0e0;
+}
+
+.quadrant.selected {
+  background-color: var(--primary-light);
+  border: 2px solid var(--primary-color);
+  font-weight: 500;
+}
+
+/* Timer display */
+.timer-display {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.timer-time {
+  font-size: 2.5rem;
+  font-weight: bold;
+  font-family: monospace;
+}
+
+.hourglass-animation {
+  height: 80px;
+  width: 50px;
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hourglass-sand {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--primary-color);
+  height: 100%;
+  width: 100%;
+  transition: height 1s linear;
+}
+
+/* Timer controls */
+.timer-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.timer-button {
+  flex: 1;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Vazirmatn', sans-serif;
+}
+
+.start-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.start-button:hover {
+  background-color: var(--primary-dark);
+}
+
+.stop-button {
+  background-color: var(--error-color);
+  color: white;
+}
+
+.stop-button:hover {
+  background-color: #d32f2f;
+}
+
+.reset-button {
+  background-color: var(--light-gray);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.reset-button:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.reset-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Congratulations overlay */
+.congrats-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.congrats-content {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  width: 90%;
+  max-width: 320px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.congrats-content h3 {
+  color: var(--primary-color);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.reward-info {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.reward-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.reward-icon {
+  font-size: 1.5rem;
+}
+
+.congrats-button {
+  padding: 0.75rem 2rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Vazirmatn', sans-serif;
+}
+
+.congrats-button:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Educational video section */
+.educational-video {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.educational-video h3 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.video-container {
+  background-color: var(--light-gray);
+  border-radius: 8px;
+  padding: 1rem;
+  height: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.video-placeholder {
+  text-align: center;
+  color: #666;
+}
+
+/* Audio error message */
+.audio-error-message {
+  background-color: #fff3e0;
+  border: 1px solid #ffcc80;
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #e65100;
+  font-size: 0.9rem;
+}
+
+/* Larger screens */
+@media (min-width: 768px) {
   .alarm-cards {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .alarm-card {
-    flex: 1;
-    background-color: var(--light-gray);
-    border-radius: 8px;
-    padding: 1rem;
-    transition: all 0.3s;
-  }
-  
-  .alarm-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-  
-  .alarm-header h3 {
-    font-size: 1.2rem;
-    font-weight: 500;
-  }
-  
-  .alarm-time {
-    text-align: center;
-  }
-  
-  .alarm-time input {
-    padding: 0.5rem;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
-    font-size: 1.2rem;
-    text-align: center;
-    width: 100%;
-  }
-  
-  /* Toggle switch styles */
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 48px;
-    height: 24px;
-  }
-  
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-  }
-  
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-  }
-  
-  input:checked + .slider {
-    background-color: var(--primary-color);
-  }
-  
-  input:focus + .slider {
-    box-shadow: 0 0 1px var(--primary-color);
-  }
-  
-  input:checked + .slider:before {
-    transform: translateX(24px);
-  }
-  
-  .slider.round {
-    border-radius: 34px;
-  }
-  
-  .slider.round:before {
-    border-radius: 50%;
-  }
-  
-  /* Timer styles */
-  .timer-section {
-    background-color: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    position: relative;
-  }
-  
-  .timer-section h2 {
-    color: var(--primary-color);
-    margin-bottom: 1.5rem;
-    font-size: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 0.5rem;
-  }
-  
-  .teeth-quadrants {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .quadrant {
-    background-color: var(--light-gray);
-    border-radius: 8px;
-    padding: 1rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-  
-  .quadrant:hover {
-    background-color: #e0e0e0;
-  }
-  
-  .quadrant.selected {
-    background-color: var(--primary-light);
-    border: 2px solid var(--primary-color);
-    font-weight: 500;
-  }
-  
-  .timer-display {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .timer-time {
-    font-size: 3rem;
-    font-weight: bold;
-    font-family: monospace;
-  }
-  
-  .hourglass-animation {
-    height: 100px;
-    width: 60px;
-    background-color: #e0e0e0;
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .hourglass-sand {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: var(--primary-color);
-    height: 100%;
-    width: 100%;
-    transition: height 1s linear;
+    flex-direction: row;
   }
   
   .timer-controls {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    flex-direction: row;
+  }
+  
+  .timer-display {
+    flex-direction: row;
+  }
+  
+  .quadrant {
+    font-size: 1rem;
+    padding: 1rem;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) {
+  .quadrant {
+    min-height: 60px;
+    padding: 1rem;
   }
   
   .timer-button {
-    flex: 1;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-family: 'Vazirmatn', sans-serif;
+    min-height: 50px;
   }
   
-  .start-button {
-    background-color: var(--primary-color);
-    color: white;
+  .alarm-time input {
+    min-height: 44px;
   }
-  
-  .start-button:hover {
-    background-color: #43a047;
+}
+
+/* RTL support for Persian */
+[dir="rtl"] .slider:before {
+  left: auto;
+  right: 4px;
+}
+
+[dir="rtl"] input:checked + .slider:before {
+  transform: translateX(-24px);
+}
+
+/* Animations */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
   }
-  
-  .stop-button {
-    background-color: var(--error-color);
-    color: white;
+  50% {
+    transform: scale(1.05);
   }
-  
-  .stop-button:hover {
-    background-color: #d32f2f;
+  100% {
+    transform: scale(1);
   }
-  
-  .reset-button {
-    background-color: var(--light-gray);
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
+}
+
+.start-button {
+  animation: pulse 2s infinite;
+}
+
+.start-button:hover {
+  animation: none;
+}
+
+/* ===== Child Games Styles ===== */
+/* Games styles for mobile */
+.games-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.game-section {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.game-section h2 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.game-score {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  background-color: var(--primary-light);
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.score-label {
+  font-weight: 500;
+}
+
+.score-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.game-instruction {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+  color: #666;
+  background-color: var(--light-gray);
+  padding: 0.8rem;
+  border-radius: 8px;
+}
+
+/* Food items */
+.food-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.food-item {
+  background-color: var(--light-gray);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: grab;
+  transition: all 0.3s;
+  width: 80px;
+  height: 80px;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+
+.food-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.food-item.dragging {
+  opacity: 0.7;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.food-emoji {
+  font-size: 2rem;
+}
+
+.food-name {
+  font-size: 0.9rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Drop zones */
+.drop-zones {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.drop-zone {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.healthy-zone {
+  background-color: var(--primary-light);
+  border: 2px solid var(--primary-color);
+}
+
+.unhealthy-zone {
+  background-color: var(--accent-light);
+  border: 2px solid var(--accent-color);
+}
+
+.drop-zone.highlight-zone {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.zone-emoji {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.zone-label {
+  font-weight: 500;
+}
+
+/* Feedback message */
+.feedback-message {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.feedback-message.correct {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.feedback-message.incorrect {
+  background-color: var(--accent-light);
+  color: var(--accent-color);
+}
+
+/* Game info */
+.game-info {
+  background-color: var(--primary-light);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.game-info h3 {
+  color: var(--primary-dark);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.game-info p {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
-  
-  .reset-button:hover:not(:disabled) {
-    background-color: #e0e0e0;
+  to {
+    opacity: 1;
   }
-  
-  .reset-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  .congrats-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
+}
+
+/* Responsive styling for larger screens */
+@media (min-width: 768px) {
+  .food-container {
     justify-content: center;
-    align-items: center;
-    z-index: 10;
   }
   
-  .congrats-content {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 12px;
-    text-align: center;
-    width: 80%;
-    max-width: 400px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  .food-item {
+    width: 100px;
+    height: 100px;
   }
   
-  .congrats-content h3 {
-    color: var(--primary-color);
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+  .drop-zone {
+    width: 150px;
+    height: 150px;
   }
   
-  .reward-info {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    margin: 1.5rem 0;
+  .zone-emoji {
+    font-size: 4rem;
+  }
+}
+
+/* Touch device optimization */
+@media (hover: none) {
+  .food-item {
+    touch-action: none;
+    padding: 0.8rem;
   }
   
-  .reward-item {
-    display: flex;
-    align-items: center;
+  .drop-zone {
+    touch-action: none;
+  }
+  
+  .food-item:active {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* ===== Child Home Styles ===== */
+.child-home-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem;
+}
+
+.welcome-banner {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-banner h1 {
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.welcome-banner p {
+  color: #666;
+  font-size: 1rem;
+}
+
+.achievement-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .achievement-summary {
+    flex-direction: row;
+  }
+}
+
+.achievement-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+}
+
+.achievement-card:hover {
+  transform: translateY(-5px);
+}
+
+.achievement-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.achievement-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.achievement-label {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.medals-section {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.medals-section h2 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.medals-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 576px) {
+  .medals-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 992px) {
+  .medals-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.medal-card {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem;
+  border-radius: 8px;
+  background-color: var(--light-gray);
+  position: relative;
+  opacity: 0.7;
+  transition: all 0.3s;
+}
+
+.medal-card.earned {
+  background-color: var(--primary-light);
+  opacity: 1;
+  border: 1px solid var(--primary-color);
+}
+
+.medal-card:hover {
+  transform: scale(1.02);
+}
+
+.medal-icon {
+  font-size: 1.8rem;
+  min-width: 35px;
+  text-align: center;
+}
+
+.medal-info {
+  flex: 1;
+}
+
+.medal-name {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  margin-top: 0;
+}
+
+.medal-description {
+  font-size: 0.8rem;
+  color: #666;
+  margin: 0;
+}
+
+.earned-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.tip-of-day {
+  background-color: var(--primary-light);
+  border-radius: 12px;
+  padding: 1.2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-right: 4px solid var(--primary-color);
+}
+
+.tip-of-day h3 {
+  color: var(--primary-color);
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+  font-size: 1.1rem;
+}
+
+.tip-content {
+  line-height: 1.5;
+}
+
+.tip-content p {
+  margin-bottom: 0.5rem;
+}
+
+/* ===== Child Videos Styles ===== */
+.videos-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem;
+}
+
+.videos-container h2 {
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.video-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .video-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .video-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.video-card {
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.video-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.video-thumbnail {
+  height: 180px;
+  background-color: var(--light-gray);
+  position: relative;
+}
+
+.thumbnail-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.video-icon {
+  font-size: 3rem;
+  color: #666;
+}
+
+.video-info {
+  padding: 1rem;
+}
+
+.video-card-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+}
+
+.video-card-description {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.video-player-container {
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.video-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: var(--primary-light);
+}
+
+.back-button {
+  background-color: white;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Vazirmatn', sans-serif;
+}
+
+.back-button:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.video-title {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.video-player {
+  height: 300px;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .video-player {
+    height: 400px;
+  }
+}
+
+.video-placeholder {
+  text-align: center;
+  color: white;
+}
+
+.video-description {
+  padding: 1rem;
+  background-color: white;
+  line-height: 1.6;
+}
+
+.video-tips {
+  background-color: var(--primary-light);
+  border-radius: 12px;
+  padding: 1.2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.video-tips h3 {
+  color: var(--primary-color);
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.video-tips ul {
+  padding-right: 1.5rem;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.video-tips li {
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .video-header {
+    flex-direction: column;
     gap: 0.5rem;
-    font-weight: 500;
   }
   
-  .reward-icon {
-    font-size: 1.5rem;
+  .video-title {
+    text-align: center;
   }
-  
-  .congrats-button {
-    padding: 0.75rem 2rem;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 8px;}
+}

@@ -11,6 +11,7 @@ const BrushReminder = () => {
   const [timeLeft, setTimeLeft] = useState(120); // 2 minutes in seconds
   const [showCongrats, setShowCongrats] = useState(false);
   const [selectedQuadrants, setSelectedQuadrants] = useState([]);
+  const [audioError, setAudioError] = useState(false);
   
   const audioRef = useRef(null);
   const congratsAudioRef = useRef(null);
@@ -18,15 +19,23 @@ const BrushReminder = () => {
   
   // Load saved alarms from localStorage
   useEffect(() => {
-    const savedAlarms = JSON.parse(localStorage.getItem('brushAlarms') || '{}');
-    if (Object.keys(savedAlarms).length > 0) {
-      setAlarms(savedAlarms);
+    try {
+      const savedAlarms = JSON.parse(localStorage.getItem('brushAlarms') || '{}');
+      if (Object.keys(savedAlarms).length > 0) {
+        setAlarms(savedAlarms);
+      }
+    } catch (error) {
+      console.error("Error loading alarms from localStorage:", error);
     }
   }, []);
   
   // Save alarms to localStorage when changed
   useEffect(() => {
-    localStorage.setItem('brushAlarms', JSON.stringify(alarms));
+    try {
+      localStorage.setItem('brushAlarms', JSON.stringify(alarms));
+    } catch (error) {
+      console.error("Error saving alarms to localStorage:", error);
+    }
   }, [alarms]);
   
   // Handle timer countdown
@@ -35,7 +44,10 @@ const BrushReminder = () => {
       timerIntervalRef.current = setInterval(() => {
         setTimeLeft(prev => prev - 1);
       }, 1000);
+      
+      console.log("Timer running, time left:", timeLeft);
     } else if (timerRunning && timeLeft === 0) {
+      console.log("Timer finished");
       stopTimer();
       showCongratulations();
     }
@@ -43,6 +55,7 @@ const BrushReminder = () => {
     return () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
       }
     };
   }, [timerRunning, timeLeft]);
@@ -58,60 +71,82 @@ const BrushReminder = () => {
   };
   
   const startTimer = () => {
+    console.log("Starting timer");
     setTimerRunning(true);
     setTimeLeft(120);
     setShowCongrats(false);
+    setAudioError(false);
     
     // Start playing music
     if (audioRef.current) {
-      audioRef.current.play();
+      audioRef.current.play().catch(error => {
+        console.error("Error playing audio:", error);
+        setAudioError(true);
+        // Continue even if audio fails
+      });
     }
   };
   
   const stopTimer = () => {
+    console.log("Stopping timer");
     setTimerRunning(false);
     
     // Stop music
     if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+      try {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      } catch (error) {
+        console.error("Error stopping audio:", error);
+      }
     }
     
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
     }
   };
   
   const resetTimer = () => {
+    console.log("Resetting timer");
     stopTimer();
     setTimeLeft(120);
+    setSelectedQuadrants([]);
   };
   
   const showCongratulations = () => {
+    console.log("Showing congratulations, quadrants:", selectedQuadrants);
     setShowCongrats(true);
     
     // Play congratulations sound
     if (congratsAudioRef.current) {
-      congratsAudioRef.current.play();
+      congratsAudioRef.current.play().catch(error => {
+        console.error("Error playing congratulations audio:", error);
+        // Continue even if audio fails
+      });
     }
     
     // Add to achievements
-    const achievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
-    
-    const updatedAchievements = {
-      stars: (achievements.stars || 0) + 1,
-      regularBrushing: (achievements.regularBrushing || 0) + 1,
-      diamonds: (achievements.diamonds || 0),
-      cleanedAreas: (achievements.cleanedAreas || 0) + selectedQuadrants.length,
-      healthySnacks: (achievements.healthySnacks || 0)
-    };
-    
-    // Extra diamond for cleaning all 4 quadrants
-    if (selectedQuadrants.length === 4) {
-      updatedAchievements.diamonds += 1;
+    try {
+      const achievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
+      
+      const updatedAchievements = {
+        stars: (achievements.stars || 0) + 1,
+        regularBrushing: (achievements.regularBrushing || 0) + 1,
+        diamonds: (achievements.diamonds || 0),
+        cleanedAreas: (achievements.cleanedAreas || 0) + selectedQuadrants.length,
+        healthySnacks: (achievements.healthySnacks || 0)
+      };
+      
+      // Extra diamond for cleaning all 4 quadrants
+      if (selectedQuadrants.length === 4) {
+        updatedAchievements.diamonds += 1;
+      }
+      
+      localStorage.setItem('childAchievements', JSON.stringify(updatedAchievements));
+    } catch (error) {
+      console.error("Error updating achievements:", error);
     }
-    
-    localStorage.setItem('childAchievements', JSON.stringify(updatedAchievements));
   };
   
   const toggleQuadrant = (quadrant) => {
@@ -196,24 +231,36 @@ const BrushReminder = () => {
           <div 
             className={`quadrant top-right ${selectedQuadrants.includes('top-right') ? 'selected' : ''}`}
             onClick={() => toggleQuadrant('top-right')}
+            role="button"
+            aria-pressed={selectedQuadrants.includes('top-right')}
+            tabIndex={0}
           >
             بالا راست
           </div>
           <div 
             className={`quadrant top-left ${selectedQuadrants.includes('top-left') ? 'selected' : ''}`}
             onClick={() => toggleQuadrant('top-left')}
+            role="button"
+            aria-pressed={selectedQuadrants.includes('top-left')}
+            tabIndex={0}
           >
             بالا چپ
           </div>
           <div 
             className={`quadrant bottom-right ${selectedQuadrants.includes('bottom-right') ? 'selected' : ''}`}
             onClick={() => toggleQuadrant('bottom-right')}
+            role="button"
+            aria-pressed={selectedQuadrants.includes('bottom-right')}
+            tabIndex={0}
           >
             پایین راست
           </div>
           <div 
             className={`quadrant bottom-left ${selectedQuadrants.includes('bottom-left') ? 'selected' : ''}`}
             onClick={() => toggleQuadrant('bottom-left')}
+            role="button"
+            aria-pressed={selectedQuadrants.includes('bottom-left')}
+            tabIndex={0}
           >
             پایین چپ
           </div>
@@ -228,43 +275,65 @@ const BrushReminder = () => {
                 height: `${(timeLeft / 120) * 100}%`,
                 transition: timerRunning ? 'height 1s linear' : 'none'
               }}
+              aria-hidden="true"
             ></div>
           </div>
         </div>
         
         <div className="timer-controls">
           {!timerRunning ? (
-            <button className="timer-button start-button" onClick={startTimer}>
+            <button 
+              className="timer-button start-button" 
+              onClick={startTimer}
+              aria-label="شروع مسواک زدن"
+            >
               شروع مسواک زدن
             </button>
           ) : (
-            <button className="timer-button stop-button" onClick={stopTimer}>
+            <button 
+              className="timer-button stop-button" 
+              onClick={stopTimer}
+              aria-label="توقف"
+            >
               توقف
             </button>
           )}
-          <button className="timer-button reset-button" onClick={resetTimer} disabled={timerRunning}>
+          <button 
+            className="timer-button reset-button" 
+            onClick={resetTimer} 
+            disabled={timerRunning}
+            aria-label="شروع مجدد"
+            style={{ opacity: timerRunning ? 0.5 : 1 }}
+          >
             شروع مجدد
           </button>
         </div>
         
+        {audioError && (
+          <div className="audio-error-message">
+            خطا در پخش موسیقی. تایمر بدون موسیقی ادامه می‌دهد.
+          </div>
+        )}
+        
         {showCongrats && (
-          <div className="congrats-overlay">
+          <div className="congrats-overlay" role="dialog" aria-labelledby="congrats-title">
             <div className="congrats-content">
-              <h3>آفرین!</h3>
+              <h3 id="congrats-title">آفرین!</h3>
               <p>تو مسواک زدن رو با موفقیت به پایان رسوندی</p>
               <div className="reward-info">
                 <span className="reward-item">
-                  <span className="reward-icon">⭐</span> 1 ستاره
+                  <span className="reward-icon" aria-hidden="true">⭐</span> 1 ستاره
                 </span>
                 {selectedQuadrants.length === 4 && (
                   <span className="reward-item">
-                    <span className="reward-icon">💎</span> 1 الماس
+                    <span className="reward-icon" aria-hidden="true">💎</span> 1 الماس
                   </span>
                 )}
               </div>
               <button 
                 className="congrats-button"
                 onClick={() => setShowCongrats(false)}
+                aria-label="بستن"
               >
                 بستن
               </button>
@@ -276,7 +345,7 @@ const BrushReminder = () => {
       <div className="educational-video">
         <h3>ویدیوی آموزش مسواک زدن</h3>
         <div className="video-container">
-          {/* این قسمت برای نمایش ویدیو است که باید افزوده شود */}
+          {/* In a real app, use video element with proper src attribute */}
           <div className="video-placeholder">
             <p>ویدیوی آموزشی مسواک زدن در اینجا قرار می‌گیرد</p>
           </div>
@@ -284,12 +353,14 @@ const BrushReminder = () => {
       </div>
       
       {/* Audio elements for timer music and congratulations */}
-      <audio ref={audioRef} loop>
-        <source src="/brushing-music.mp3" type="audio/mpeg" />
+      <audio ref={audioRef} loop preload="auto">
+        <source src="/assets/sounds/brushing-music.mp3" type="audio/mpeg" />
+        <source src="/assets/sounds/brushing-music.ogg" type="audio/ogg" />
       </audio>
       
-      <audio ref={congratsAudioRef}>
-        <source src="/applause.mp3" type="audio/mpeg" />
+      <audio ref={congratsAudioRef} preload="auto">
+        <source src="/assets/sounds/applause.mp3" type="audio/mpeg" />
+        <source src="/assets/sounds/applause.ogg" type="audio/ogg" />
       </audio>
     </div>
   );
