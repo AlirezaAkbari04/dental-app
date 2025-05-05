@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './ChildComponents.css';
+import '../../../styles/ChildComponents.css';
 
 const ChildVideos = () => {
   const [selectedVideo, setSelectedVideo] = useState(null);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/ProfileForm.css';
+import '../../styles/ProfileForm.css';
 import logoImage from '../logo.svg';
 
 const ProfileForm = ({ title, children, onSubmit }) => {

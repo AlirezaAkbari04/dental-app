@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/Auth.css';
-import logoImage from '../logo.svg';
+import '../../styles/Auth.css'; // Changed from '../styles/Auth.css'
+import logoImage from '../../logo.svg'; // Changed from '../logo.svg'
 
 const RoleSelection = () => {
   const navigate = useNavigate();

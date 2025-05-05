@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/ChildDashboard.css';
+import '../../styles/ChildDashboard.css';
 import logoImage from '../logo.svg';
 import ChildHome from './child/ChildHome';
 import BrushReminder from './child/BrushReminder';

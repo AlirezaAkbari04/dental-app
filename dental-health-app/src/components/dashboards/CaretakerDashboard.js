@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/CaretakerDashboard.css';
-import logoImage from '../logo.svg';
+import '../../styles/CaretakerDashboard.css'; // Changed from '../styles/CaretakerDashboard.css'
+import logoImage from '../../logo.svg'; // Changed from '../logo.svg'
 import MySchools from './caretaker/MySchools';
 import StudentsList from './caretaker/StudentsList';
 import HealthReports from './caretaker/HealthReports';

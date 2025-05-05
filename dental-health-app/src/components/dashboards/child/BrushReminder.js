@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './ChildComponents.css';
+import '../../../styles/ChildComponents.css';
 
 const BrushReminder = () => {
   const [alarms, setAlarms] = useState({

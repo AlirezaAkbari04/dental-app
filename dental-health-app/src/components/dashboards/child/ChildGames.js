@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './ChildComponents.css';
+import '../../../styles/ChildComponents.css';
 
 const ChildGames = () => {
   const [draggedItem, setDraggedItem] = useState(null);
@@ -7,6 +7,7 @@ const ChildGames = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isCorrect, setIsCorrect] = useState(false);
+  const [currentFoodItems, setCurrentFoodItems] = useState([]);
   
   // Food items for the game
   const foodItems = [
@@ -24,6 +25,19 @@ const ChildGames = () => {
     { id: 12, name: 'نوشابه', type: 'unhealthy', emoji: '🥤' },
     { id: 13, name: 'آبمیوه صنعتی', type: 'unhealthy', emoji: '🧃' },
     { id: 14, name: 'لواشک', type: 'unhealthy', emoji: '🍬' }
+  ];
+
+  // Get random food items for the game
+  const getRandomFoodItems = () => {
+    // Shuffle the array and get first 4 items
+    return [...foodItems].sort(() => 0.5 - Math.random()).slice(0, 4);
+  };
+  
+  // Initialize game with random food items
+  useEffect(() => {
+    setCurrentFoodItems(getRandomFoodItems());
+  }, []);
+  
   // Drag and drop handlers
   const handleDragStart = (e, item) => {
     setDraggedItem(item);

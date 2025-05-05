@@ -528,10 +528,4 @@ const HealthReports = () => {
   );
 };
 
-export default HealthReports;]: checked
-        }));
-      }
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name
+export default HealthReports;

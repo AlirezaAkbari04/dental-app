@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import '../styles/Auth.css';
-import logoImage from '../logo.svg'; // Make sure the logo is saved as SVG in your project
+import '../../styles/Auth.css'; // Changed from '../styles/Auth.css'
+import logoImage from '../../logo.svg'; // Changed from '../logo.svg'
 
 const Login = () => {
   const [credentials, setCredentials] = useState('');

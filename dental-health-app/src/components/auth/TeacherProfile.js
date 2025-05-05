@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProfileForm from './ProfileForm';
-import '../styles/ProfileForm.css';
+import '../../styles/ProfileForm.css';
 
 const TeacherProfile = () => {
   const navigate = useNavigate();
@@ -33,7 +33,91 @@ const TeacherProfile = () => {
     }
   };
 
-export default TeacherProfile;
+  const handleCheckboxChange = (e) => {
+    const { value, checked } = e.target;
+    
+    if (checked) {
+      setFormData({
+        ...formData,
+        schoolTypes: [...formData.schoolTypes, value]
+      });
+    } else {
+      setFormData({
+        ...formData,
+        schoolTypes: formData.schoolTypes.filter(type => type !== value)
+      });
+    }
+    
+    // Clear error for schoolTypes when changing
+    if (errors.schoolTypes) {
+      setErrors({
+        ...errors,
+        schoolTypes: '',
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'لطفاً نام خود را وارد کنید';
+    }
+    
+    if (!formData.gender) {
+      newErrors.gender = 'لطفاً جنسیت خود را انتخاب کنید';
+    }
+    
+    if (!formData.careType) {
+      newErrors.careType = 'لطفاً نوع مراقبت را انتخاب کنید';
+    }
+    
+    if (!formData.daysPerWeek) {
+      newErrors.daysPerWeek = 'لطفاً تعداد روزهای فعالیت در هفته را وارد کنید';
+    } else if (isNaN(formData.daysPerWeek) || formData.daysPerWeek < 1 || formData.daysPerWeek > 7) {
+      newErrors.daysPerWeek = 'تعداد روزها باید بین 1 تا 7 باشد';
+    }
+    
+    if (!formData.isRegular) {
+      newErrors.isRegular = 'لطفاً منظم یا نامنظم بودن فعالیت را مشخص کنید';
+    }
+    
+    if (!formData.daysPerSchool) {
+      newErrors.daysPerSchool = 'لطفاً تعداد روزهای حضور در هر مدرسه را وارد کنید';
+    } else if (isNaN(formData.daysPerSchool) || formData.daysPerSchool < 1 || formData.daysPerSchool > 7) {
+      newErrors.daysPerSchool = 'تعداد روزها باید بین 1 تا 7 باشد';
+    }
+    
+    if (!formData.schoolsCount) {
+      newErrors.schoolsCount = 'لطفاً تعداد مدارس تحت پوشش را وارد کنید';
+    } else if (isNaN(formData.schoolsCount) || formData.schoolsCount < 1) {
+      newErrors.schoolsCount = 'تعداد مدارس باید حداقل 1 باشد';
+    }
+    
+    if (formData.schoolTypes.length === 0) {
+      newErrors.schoolTypes = 'لطفاً نوع مدارس تحت پوشش را انتخاب کنید';
+    }
+    
+    return newErrors;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const newErrors = validateForm();
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    // For demo purposes, store in localStorage and log
+    localStorage.setItem('teacherProfile', JSON.stringify(formData));
+    console.log('Teacher profile saved:', formData);
+    
+    // Navigate to teacher dashboard
+    navigate('/dashboard/caretaker');
+  };
 
   return (
     <ProfileForm 
@@ -226,88 +310,4 @@ export default TeacherProfile;
   );
 };
 
-  const handleCheckboxChange = (e) => {
-    const { value, checked } = e.target;
-    
-    if (checked) {
-      setFormData({
-        ...formData,
-        schoolTypes: [...formData.schoolTypes, value]
-      });
-    } else {
-      setFormData({
-        ...formData,
-        schoolTypes: formData.schoolTypes.filter(type => type !== value)
-      });
-    }
-    
-    // Clear error for schoolTypes when changing
-    if (errors.schoolTypes) {
-      setErrors({
-        ...errors,
-        schoolTypes: '',
-      });
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'لطفاً نام خود را وارد کنید';
-    }
-    
-    if (!formData.gender) {
-      newErrors.gender = 'لطفاً جنسیت خود را انتخاب کنید';
-    }
-    
-    if (!formData.careType) {
-      newErrors.careType = 'لطفاً نوع مراقبت را انتخاب کنید';
-    }
-    
-    if (!formData.daysPerWeek) {
-      newErrors.daysPerWeek = 'لطفاً تعداد روزهای فعالیت در هفته را وارد کنید';
-    } else if (isNaN(formData.daysPerWeek) || formData.daysPerWeek < 1 || formData.daysPerWeek > 7) {
-      newErrors.daysPerWeek = 'تعداد روزها باید بین 1 تا 7 باشد';
-    }
-    
-    if (!formData.isRegular) {
-      newErrors.isRegular = 'لطفاً منظم یا نامنظم بودن فعالیت را مشخص کنید';
-    }
-    
-    if (!formData.daysPerSchool) {
-      newErrors.daysPerSchool = 'لطفاً تعداد روزهای حضور در هر مدرسه را وارد کنید';
-    } else if (isNaN(formData.daysPerSchool) || formData.daysPerSchool < 1 || formData.daysPerSchool > 7) {
-      newErrors.daysPerSchool = 'تعداد روزها باید بین 1 تا 7 باشد';
-    }
-    
-    if (!formData.schoolsCount) {
-      newErrors.schoolsCount = 'لطفاً تعداد مدارس تحت پوشش را وارد کنید';
-    } else if (isNaN(formData.schoolsCount) || formData.schoolsCount < 1) {
-      newErrors.schoolsCount = 'تعداد مدارس باید حداقل 1 باشد';
-    }
-    
-    if (formData.schoolTypes.length === 0) {
-      newErrors.schoolTypes = 'لطفاً نوع مدارس تحت پوشش را انتخاب کنید';
-    }
-    
-    return newErrors;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    const newErrors = validateForm();
-    
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-    
-    // For demo purposes, store in localStorage and log
-    localStorage.setItem('teacherProfile', JSON.stringify(formData));
-    console.log('Teacher profile saved:', formData);
-    
-    // Navigate to teacher dashboard
-    navigate('/dashboard/caretaker');
-  };
+export default TeacherProfile;

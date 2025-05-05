@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProfileForm from './ProfileForm';
-import '../styles/ProfileForm.css';
+import '../../styles/ProfileForm.css';
 
 const ParentProfile = () => {
   const navigate = useNavigate();

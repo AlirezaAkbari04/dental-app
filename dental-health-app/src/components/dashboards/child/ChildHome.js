@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './ChildComponents.css';
+import '../../../styles/ChildComponents.css';
 
 const ChildHome = ({ childName }) => {
   const [achievements, setAchievements] = useState({
