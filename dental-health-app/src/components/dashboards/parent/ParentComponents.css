@@ -669,3 +669,30 @@
   .reminder-tips li {
     margin-bottom: 0.5rem;
   }
+  .fluoride-brochure-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin: 20px 0;
+  }
+  
+  .fluoride-brochure-image {
+    width: 100%;
+    max-width: 800px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+  
+  @media (min-width: 992px) {
+    .fluoride-brochure-container {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .fluoride-brochure-image {
+      width: 48%;
+    }
+  }

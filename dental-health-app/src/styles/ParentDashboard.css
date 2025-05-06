@@ -221,3 +221,22 @@
     padding: 1rem;
   }
 }
+.side-by-side-images {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.tooth-image {
+  flex: 1;
+  text-align: center;
+}
+
+.anatomy-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}

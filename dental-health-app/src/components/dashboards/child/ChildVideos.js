@@ -11,20 +11,6 @@ const ChildVideos = () => {
       description: 'در این ویدیو می‌آموزید که فیشور سیلنت چیست و چگونه از دندان‌های شما محافظت می‌کند.',
       thumbnail: '/video-thumbnails/fissure-sealant.jpg',
       videoUrl: '/videos/fissure-sealant.mp4',
-    },
-    {
-      id: 2,
-      title: 'اهمیت دندان‌های شیری',
-      description: 'چرا دندان‌های شیری مهم هستند و چرا باید از آنها مراقبت کنیم؟',
-      thumbnail: '/video-thumbnails/baby-teeth.jpg',
-      videoUrl: '/videos/baby-teeth.mp4',
-    },
-    {
-      id: 3,
-      title: 'فواید فلوراید و خمیردندان',
-      description: 'بیاموزید که فلوراید چیست و چگونه به سلامت دندان‌های شما کمک می‌کند.',
-      thumbnail: '/video-thumbnails/fluoride.jpg',
-      videoUrl: '/videos/fluoride.mp4',
     }
   ];
   

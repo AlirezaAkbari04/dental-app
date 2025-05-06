@@ -15,7 +15,6 @@ const ReminderSettings = ({ childName }) => {
     }
   });
   
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   
   // Load reminders from localStorage
@@ -24,9 +23,6 @@ const ReminderSettings = ({ childName }) => {
     if (Object.keys(savedReminders).length > 0) {
       setReminders(savedReminders);
     }
-    
-    const parentProfile = JSON.parse(localStorage.getItem('parentProfile') || '{}');
-    setPhoneNumber(parentProfile.phoneNumber || '');
   }, []);
   
   // Handle toggling reminder on/off
@@ -62,20 +58,10 @@ const ReminderSettings = ({ childName }) => {
     }));
   };
   
-  // Handle phone number change
-  const handlePhoneChange = (e) => {
-    setPhoneNumber(e.target.value);
-  };
-  
   // Handle saving all reminders
   const handleSaveReminders = () => {
-    // In a real app, would send to server/API
+    // In a real app, would save to local storage or database
     localStorage.setItem('parentReminders', JSON.stringify(reminders));
-    
-    // Update parent profile with phone number
-    const parentProfile = JSON.parse(localStorage.getItem('parentProfile') || '{}');
-    parentProfile.phoneNumber = phoneNumber;
-    localStorage.setItem('parentProfile', JSON.stringify(parentProfile));
     
     // Show success message
     setShowSuccess(true);
@@ -86,8 +72,8 @@ const ReminderSettings = ({ childName }) => {
   
   // Handle testing a reminder (for demo purposes)
   const handleTestReminder = (type) => {
-    // In a real app, would send test SMS
-    alert(`آزمایش پیامک برای ${reminders[type].message}`);
+    // In a real app, would show notification in the app
+    alert(`آزمایش اعلان برنامه: ${reminders[type].message}`);
   };
   
   return (
@@ -95,23 +81,8 @@ const ReminderSettings = ({ childName }) => {
       <div className="settings-header">
         <h2>تنظیمات یادآوری برای {childName}</h2>
         <p className="settings-description">
-          یادآوری‌های متنی به شماره موبایل شما ارسال خواهند شد.
+          یادآوری‌ها از طریق برنامه به شما نمایش داده خواهند شد.
         </p>
-      </div>
-      
-      <div className="phone-number-section">
-        <label htmlFor="phoneNumber">شماره موبایل:</label>
-        <div className="phone-input-container">
-          <input
-            type="tel"
-            id="phoneNumber"
-            value={phoneNumber}
-            onChange={handlePhoneChange}
-            placeholder="09123456789"
-            className="phone-input"
-            dir="ltr"
-          />
-        </div>
       </div>
       
       <div className="reminders-section">
@@ -142,13 +113,13 @@ const ReminderSettings = ({ childName }) => {
             </div>
             
             <div className="reminder-field">
-              <label>متن پیامک:</label>
+              <label>متن اعلان:</label>
               <input
                 type="text"
                 value={reminders.brushMorning.message}
                 onChange={(e) => handleMessageChange('brushMorning', e.target.value)}
                 disabled={!reminders.brushMorning.enabled}
-                placeholder="متن پیامک یادآوری"
+                placeholder="متن اعلان یادآوری"
               />
             </div>
           </div>
@@ -159,7 +130,7 @@ const ReminderSettings = ({ childName }) => {
               onClick={() => handleTestReminder('brushMorning')}
               disabled={!reminders.brushMorning.enabled}
             >
-              آزمایش پیامک
+              آزمایش اعلان
             </button>
           </div>
         </div>
@@ -189,13 +160,13 @@ const ReminderSettings = ({ childName }) => {
             </div>
             
             <div className="reminder-field">
-              <label>متن پیامک:</label>
+              <label>متن اعلان:</label>
               <input
                 type="text"
                 value={reminders.brushEvening.message}
                 onChange={(e) => handleMessageChange('brushEvening', e.target.value)}
                 disabled={!reminders.brushEvening.enabled}
-                placeholder="متن پیامک یادآوری"
+                placeholder="متن اعلان یادآوری"
               />
             </div>
           </div>
@@ -206,7 +177,7 @@ const ReminderSettings = ({ childName }) => {
               onClick={() => handleTestReminder('brushEvening')}
               disabled={!reminders.brushEvening.enabled}
             >
-              آزمایش پیامک
+              آزمایش اعلان
             </button>
           </div>
         </div>
@@ -227,11 +198,19 @@ const ReminderSettings = ({ childName }) => {
         </div>
       )}
       
+      <div className="reminder-info">
+        <div className="info-box">
+          <h3>نحوه دریافت یادآوری‌ها</h3>
+          <p>یادآوری‌ها در زمان‌های تنظیم شده به صورت اعلان در برنامه نمایش داده می‌شوند. برای دریافت یادآوری‌ها، لطفاً اعلان‌های برنامه را فعال نگه دارید.</p>
+        </div>
+      </div>
+      
       <div className="reminder-tips">
         <h3>نکات مفید</h3>
         <ul>
           <li>یادآوری مسواک صبح و شب به تنظیم عادت مسواک زدن منظم کمک می‌کند.</li>
           <li>هر 6 ماه یک بار به دندانپزشک مراجعه کنید.</li>
+          <li>برای دریافت بهترین نتیجه، گوشی خود را هنگام خواب در حالت بی‌صدا قرار ندهید تا اعلان‌های یادآوری را از دست ندهید.</li>
         </ul>
       </div>
     </div>

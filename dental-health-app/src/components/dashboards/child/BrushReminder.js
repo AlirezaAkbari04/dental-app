@@ -3,8 +3,8 @@ import '../../../styles/ChildComponents.css';
 
 const BrushReminder = () => {
   const [alarms, setAlarms] = useState({
-    morning: { hour: 7, minute: 30, enabled: true, ringtone: 'ringtone1' },
-    evening: { hour: 20, minute: 0, enabled: true, ringtone: 'ringtone1' }
+    morning: { hour: 7, minute: 30, enabled: true },
+    evening: { hour: 20, minute: 0, enabled: true }
   });
   
   const [timerRunning, setTimerRunning] = useState(false);
@@ -15,13 +15,6 @@ const BrushReminder = () => {
   const audioRef = useRef(null);
   const congratsAudioRef = useRef(null);
   const timerIntervalRef = useRef(null);
-  
-  // Available ringtones
-  const ringtones = [
-    { id: 'ringtone1', name: 'صدای زنگ 1', path: '/assets/sounds/ringtone1.mp3' },
-    { id: 'ringtone2', name: 'صدای زنگ 2', path: '/assets/sounds/ringtone2.mp3' },
-    { id: 'ringtone3', name: 'صدای زنگ 3', path: '/assets/sounds/ringtone3.mp3' },
-  ];
   
   // Load saved alarms from localStorage
   useEffect(() => {
@@ -81,16 +74,6 @@ const BrushReminder = () => {
         ...prev[alarmType],
         hour,
         minute
-      }
-    }));
-  };
-  
-  const handleRingtoneChange = (alarmType, ringtoneId) => {
-    setAlarms(prev => ({
-      ...prev,
-      [alarmType]: {
-        ...prev[alarmType],
-        ringtone: ringtoneId
       }
     }));
   };
@@ -207,13 +190,6 @@ const BrushReminder = () => {
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   };
   
-  // Preview ringtone
-  const previewRingtone = (ringtoneId) => {
-    const ringtone = ringtones.find(r => r.id === ringtoneId);
-    // In a real implementation, this would play the ringtone
-    alert(`پخش صدای زنگ: ${ringtone?.name || 'نامشخص'}`);
-  };
-  
   return (
     <div className="brush-reminder-container">
       <div className="brush-section">
@@ -222,7 +198,7 @@ const BrushReminder = () => {
         <div className="alarm-cards">
           <div className="alarm-card">
             <div className="alarm-header">
-              <h3>مسواک صبح</h3>
+              <h3><span className="sun-icon">☀️</span> مسواک صبح</h3>
               <label className="switch">
                 <input
                   type="checkbox"
@@ -240,30 +216,11 @@ const BrushReminder = () => {
                 disabled={!alarms.morning.enabled}
               />
             </div>
-            <div className="alarm-ringtone">
-              <label>صدای زنگ</label>
-              <select 
-                value={alarms.morning.ringtone} 
-                onChange={(e) => handleRingtoneChange('morning', e.target.value)}
-                disabled={!alarms.morning.enabled}
-              >
-                {ringtones.map(ringtone => (
-                  <option key={ringtone.id} value={ringtone.id}>{ringtone.name}</option>
-                ))}
-              </select>
-              <button 
-                className="preview-button" 
-                onClick={() => previewRingtone(alarms.morning.ringtone)}
-                disabled={!alarms.morning.enabled}
-              >
-                پخش نمونه
-              </button>
-            </div>
           </div>
           
           <div className="alarm-card">
             <div className="alarm-header">
-              <h3>مسواک شب</h3>
+              <h3><span className="moon-icon">🌙</span> مسواک شب</h3>
               <label className="switch">
                 <input
                   type="checkbox"
@@ -280,25 +237,6 @@ const BrushReminder = () => {
                 onChange={(e) => handleTimeChange('evening', e.target.value)}
                 disabled={!alarms.evening.enabled}
               />
-            </div>
-            <div className="alarm-ringtone">
-              <label>صدای زنگ</label>
-              <select 
-                value={alarms.evening.ringtone} 
-                onChange={(e) => handleRingtoneChange('evening', e.target.value)}
-                disabled={!alarms.evening.enabled}
-              >
-                {ringtones.map(ringtone => (
-                  <option key={ringtone.id} value={ringtone.id}>{ringtone.name}</option>
-                ))}
-              </select>
-              <button 
-                className="preview-button" 
-                onClick={() => previewRingtone(alarms.evening.ringtone)}
-                disabled={!alarms.evening.enabled}
-              >
-                پخش نمونه
-              </button>
             </div>
           </div>
         </div>
@@ -402,7 +340,6 @@ const BrushReminder = () => {
               <p>ویدیوی آموزشی ۱</p>
               <span className="play-icon">▶️</span>
             </div>
-            <div className="video-caption">نحوه صحیح مسواک زدن</div>
           </div>
           
           <div className="video-item">
@@ -410,7 +347,6 @@ const BrushReminder = () => {
               <p>ویدیوی آموزشی ۲</p>
               <span className="play-icon">▶️</span>
             </div>
-            <div className="video-caption">روش مسواک زدن</div>
           </div>
         </div>
       </div>
@@ -445,6 +381,12 @@ const BrushReminder = () => {
         .alarm-header h3 {
           margin: 0;
           color: #4a6bff;
+          display: flex;
+          align-items: center;
+        }
+        
+        .sun-icon, .moon-icon {
+          margin-left: 8px;
         }
         
         .alarm-time {
@@ -513,45 +455,6 @@ const BrushReminder = () => {
         
         .slider.round:before {
           border-radius: 50%;
-        }
-        
-        .alarm-ringtone {
-          margin-top: 15px;
-        }
-        
-        .alarm-ringtone label {
-          display: block;
-          margin-bottom: 8px;
-          font-size: 14px;
-          color: #555;
-        }
-        
-        .alarm-ringtone select {
-          padding: 10px;
-          border-radius: 6px;
-          border: 1px solid #ddd;
-          margin-bottom: 10px;
-          width: 100%;
-          font-size: 14px;
-        }
-        
-        .preview-button {
-          background-color: #f0f0f0;
-          border: 1px solid #ddd;
-          border-radius: 6px;
-          padding: 8px 12px;
-          cursor: pointer;
-          font-size: 13px;
-          transition: background-color 0.3s;
-        }
-        
-        .preview-button:hover {
-          background-color: #e5e5e5;
-        }
-        
-        .preview-button:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
         }
         
         .notification-permission {
@@ -877,13 +780,6 @@ const BrushReminder = () => {
         .play-icon {
           font-size: 48px;
           margin-top: 15px;
-        }
-        
-        .video-caption {
-          padding: 10px;
-          text-align: center;
-          background-color: #fff;
-          font-weight: bold;
         }
       `}</style>
     </div>
