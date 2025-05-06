@@ -39,7 +39,6 @@ const ParentProfile = () => {
     
     const requiredFields = [
       'parentType',
-      'relationship',
       'fatherEducation',
       'fatherJob',
       'motherEducation',
@@ -48,6 +47,11 @@ const ParentProfile = () => {
       'economicStatus',
       'oralHealthStatus'
     ];
+    
+    // Add relationship field as required only if parentType is 'other'
+    if (formData.parentType === 'other' && !formData.relationship) {
+      newErrors.relationship = 'این فیلد الزامی است';
+    }
     
     // Check for empty required fields
     requiredFields.forEach(field => {
@@ -93,44 +97,45 @@ const ParentProfile = () => {
       title="تکمیل پروفایل والدین" 
       onSubmit={handleSubmit}
     >
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="parentType">نوع والد</label>
-          <div className="radio-group">
-            <label className="radio-option">
-              <input
-                type="radio"
-                name="parentType"
-                value="father"
-                checked={formData.parentType === 'father'}
-                onChange={handleChange}
-              />
-              پدر
-            </label>
-            <label className="radio-option">
-              <input
-                type="radio"
-                name="parentType"
-                value="mother"
-                checked={formData.parentType === 'mother'}
-                onChange={handleChange}
-              />
-              مادر
-            </label>
-            <label className="radio-option">
-              <input
-                type="radio"
-                name="parentType"
-                value="other"
-                checked={formData.parentType === 'other'}
-                onChange={handleChange}
-              />
-              سایر (سرپرست)
-            </label>
-          </div>
-          {errors.parentType && <div className="error-message">{errors.parentType}</div>}
+      <div className="form-group">
+        <label htmlFor="parentType">نوع والد</label>
+        <div className="radio-group">
+          <label className="radio-option">
+            <input
+              type="radio"
+              name="parentType"
+              value="father"
+              checked={formData.parentType === 'father'}
+              onChange={handleChange}
+            />
+            پدر
+          </label>
+          <label className="radio-option">
+            <input
+              type="radio"
+              name="parentType"
+              value="mother"
+              checked={formData.parentType === 'mother'}
+              onChange={handleChange}
+            />
+            مادر
+          </label>
+          <label className="radio-option">
+            <input
+              type="radio"
+              name="parentType"
+              value="other"
+              checked={formData.parentType === 'other'}
+              onChange={handleChange}
+            />
+            سایر (سرپرست)
+          </label>
         </div>
-        
+        {errors.parentType && <div className="error-message">{errors.parentType}</div>}
+      </div>
+      
+      {/* Show relationship field only when "other" is selected */}
+      {formData.parentType === 'other' && (
         <div className="form-group">
           <label htmlFor="relationship">نسبت خانوادگی</label>
           <input
@@ -144,7 +149,7 @@ const ParentProfile = () => {
           />
           {errors.relationship && <div className="error-message">{errors.relationship}</div>}
         </div>
-      </div>
+      )}
       
       <h3 className="section-title">اطلاعات تحصیلی و شغلی والدین</h3>
       

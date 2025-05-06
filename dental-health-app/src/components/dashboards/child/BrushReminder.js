@@ -11,10 +11,13 @@ const BrushReminder = () => {
   const [timeLeft, setTimeLeft] = useState(120); // 2 minutes in seconds
   const [showCongrats, setShowCongrats] = useState(false);
   const [audioError, setAudioError] = useState(false);
+  const [alarmActive, setAlarmActive] = useState(false);
   
   const audioRef = useRef(null);
+  const alarmAudioRef = useRef(null);
   const congratsAudioRef = useRef(null);
   const timerIntervalRef = useRef(null);
+  const alarmCheckIntervalRef = useRef(null);
   
   // Load saved alarms from localStorage
   useEffect(() => {
@@ -36,6 +39,74 @@ const BrushReminder = () => {
       console.error("Error saving alarms to localStorage:", error);
     }
   }, [alarms]);
+  
+  // Check if alarm should be triggered
+  useEffect(() => {
+    // Set up an interval to check if alarm should be triggered
+    alarmCheckIntervalRef.current = setInterval(() => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      
+      // Check morning alarm
+      if (alarms.morning.enabled && 
+          currentHour === alarms.morning.hour && 
+          currentMinute === alarms.morning.minute && 
+          !alarmActive) {
+        triggerAlarm('صبح');
+      }
+      
+      // Check evening alarm
+      if (alarms.evening.enabled && 
+          currentHour === alarms.evening.hour && 
+          currentMinute === alarms.evening.minute && 
+          !alarmActive) {
+        triggerAlarm('شب');
+      }
+    }, 10000); // Check every 10 seconds
+    
+    return () => {
+      if (alarmCheckIntervalRef.current) {
+        clearInterval(alarmCheckIntervalRef.current);
+      }
+    };
+  }, [alarms, alarmActive]);
+  
+  // Function to trigger alarm
+  const triggerAlarm = (timeOfDay) => {
+    setAlarmActive(true);
+    
+    // Show notification if supported
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(`یادآوری مسواک ${timeOfDay}`, {
+        body: `زمان مسواک زدن ${timeOfDay} رسیده است!`,
+        icon: '/logo192.png'
+      });
+    }
+    
+    // Play alarm sound
+    if (alarmAudioRef.current) {
+      alarmAudioRef.current.currentTime = 0;
+      alarmAudioRef.current.play().catch(error => {
+        console.error("Error playing alarm audio:", error);
+      });
+      
+      // Stop alarm after 30 seconds
+      setTimeout(() => {
+        stopAlarm();
+      }, 30000);
+    }
+  };
+  
+  // Function to stop alarm
+  const stopAlarm = () => {
+    setAlarmActive(false);
+    
+    if (alarmAudioRef.current) {
+      alarmAudioRef.current.pause();
+      alarmAudioRef.current.currentTime = 0;
+    }
+  };
   
   // Handle timer countdown
   useEffect(() => {
@@ -101,6 +172,8 @@ const BrushReminder = () => {
     
     // Start playing music
     if (audioRef.current) {
+      // Reset audio to beginning
+      audioRef.current.currentTime = 0;
       audioRef.current.play().catch(error => {
         console.error("Error playing audio:", error);
         setAudioError(true);
@@ -190,6 +263,11 @@ const BrushReminder = () => {
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   };
   
+  // Test alarm function for development purposes
+  const testAlarm = () => {
+    triggerAlarm('تست');
+  };
+  
   return (
     <div className="brush-reminder-container">
       <div className="brush-section">
@@ -251,7 +329,30 @@ const BrushReminder = () => {
           <p className="permission-info">
             برای دریافت یادآوری مسواک، لطفاً مجوز اعلان‌ها را تأیید کنید.
           </p>
+          
+          {/* For development purposes only - remove in production */}
+          <button 
+            className="test-button" 
+            onClick={testAlarm}
+            style={{ marginTop: '10px', backgroundColor: '#666' }}
+          >
+            تست آلارم
+          </button>
         </div>
+        
+        {alarmActive && (
+          <div className="alarm-notification">
+            <div className="alarm-message">
+              <p>زمان مسواک زدن رسیده است!</p>
+              <button 
+                className="dismiss-button"
+                onClick={stopAlarm}
+              >
+                متوجه شدم
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="timer-section">
@@ -332,34 +433,164 @@ const BrushReminder = () => {
         )}
       </div>
       
+
       <div className="educational-video">
         <h3>آموزش مسواک زدن</h3>
         <div className="videos-container">
           <div className="video-item">
-            <div className="video-placeholder">
-              <p>ویدیوی آموزشی ۱</p>
-              <span className="play-icon">▶️</span>
+            <div className="video-wrapper">
+              <video 
+                controls 
+                preload="metadata"
+                className="video-player"
+                poster="/assets/images/video-thumbnail-1.jpg"
+              >
+                <source src="/assets/videos/How_to_Brush_Your_Teeth_Animation.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
             </div>
+            <p>ویدیوی آموزشی ۱: روش صحیح مسواک زدن</p>
           </div>
           
           <div className="video-item">
-            <div className="video-placeholder">
-              <p>ویدیوی آموزشی ۲</p>
-              <span className="play-icon">▶️</span>
+            <div className="video-wrapper">
+              <video 
+                controls 
+                preload="metadata"
+                className="video-player"
+                poster="/assets/images/video-thumbnail-2.jpg"
+              >
+                <source src="/assets/videos/How_to_Brush_Your_Teeth_Animation.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
             </div>
+            <p>ویدیوی آموزشی ۲: نخ دندان کشیدن</p>
           </div>
         </div>
       </div>
-      
+
+      <style jsx>{`
+        .educational-video {
+          margin-top: 40px;
+        }
+        
+        .educational-video h3 {
+          color: #4a6bff;
+          margin-bottom: 15px;
+          text-align: center;
+        }
+        
+        .videos-container {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          margin-top: 20px;
+        }
+        
+        .video-item {
+          width: 100%;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .video-wrapper {
+          position: relative;
+          width: 100%;
+          padding-top: 56.25%; /* 16:9 Aspect Ratio */
+          overflow: hidden;
+        }
+        
+        .video-player {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        
+        .video-item p {
+          padding: 10px;
+          margin: 0;
+          text-align: center;
+          font-size: 14px;
+          color: #555;
+        }
+        
+        /* Media queries for larger screens */
+        @media (min-width: 768px) {
+          .videos-container {
+            flex-direction: row;
+            flex-wrap: wrap;
+          }
+          
+          .video-item {
+            width: calc(50% - 10px);
+          }
+        }
+        
+        .alarm-notification {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.7);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        
+        .alarm-message {
+          background-color: white;
+          border-radius: 12px;
+          padding: 30px;
+          text-align: center;
+          max-width: 90%;
+          width: 350px;
+          animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+        
+        .alarm-message p {
+          font-size: 20px;
+          font-weight: bold;
+          margin-bottom: 20px;
+        }
+        
+        .dismiss-button {
+          background-color: #4a6bff;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          padding: 12px 25px;
+          font-size: 16px;
+          cursor: pointer;
+        }
+      `}</style>
+
       {/* Audio elements for timer music and congratulations */}
       <audio ref={audioRef} loop preload="auto">
-        <source src="/assets/sounds/brushing-music.mp3" type="audio/mpeg" />
-        <source src="/assets/sounds/brushing-music.ogg" type="audio/ogg" />
+        <source src="/assets/audios/brushing_music.mp3" type="audio/mpeg" />
+        <source src="/assets/audios/brushing_music.ogg" type="audio/ogg" />
+      </audio>
+      
+      {/* Audio element for alarm */}
+      <audio ref={alarmAudioRef} loop preload="auto">
+        <source src="/assets/audios/brushing_music.mp3" type="audio/mpeg" />
+        <source src="/assets/audios/brushing_music.ogg" type="audio/ogg" />
       </audio>
       
       <audio ref={congratsAudioRef} preload="auto">
-        <source src="/assets/sounds/applause.mp3" type="audio/mpeg" />
-        <source src="/assets/sounds/applause.ogg" type="audio/ogg" />
+        <source src="/assets/audios/applause.mp3" type="audio/mpeg" />
+        <source src="/assets/audios/applause.ogg" type="audio/ogg" />
       </audio>
       
       <style jsx>{`
@@ -624,15 +855,6 @@ const BrushReminder = () => {
           background-color: #3a5aee;
         }
         
-        .educational-video {
-          margin-top: 40px;
-        }
-        
-        .educational-video h3 {
-          color: #4a6bff;
-          margin-bottom: 15px;
-        }
-        
         .hourglass-container {
           display: flex;
           justify-content: center;
@@ -724,7 +946,6 @@ const BrushReminder = () => {
           z-index: 3;
         }
         
-        /* Connecting lines */
         .hourglass-frame:before,
         .hourglass-frame:after {
           content: '';
@@ -738,6 +959,9 @@ const BrushReminder = () => {
         .hourglass-frame:before {
           top: 65px;
           left: 24px;
+          transform: rotate(45deg);.hourglass-frame:before {
+          top: 65px;
+          left: 24px;
           transform: rotate(45deg);
         }
         
@@ -747,39 +971,30 @@ const BrushReminder = () => {
           transform: rotate(-45deg);
         }
         
-        .videos-container {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 20px;
-          margin-top: 20px;
-        }
-        
-        .video-item {
-          flex: 1;
-          min-width: 250px;
-          border-radius: 8px;
-          overflow: hidden;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .video-placeholder {
-          background-color: #f0f0f0;
-          height: 180px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-          cursor: pointer;
-        }
-        
-        .video-placeholder:hover {
-          background-color: #e5e5e5;
-        }
-        
-        .play-icon {
-          font-size: 48px;
-          margin-top: 15px;
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+          .timer-controls {
+            flex-direction: column;
+            width: 100%;
+          }
+          
+          .timer-button {
+            width: 100%;
+            margin-bottom: 10px;
+          }
+          
+          .hourglass-container {
+            height: 120px;
+          }
+          
+          .real-hourglass {
+            width: 60px;
+            height: 120px;
+          }
+          
+          .timer-time {
+            font-size: 28px;
+          }
         }
       `}</style>
     </div>

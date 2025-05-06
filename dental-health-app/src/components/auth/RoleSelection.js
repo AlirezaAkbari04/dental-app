@@ -1,16 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../../styles/Auth.css'; // Changed from '../styles/Auth.css'
-import logoImage from '../../logo.svg'; // Changed from '../logo.svg'
+import '../../styles/Auth.css';
+import logoImage from '../../logo.svg';
 
 const RoleSelection = () => {
   const navigate = useNavigate();
 
   const handleRoleSelect = (role) => {
-    // Store selected role in localStorage or state management system
     localStorage.setItem('userRole', role);
     
-    // Navigate to the appropriate profile completion page based on role
     switch (role) {
       case 'child':
         navigate('/profile/child');
@@ -28,7 +26,7 @@ const RoleSelection = () => {
 
   return (
     <div className="auth-container" dir="rtl">
-      <div className="auth-form-container">
+      <div className="auth-form-container" style={{ maxWidth: '500px' }}>
         <div className="logo-container">
           <img src={logoImage} alt="لبخند شاد دندان سالم" className="app-logo" />
           <h1 className="app-title">لبخند شاد دندان سالم</h1>
@@ -38,37 +36,70 @@ const RoleSelection = () => {
           <h2>لطفاً نقش خود را انتخاب کنید</h2>
           <p className="role-instruction">برای ادامه، نقش خود را از گزینه‌های زیر انتخاب کنید</p>
           
-          <div className="role-options">
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            gap: '15px',
+            width: '100%',
+            margin: '20px 0'
+          }}>
             <div 
-              className="role-option" 
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: '15px',
+                backgroundColor: 'white',
+                borderRadius: '10px',
+                boxShadow: '0 3px 10px rgba(0, 0, 0, 0.08)',
+                cursor: 'pointer'
+              }}
               onClick={() => handleRoleSelect('child')}
             >
-              <span className="role-icon">👶</span>
-              <div className="role-info">
-                <div className="role-title">کودک</div>
-                <div className="role-description">آموزش بهداشت دهان و دندان برای کودکان</div>
+              <span style={{ fontSize: '30px', marginLeft: '15px' }}>👶</span>
+              <div>
+                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>کودک</div>
+                <div style={{ fontSize: '13px', color: '#666' }}>آموزش بهداشت دهان و دندان برای کودکان</div>
               </div>
             </div>
             
             <div 
-              className="role-option" 
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: '15px',
+                backgroundColor: 'white',
+                borderRadius: '10px',
+                boxShadow: '0 3px 10px rgba(0, 0, 0, 0.08)',
+                cursor: 'pointer'
+              }}
               onClick={() => handleRoleSelect('teacher')}
             >
-              <span className="role-icon">👨‍⚕️</span>
-              <div className="role-info">
-                <div className="role-title">معلم بهداشت</div>
-                <div className="role-description">مدیریت آموزش بهداشت دهان و دندان برای کودکان</div>
+              <span style={{ fontSize: '30px', marginLeft: '15px' }}>👨‍⚕️</span>
+              <div>
+                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>معلم بهداشت</div>
+                <div style={{ fontSize: '13px', color: '#666' }}>مدیریت آموزش بهداشت دهان و دندان برای کودکان</div>
               </div>
             </div>
             
             <div 
-              className="role-option" 
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: '15px',
+                backgroundColor: 'white',
+                borderRadius: '10px',
+                boxShadow: '0 3px 10px rgba(0, 0, 0, 0.08)',
+                cursor: 'pointer'
+              }}
               onClick={() => handleRoleSelect('parent')}
             >
-              <span className="role-icon">👪</span>
-              <div className="role-info">
-                <div className="role-title">والدین</div>
-                <div className="role-description">نظارت بر بهداشت دهان و دندان فرزندان</div>
+              <span style={{ fontSize: '30px', marginLeft: '15px' }}>👪</span>
+              <div>
+                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>والدین</div>
+                <div style={{ fontSize: '13px', color: '#666' }}>نظارت بر بهداشت دهان و دندان فرزندان</div>
               </div>
             </div>
           </div>

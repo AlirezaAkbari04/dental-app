@@ -293,16 +293,6 @@ const TeacherProfile = () => {
             />
             پسرانه
           </label>
-          <label className="checkbox-option">
-            <input
-              type="checkbox"
-              name="schoolTypes"
-              value="both"
-              checked={formData.schoolTypes.includes('both')}
-              onChange={handleCheckboxChange}
-            />
-            مختلط
-          </label>
         </div>
         {errors.schoolTypes && <div className="error-message">{errors.schoolTypes}</div>}
       </div>

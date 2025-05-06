@@ -1,94 +1,135 @@
 .role-card {
-    background-color: white;
-    border-radius: 15px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    text-align: center;
-    margin-top: 50px;
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  text-align: center;
+  margin-top: 50px;
+}
+
+.logo {
+  width: 80px;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 24px;
+  color: #4a6bff;
+  margin-bottom: 30px;
+}
+
+.roles {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+  gap: 15px;
+}
+
+.role {
+  flex: 1;
+  min-width: 200px;
+  padding: 20px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.role:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.role.selected {
+  background-color: rgba(74, 107, 255, 0.1);
+  border: 2px solid #4a6bff;
+}
+
+.role-icon {
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.role-title {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.role-description {
+  height: 0;
+  overflow: hidden;
+  font-size: 13px;
+  color: #666;
+  transition: height 0.3s;
+  padding: 0 10px;
+}
+
+.role.selected .role-description {
+  height: 60px;
+  margin-top: 10px;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 30px;
+}
+
+.btn-primary {
+  background-color: #4a6bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #3a5afa;
+}
+
+.btn-disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Added for responsive design */
+.role-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.role-option {
+  flex: 1;
+  min-width: 200px;
+  background-color: white;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+/* Make sure role options stack properly on different screen sizes */
+@media (max-width: 768px) {
+  .role-options {
+    flex-direction: column;
   }
   
-  .logo {
-    width: 80px;
-    margin-bottom: 20px;
-  }
-  
-  h1 {
-    font-size: 24px;
-    color: #4a6bff;
-    margin-bottom: 30px;
-  }
-  
-  .roles {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 30px;
-  }
-  
-  .role {
-    flex-basis: 30%;
-    padding: 20px 10px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-  
-  .role:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  }
-  
-  .role.selected {
-    background-color: rgba(74, 107, 255, 0.1);
-    border: 2px solid #4a6bff;
-  }
-  
-  .role-icon {
-    font-size: 36px;
-    margin-bottom: 10px;
-  }
-  
-  .role-title {
-    font-size: 14px;
-    font-weight: bold;
-  }
-  
-  .role-description {
-    height: 0;
-    overflow: hidden;
-    font-size: 13px;
-    color: #666;
-    transition: height 0.3s;
-    padding: 0 10px;
-  }
-  
-  .role.selected .role-description {
-    height: 60px;
-    margin-top: 10px;
-  }
-  
-  .btn {
-    display: block;
+  .role-option {
     width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s;
-    margin-top: 30px;
   }
-  
-  .btn-primary {
-    background-color: #4a6bff;
-    color: white;
+}
+
+/* Adjust for medium screens/tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .role-option {
+    min-width: 160px;
   }
-  
-  .btn-primary:hover {
-    background-color: #3a5afa;
-  }
-  
-  .btn-disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
+}

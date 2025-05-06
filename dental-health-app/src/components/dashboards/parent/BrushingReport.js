@@ -513,7 +513,15 @@ const BrushingReport = ({ childName = "کودک" }) => {
                   min="0" 
                   max="300"
                   value={currentRecord.morning.time}
-                  onChange={(e) => handleRecordChange('morning', 'time', parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    // Convert to number or 0 if empty
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    handleRecordChange('morning', 'time', value);
+                  }}
+                  onClick={(e) => {
+                    // Select all text when field is clicked
+                    e.target.select();
+                  }}
                   disabled={!currentRecord.morning.brushed}
                 />
               </div>
@@ -525,7 +533,15 @@ const BrushingReport = ({ childName = "کودک" }) => {
                   min="0" 
                   max="4"
                   value={currentRecord.morning.quadrants}
-                  onChange={(e) => handleRecordChange('morning', 'quadrants', parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    // Convert to number or 0 if empty
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    handleRecordChange('morning', 'quadrants', value);
+                  }}
+                  onClick={(e) => {
+                    // Select all text when field is clicked
+                    e.target.select();
+                  }}
                   disabled={!currentRecord.morning.brushed}
                 />
               </div>
@@ -551,7 +567,15 @@ const BrushingReport = ({ childName = "کودک" }) => {
                   min="0" 
                   max="300"
                   value={currentRecord.evening.time}
-                  onChange={(e) => handleRecordChange('evening', 'time', parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    // Convert to number or 0 if empty
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    handleRecordChange('evening', 'time', value);
+                  }}
+                  onClick={(e) => {
+                    // Select all text when field is clicked
+                    e.target.select();
+                  }}
                   disabled={!currentRecord.evening.brushed}
                 />
               </div>
@@ -563,7 +587,15 @@ const BrushingReport = ({ childName = "کودک" }) => {
                   min="0" 
                   max="4"
                   value={currentRecord.evening.quadrants}
-                  onChange={(e) => handleRecordChange('evening', 'quadrants', parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    // Convert to number or 0 if empty
+                    const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    handleRecordChange('evening', 'quadrants', value);
+                  }}
+                  onClick={(e) => {
+                    // Select all text when field is clicked
+                    e.target.select();
+                  }}
                   disabled={!currentRecord.evening.brushed}
                 />
               </div>
@@ -639,6 +671,12 @@ const BrushingReport = ({ childName = "کودک" }) => {
         }
         
         .month-nav {
+          background: none;
+          border: none;
+          color: white;
+          font-size: 20px;
+          cursor: pointer;
+          padding:.month-nav {
           background: none;
           border: none;
           color: white;
