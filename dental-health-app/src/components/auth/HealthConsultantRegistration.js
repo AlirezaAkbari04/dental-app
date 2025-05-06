@@ -245,15 +245,6 @@ function HealthConsultantRegistration() {
                 />
                 <span>پسرانه</span>
               </label>
-              <label className="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  name="schoolTypes" 
-                  value="both" 
-                  onChange={handleCheckboxChange}
-                />
-                <span>هردو</span>
-              </label>
             </div>
           </div>
 

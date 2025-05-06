@@ -33,12 +33,6 @@ const ChildHome = ({ childName }) => {
       description: '10 ستاره کسب کردی'
     },
     {
-      name: 'قهرمان بهداشت',
-      icon: '🦷',
-      earned: achievements.cleanedAreas >= 20,
-      description: 'تمیز کردن کامل هر 4 ناحیه دندان 20 بار'
-    },
-    {
       name: 'خوراکی سالم',
       icon: '🍎',
       earned: achievements.healthySnacks >= 15,
