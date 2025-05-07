@@ -291,6 +291,36 @@ const BrushReminder = () => {
     setTimeLeft(120);
   };
   
+  // Add this unified function to save brushing state
+  const saveBrushingState = async (isCompleted, timeOfDay, durationMinutes) => {
+    if (!childId) return;
+    
+    try {
+      // Get current date as YYYY-MM-DD
+      const currentDate = DatabaseService.formatDate(new Date());
+      
+      // Create brushing record in database
+      await DatabaseService.createBrushingRecord(
+        childId,
+        currentDate,
+        timeOfDay,
+        durationMinutes.toString(), // Convert to string
+        isCompleted
+      );
+      
+      if (isCompleted) {
+        // Update achievements for successful brushing
+        await DatabaseService.updateAchievement(childId, 'regularBrushing', 1);
+        await DatabaseService.updateAchievement(childId, 'stars', 1);
+        
+        console.log('Brushing record and achievements saved');
+      }
+    } catch (error) {
+      console.error('Error saving brushing state:', error);
+    }
+  };
+
+  // Update the showCongratulations function to use saveBrushingState
   const showCongratulations = async () => {
     console.log("Showing congratulations");
     setShowCongrats(true);
@@ -302,29 +332,12 @@ const BrushReminder = () => {
       });
     }
 
-    if (childId) {
-      try {
-        // Get current date as YYYY-MM-DD
-        const currentDate = DatabaseService.formatDate(new Date());
+    // Determine if it's morning or evening based on current time
+    const currentHour = new Date().getHours();
+    const timeOfDay = currentHour < 12 ? 'morning' : 'evening';
 
-        // Determine if it's morning or evening based on current time
-        const currentHour = new Date().getHours();
-        const timeOfDay = currentHour < 12 ? 'morning' : 'evening';
-
-        // Create brushing record in database
-        await DatabaseService.createBrushingRecord(
-          childId,
-          currentDate,
-          timeOfDay,
-          timeLeft.toString(), // Convert to string
-          true // Completed
-        );
-
-        console.log('Brushing record saved to database');
-      } catch (error) {
-        console.error('Error saving brushing record:', error);
-      }
-    }
+    // Save brushing record
+    await saveBrushingState(true, timeOfDay, timeLeft);
   };
   
   // Request notification permission for when we convert to mobile

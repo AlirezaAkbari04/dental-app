@@ -14,6 +14,22 @@ class DatabaseService {
     }
   }
 
+  async ensureInitialized() {
+    if (this.initialized) {
+      return true;
+    }
+
+    try {
+      await this.init();
+      await this.createChildTables();
+      await this.createParentTables();
+      return true;
+    } catch (error) {
+      console.error('Error ensuring database is initialized:', error);
+      return false;
+    }
+  }
+
   async init() {
     if (this.initialized) {
       return;
@@ -39,9 +55,9 @@ class DatabaseService {
       // Open database
       await this.db.open();
 
-      // Create tables
-      await this.createTables();
-      
+      // Ensure tables are created
+      await this.ensureInitialized();
+
       this.initialized = true;
       console.log("Database initialized successfully");
     } catch (error) {
@@ -55,17 +71,8 @@ class DatabaseService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         role TEXT NOT NULL CHECK(role IN ('child', 'parent', 'teacher')),
+        profile_data TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS children (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        parent_id INTEGER,
-        name TEXT NOT NULL,
-        age INTEGER,
-        gender TEXT,
-        avatar_url TEXT,
-        FOREIGN KEY (parent_id) REFERENCES users(id)
       );
 
       CREATE TABLE IF NOT EXISTS brushing_records (
@@ -75,7 +82,8 @@ class DatabaseService {
         time_of_day TEXT NOT NULL CHECK(time_of_day IN ('morning', 'evening')),
         duration_minutes TEXT,
         brushed BOOLEAN DEFAULT 0,
-        FOREIGN KEY (child_id) REFERENCES children(id)
+        FOREIGN KEY (child_id) REFERENCES children(id),
+        UNIQUE(child_id, date, time_of_day)
       );
 
       CREATE TABLE IF NOT EXISTS reminders (
@@ -85,7 +93,8 @@ class DatabaseService {
         time TEXT NOT NULL,
         message TEXT,
         enabled BOOLEAN DEFAULT 1,
-        FOREIGN KEY (user_id) REFERENCES users(id)
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        UNIQUE(user_id, type)
       );
 
       CREATE TABLE IF NOT EXISTS achievements (
@@ -94,7 +103,8 @@ class DatabaseService {
         type TEXT NOT NULL,
         count INTEGER DEFAULT 0,
         last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (child_id) REFERENCES children(id)
+        FOREIGN KEY (child_id) REFERENCES children(id),
+        UNIQUE(child_id, type)
       );
 
       CREATE TABLE IF NOT EXISTS game_scores (
@@ -104,7 +114,8 @@ class DatabaseService {
         score INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (child_id) REFERENCES children(id)
+        FOREIGN KEY (child_id) REFERENCES children(id),
+        UNIQUE(child_id, game_type)
       );
 
       CREATE TABLE IF NOT EXISTS video_progress (
@@ -114,41 +125,8 @@ class DatabaseService {
         progress REAL DEFAULT 0,
         completed BOOLEAN DEFAULT 0,
         last_watched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (child_id) REFERENCES children(id)
-      );
-
-      CREATE TABLE IF NOT EXISTS schools (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        caretaker_id INTEGER NOT NULL,
-        name TEXT NOT NULL,
-        type TEXT NOT NULL CHECK(type IN ('boys', 'girls')),
-        activity_days TEXT,
-        FOREIGN KEY (caretaker_id) REFERENCES users(id)
-      );
-
-      CREATE TABLE IF NOT EXISTS students (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        school_id INTEGER NOT NULL,
-        name TEXT NOT NULL,
-        age INTEGER,
-        grade TEXT,
-        FOREIGN KEY (school_id) REFERENCES schools(id)
-      );
-
-      CREATE TABLE IF NOT EXISTS health_records (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_id INTEGER NOT NULL,
-        date TEXT NOT NULL,
-        has_brushed BOOLEAN DEFAULT 0,
-        has_cavity BOOLEAN DEFAULT 0,
-        has_healthy_gums BOOLEAN DEFAULT 1,
-        score INTEGER DEFAULT 5,
-        notes TEXT,
-        warning_flags TEXT,
-        needs_referral BOOLEAN DEFAULT 0,
-        referral_notes TEXT,
-        resolved BOOLEAN DEFAULT 0,
-        FOREIGN KEY (student_id) REFERENCES students(id)
+        FOREIGN KEY (child_id) REFERENCES children(id),
+        UNIQUE(child_id, video_id)
       );
     `;
 

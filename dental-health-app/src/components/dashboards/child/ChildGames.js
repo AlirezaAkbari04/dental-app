@@ -236,21 +236,42 @@ const ChildGames = () => {
   // Update the handleAnswerSelection function
   const handleAnswerSelection = useCallback(async (item, targetType) => {
     console.log("Answer selected:", item.name, "as", targetType);
-
+    
     if (item.type === targetType) {
       // Correct answer
       setIsCorrect(true);
-      setScore(prevScore => prevScore + 1);
-
-      // Save score increment to database if we have a user
-      if (currentUser?.id && DatabaseService.initialized) {
-        try {
-          await DatabaseService.updateAchievement(currentUser.id, 'healthySnacks', 1);
-        } catch (error) {
-          console.error("Error updating achievement:", error);
+      
+      // Increment score
+      const newScore = score + 1;
+      setScore(newScore);
+      
+      // Use executeWithFallback for cleaner error handling
+      await DatabaseService.executeWithFallback(
+        // Database operation
+        async () => {
+          if (currentUser?.id && DatabaseService.initialized) {
+            // Save increment to database
+            await DatabaseService.saveGameScore(currentUser.id, 'healthySnacks', newScore);
+            return true;
+          }
+          throw new Error('Not initialized or no user ID');
+        },
+        // Fallback operation
+        async () => {
+          // Update localStorage
+          localStorage.setItem('healthySnackScore', newScore.toString());
+          
+          // Update achievements in localStorage
+          const achievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
+          const updatedAchievements = {
+            ...achievements,
+            healthySnacks: newScore
+          };
+          localStorage.setItem('childAchievements', JSON.stringify(updatedAchievements));
+          return true;
         }
-      }
-
+      );
+      
       setFeedbackMessage(
         targetType === 'healthy' 
           ? `آفرین! ${item.name} یک میان‌وعده سالم است.` 
@@ -269,18 +290,18 @@ const ChildGames = () => {
       setAnimationClass('wrong-answer-animation');
       setFeedbackImage('❌');
     }
-
+    
     setShowFeedback(true);
-
+    
     // Load next food items after a delay
     const timer = setTimeout(() => {
       setShowFeedback(false);
       setAnimationClass('');
       setCurrentFoodItems(getRandomFoodItems());
     }, 2000);
-
+    
     return () => clearTimeout(timer);
-  }, [getRandomFoodItems, currentUser]);
+  }, [getRandomFoodItems, currentUser, score]);
   
   // For direct click/tap on mobile if drag not working
   const handleDirectSelection = useCallback((item, type) => {

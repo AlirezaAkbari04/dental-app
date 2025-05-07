@@ -19,30 +19,24 @@ const ChildHome = ({ childName }) => {
   useEffect(() => {
     const fetchAchievements = async () => {
       try {
-        // Initialize database if needed
-        if (!DatabaseService.initialized) {
-          await DatabaseService.init();
-        }
-        
-        if (currentUser?.id) {
-          // Get achievements from database
-          const achievementsData = await DatabaseService.getChildAchievements(currentUser.id);
-          setAchievements(achievementsData);
-        } else {
-          // Fallback to localStorage
-          const savedAchievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
-          if (Object.keys(savedAchievements).length > 0) {
-            setAchievements(savedAchievements);
+        // Use executeWithFallback for cleaner error handling
+        const achievementsData = await DatabaseService.executeWithFallback(
+          // Database operation
+          async () => {
+            if (currentUser?.id) {
+              return await DatabaseService.getChildAchievements(currentUser.id);
+            }
+            throw new Error('No user ID');
+          },
+          // Fallback operation
+          async () => {
+            return JSON.parse(localStorage.getItem('childAchievements') || '{}');
           }
-        }
+        );
+        
+        setAchievements(achievementsData);
       } catch (error) {
         console.error('Error loading achievements:', error);
-        
-        // Fallback to localStorage
-        const savedAchievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
-        if (Object.keys(savedAchievements).length > 0) {
-          setAchievements(savedAchievements);
-        }
       }
     };
     

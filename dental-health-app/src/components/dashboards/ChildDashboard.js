@@ -19,51 +19,71 @@ const ChildDashboard = () => {
   const { currentUser } = useUser();
   
   useEffect(() => {
-    const initDatabase = async () => {
+    const initApp = async () => {
       try {
+        // Initialize database and run migration if needed
         if (!DatabaseService.initialized) {
           await DatabaseService.init();
+          await MigrationService.migrateChildDataToDatabase();
         }
         
-        await MigrationService.migrateChildDataToDatabase();
+        // Get child profile
+        const childProfile = currentUser?.id 
+          ? await DatabaseService.getChildProfile(currentUser.id)
+          : JSON.parse(localStorage.getItem('childProfile') || '{}');
         
-        if (currentUser?.id) {
-          const childProfile = await DatabaseService.getChildProfile(currentUser.id);
-          setChildName(childProfile.fullName || 'کودک عزیز');
-        } else {
-          const storedProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
-          setChildName(storedProfile.fullName || 'کودک عزیز');
-        }
+        setChildName(childProfile.fullName || 'کودک عزیز');
+        
+        // Show the logo message after a short delay
+        const messageTimer = setTimeout(() => {
+          setShowMessage(true);
+          
+          // Hide the message after 5 seconds
+          const hideTimer = setTimeout(() => {
+            setShowMessage(false);
+          }, 5000);
+          
+          return () => clearTimeout(hideTimer);
+        }, 1000);
+        
+        return () => clearTimeout(messageTimer);
       } catch (error) {
-        console.error('Error initializing database:', error);
+        console.error('Error initializing app:', error);
+        
+        // Fallback to localStorage
         const storedProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
         setChildName(storedProfile.fullName || 'کودک عزیز');
       }
     };
     
-    initDatabase();
-    
-    const messageTimer = setTimeout(() => {
-      setShowMessage(true);
-      
-      const hideTimer = setTimeout(() => {
-        setShowMessage(false);
-      }, 5000);
-      
-      return () => clearTimeout(hideTimer);
-    }, 1000);
-    
-    return () => clearTimeout(messageTimer);
+    initApp();
   }, [currentUser]);
   
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
   
-  const handleLogout = () => {
-    localStorage.removeItem('userAuth');
-    localStorage.removeItem('userRole');
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      // Close database connection if open
+      if (DatabaseService.initialized) {
+        await DatabaseService.close();
+      }
+      
+      // Clear auth data
+      localStorage.removeItem('userAuth');
+      localStorage.removeItem('userRole');
+      
+      // Navigate to login page
+      navigate('/login');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      
+      // Still logout even if error
+      localStorage.removeItem('userAuth');
+      localStorage.removeItem('userRole');
+      navigate('/login');
+    }
   };
   
   const renderContent = () => {

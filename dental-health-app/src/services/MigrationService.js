@@ -358,7 +358,7 @@ class MigrationService {
   // Add this method for child data migration
   async migrateChildDataToDatabase() {
     try {
-      // Check if child migration has been run already
+      // Check if migration already completed
       const childMigrationCompleted = localStorage.getItem('dbChildMigrationCompleted');
       if (childMigrationCompleted === 'true') {
         console.log('Child migration already completed');
@@ -372,83 +372,95 @@ class MigrationService {
       
       // Get current user data
       const userAuthData = JSON.parse(localStorage.getItem('userAuth') || '{}');
-      let userId = null;
       
       if (userAuthData.username && userAuthData.role === 'child') {
-        // Check if user already exists in DB
-        const existingUser = await DatabaseService.getUserByUsername(userAuthData.username);
+        // Begin transaction
+        await DatabaseService.db.execute({ statements: 'BEGIN TRANSACTION;' });
         
-        if (!existingUser) {
-          // Create user in database
-          userId = await DatabaseService.createUser(
-            userAuthData.username, 
-            'child'
-          );
+        try {
+          let userId = null;
           
-          console.log(`Migrated child ${userAuthData.username} to database with ID ${userId}`);
-        } else {
-          userId = existingUser.id;
-        }
-        
-        if (userId) {
-          // Migrate child profile
-          const childProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
-          if (Object.keys(childProfile).length > 0) {
-            // Update child profile (user is already a child)
-            await DatabaseService.updateUserProfile(userId, childProfile);
+          // Check if user exists
+          const existingUser = await DatabaseService.getUserByUsername(userAuthData.username);
+          
+          if (!existingUser) {
+            // Create user
+            userId = await DatabaseService.createUser(
+              userAuthData.username, 
+              'child'
+            );
+          } else {
+            userId = existingUser.id;
           }
           
-          // Migrate achievements
-          const achievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
-          
-          for (const [type, count] of Object.entries(achievements)) {
-            if (type !== 'lastUpdated' && typeof count === 'number') {
-              await DatabaseService.updateAchievement(userId, type, count);
-            }
-          }
-          
-          // Migrate brush alarms
-          const alarms = JSON.parse(localStorage.getItem('brushAlarms') || '{}');
-          
-          if (Object.keys(alarms).length > 0) {
-            // Morning alarm
-            if (alarms.morning) {
-              const morningTime = `${alarms.morning.hour.toString().padStart(2, '0')}:${alarms.morning.minute.toString().padStart(2, '0')}`;
-              
-              await DatabaseService.createReminder(
-                userId,
-                'brushMorning',
-                morningTime,
-                'یادآوری مسواک صبح',
-                alarms.morning.enabled !== false
-              );
+          if (userId) {
+            // Migrate child profile
+            const childProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
+            if (Object.keys(childProfile).length > 0) {
+              await DatabaseService.updateUserProfile(userId, childProfile);
             }
             
-            // Evening alarm
-            if (alarms.evening) {
-              const eveningTime = `${alarms.evening.hour.toString().padStart(2, '0')}:${alarms.evening.minute.toString().padStart(2, '0')}`;
+            // Migrate achievements
+            const achievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
+            
+            for (const [type, count] of Object.entries(achievements)) {
+              if (type !== 'lastUpdated' && typeof count === 'number') {
+                await DatabaseService.updateAchievement(userId, type, count);
+              }
+            }
+            
+            // Migrate brush alarms
+            const alarms = JSON.parse(localStorage.getItem('brushAlarms') || '{}');
+            
+            if (Object.keys(alarms).length > 0) {
+              // Morning alarm
+              if (alarms.morning) {
+                const morningTime = `${alarms.morning.hour.toString().padStart(2, '0')}:${alarms.morning.minute.toString().padStart(2, '0')}`;
+                
+                await DatabaseService.createReminder(
+                  userId,
+                  'brushMorning',
+                  morningTime,
+                  'یادآوری مسواک صبح',
+                  alarms.morning.enabled !== false
+                );
+              }
               
-              await DatabaseService.createReminder(
-                userId,
-                'brushEvening',
-                eveningTime,
-                'یادآوری مسواک شب',
-                alarms.evening.enabled !== false
-              );
+              // Evening alarm
+              if (alarms.evening) {
+                const eveningTime = `${alarms.evening.hour.toString().padStart(2, '0')}:${alarms.evening.minute.toString().padStart(2, '0')}`;
+                
+                await DatabaseService.createReminder(
+                  userId,
+                  'brushEvening',
+                  eveningTime,
+                  'یادآوری مسواک شب',
+                  alarms.evening.enabled !== false
+                );
+              }
+            }
+            
+            // Migrate game scores
+            const healthySnackScore = localStorage.getItem('healthySnackScore');
+            if (healthySnackScore) {
+              await DatabaseService.saveGameScore(userId, 'healthySnacks', parseInt(healthySnackScore, 10));
             }
           }
           
-          // Migrate game scores
-          const healthySnackScore = localStorage.getItem('healthySnackScore');
-          if (healthySnackScore) {
-            await DatabaseService.saveGameScore(userId, 'healthySnacks', parseInt(healthySnackScore, 10));
-          }
+          // Commit transaction
+          await DatabaseService.db.execute({ statements: 'COMMIT;' });
+          
+          // Mark migration as completed
+          localStorage.setItem('dbChildMigrationCompleted', 'true');
+          console.log('Child database migration completed successfully');
+          return true;
+        } catch (error) {
+          // Rollback transaction on error
+          await DatabaseService.db.execute({ statements: 'ROLLBACK;' });
+          throw error;
         }
       }
       
-      // Mark migration as completed
-      localStorage.setItem('dbChildMigrationCompleted', 'true');
-      console.log('Child database migration completed successfully');
       return true;
     } catch (error) {
       console.error('Error during child database migration:', error);
