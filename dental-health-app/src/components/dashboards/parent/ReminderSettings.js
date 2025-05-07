@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ParentComponents.css';
-import { useUser } from '../../contexts/UserContext';
-import DatabaseService from '../../services/DatabaseService';
+import { useUser } from '../../../contexts/UserContext'; // Fix the path
+import DatabaseService from '../../../services/DatabaseService'; // Fix the path
 
 const ReminderSettings = ({ childName }) => {
   const { currentUser } = useUser(); // Get current user

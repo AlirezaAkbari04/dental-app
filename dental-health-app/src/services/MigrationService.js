@@ -223,6 +223,137 @@ class MigrationService {
       return false;
     }
   }
+
+  // Add this method for parent data migration
+  async migrateParentDataToDatabase() {
+    try {
+      // Check if parent migration has been run already
+      const parentMigrationCompleted = localStorage.getItem('dbParentMigrationCompleted');
+      if (parentMigrationCompleted === 'true') {
+        console.log('Parent migration already completed');
+        return true;
+      }
+
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      // Get current user data
+      const userAuthData = JSON.parse(localStorage.getItem('userAuth') || '{}');
+      let userId = null;
+
+      if (userAuthData.username && userAuthData.role === 'parent') {
+        // Check if user already exists in DB
+        const existingUser = await DatabaseService.getUserByUsername(userAuthData.username);
+
+        if (!existingUser) {
+          // Create user in database
+          userId = await DatabaseService.createUser(
+            userAuthData.username,
+            'parent'
+          );
+
+          console.log(`Migrated parent ${userAuthData.username} to database with ID ${userId}`);
+        } else {
+          userId = existingUser.id;
+        }
+
+        if (userId) {
+          // Migrate child data
+          const childProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
+          let childId = null;
+
+          const children = await DatabaseService.getChildrenByParentId(userId);
+          if (children.length === 0) {
+            childId = await DatabaseService.createChild(
+              userId,
+              childProfile.fullName || 'کودک',
+              childProfile.age || null,
+              childProfile.gender || null,
+              childProfile.avatarUrl || null
+            );
+            console.log(`Created child with ID ${childId}`);
+          } else {
+            childId = children[0].id;
+          }
+
+          if (childId) {
+            // Migrate brushing records
+            const brushingRecords = JSON.parse(localStorage.getItem('parentBrushingRecord') || '{}');
+
+            for (const [dateKey, record] of Object.entries(brushingRecords)) {
+              if (record.morning && record.morning.brushed) {
+                await DatabaseService.createBrushingRecord(
+                  childId,
+                  dateKey,
+                  'morning',
+                  record.morning.time || '',
+                  true
+                );
+              }
+
+              if (record.evening && record.evening.brushed) {
+                await DatabaseService.createBrushingRecord(
+                  childId,
+                  dateKey,
+                  'evening',
+                  record.evening.time || '',
+                  true
+                );
+              }
+            }
+
+            // Migrate achievements
+            const achievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
+
+            for (const [type, count] of Object.entries(achievements)) {
+              if (type !== 'lastUpdated' && typeof count === 'number') {
+                await DatabaseService.updateAchievement(childId, type, count);
+              }
+            }
+          }
+
+          // Migrate reminders
+          const reminderData = JSON.parse(localStorage.getItem('parentReminders') || '{}');
+
+          if (reminderData.brushMorning) {
+            await DatabaseService.createReminder(
+              userId,
+              'brushMorning',
+              reminderData.brushMorning.time || '07:30',
+              reminderData.brushMorning.message || 'یادآوری مسواک صبح',
+              reminderData.brushMorning.enabled !== false
+            );
+          }
+
+          if (reminderData.brushEvening) {
+            await DatabaseService.createReminder(
+              userId,
+              'brushEvening',
+              reminderData.brushEvening.time || '20:00',
+              reminderData.brushEvening.message || 'یادآوری مسواک شب',
+              reminderData.brushEvening.enabled !== false
+            );
+          }
+
+          // Migrate parent profile
+          const parentProfile = JSON.parse(localStorage.getItem('parentProfile') || '{}');
+          if (Object.keys(parentProfile).length > 0) {
+            await DatabaseService.updateParentProfile(userId, parentProfile);
+          }
+        }
+      }
+
+      // Mark migration as completed
+      localStorage.setItem('dbParentMigrationCompleted', 'true');
+      console.log('Parent database migration completed successfully');
+      return true;
+    } catch (error) {
+      console.error('Error during parent database migration:', error);
+      return false;
+    }
+  }
 }
 
 export default new MigrationService();

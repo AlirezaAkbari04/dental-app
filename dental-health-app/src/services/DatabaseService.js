@@ -837,6 +837,208 @@ class DatabaseService {
     }
   }
 
+  // Parent Dashboard specific methods
+
+  // Get child data for the current parent
+  async getChildForParent(parentId) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      const children = JSON.parse(localStorage.getItem('db_children') || '[]');
+      return children.find(child => child.parent_id === parentId) || null;
+    }
+
+    try {
+      const statement = `
+        SELECT * FROM children 
+        WHERE parent_id = ?
+        LIMIT 1
+      `;
+      const result = await this.db.query(statement, [parentId]);
+      return result.values && result.values.length > 0 ? result.values[0] : null;
+    } catch (error) {
+      console.error("Error getting child for parent:", error);
+      return null;
+    }
+  }
+
+  // Create the child profile if it doesn't exist
+  async ensureChildExists(parentId, childName) {
+    try {
+      // Check if child exists
+      const child = await this.getChildForParent(parentId);
+      
+      if (!child) {
+        // Create new child
+        const childId = await this.createChild(
+          parentId,
+          childName || "کودک",
+          null, // age
+          null, // gender
+          null  // avatarUrl
+        );
+        
+        return childId;
+      }
+      
+      return child.id;
+    } catch (error) {
+      console.error("Error ensuring child exists:", error);
+      return null;
+    }
+  }
+
+  // Get all reminders specific to this parent
+  async getParentReminders(parentId) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      return JSON.parse(localStorage.getItem('parentReminders') || '{}');
+    }
+
+    try {
+      const reminders = await this.getRemindersByUserId(parentId);
+      
+      // Convert to the format expected by the component
+      const reminderData = {
+        brushMorning: null,
+        brushEvening: null
+      };
+      
+      reminders.forEach(reminder => {
+        if (reminder.type === 'brushMorning') {
+          reminderData.brushMorning = {
+            id: reminder.id,
+            enabled: reminder.enabled === 1,
+            time: reminder.time,
+            message: reminder.message
+          };
+        } else if (reminder.type === 'brushEvening') {
+          reminderData.brushEvening = {
+            id: reminder.id,
+            enabled: reminder.enabled === 1,
+            time: reminder.time,
+            message: reminder.message
+          };
+        }
+      });
+      
+      return reminderData;
+    } catch (error) {
+      console.error("Error getting parent reminders:", error);
+      return {
+        brushMorning: null,
+        brushEvening: null
+      };
+    }
+  }
+
+  // Save parent profile data
+  async updateParentProfile(parentId, profileData) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      localStorage.setItem('parentProfile', JSON.stringify(profileData));
+      return true;
+    }
+
+    try {
+      // For now, we'll just create a minimal users table update
+      // In a complete implementation, you would have a parent_profiles table
+      const statement = `
+        UPDATE users
+        SET profile_data = ?
+        WHERE id = ?
+      `;
+      
+      await this.db.run(statement, [JSON.stringify(profileData), parentId]);
+      return true;
+    } catch (error) {
+      console.error("Error updating parent profile:", error);
+      return false;
+    }
+  }
+
+  // Get asset data (for future use - loading infographics from database)
+  async getInfographicAssets() {
+    if (!Capacitor.isNativePlatform()) {
+      // For web development, we'll just return the hardcoded assets
+      return null;
+    }
+
+    try {
+      // In a real implementation, you would have an assets table
+      // For now, we'll just return null to indicate using built-in assets
+      return null;
+    } catch (error) {
+      console.error("Error getting infographic assets:", error);
+      return null;
+    }
+  }
+
+  // Track user interaction with infographics (for future analytics)
+  async trackInfoGraphicView(userId, infographicId) {
+    if (!Capacitor.isNativePlatform()) {
+      // For web development, we'll just log it
+      console.log(`User ${userId} viewed infographic ${infographicId}`);
+      return true;
+    }
+
+    try {
+      // In a real implementation, you would log this to an analytics table
+      // For now, we'll just log it
+      console.log(`User ${userId} viewed infographic ${infographicId}`);
+      return true;
+    } catch (error) {
+      console.error("Error tracking infographic view:", error);
+      return false;
+    }
+  }
+
+  // Create tables for parent dashboard
+  async createParentTables() {
+    const statements = `
+      -- Add profile_data column to users table if it doesn't exist
+      PRAGMA table_info(users);
+      
+      -- Create table for infographic assets if needed in the future
+      CREATE TABLE IF NOT EXISTS infographic_assets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        content TEXT,
+        image_path TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      
+      -- Create table for tracking user interactions with infographics
+      CREATE TABLE IF NOT EXISTS infographic_views (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        infographic_id INTEGER NOT NULL,
+        viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+    `;
+
+    try {
+      // Execute the SQL to create tables
+      await this.db.execute({ statements });
+      
+      // Check if profile_data column exists in users table
+      const result = await this.db.query('PRAGMA table_info(users);');
+      const columns = result.values || [];
+      
+      // If profile_data column doesn't exist, add it
+      if (!columns.some(column => column.name === 'profile_data')) {
+        await this.db.execute({
+          statements: 'ALTER TABLE users ADD COLUMN profile_data TEXT;'
+        });
+      }
+      
+      console.log("Parent tables created successfully");
+    } catch (error) {
+      console.error("Error creating parent tables:", error);
+    }
+  }
+
   // UTILITY FUNCTIONS
   // Helper method to format date as YYYY-MM-DD
   formatDate(date) {

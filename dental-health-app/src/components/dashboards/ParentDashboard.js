@@ -5,6 +5,9 @@ import logoImage from '../logo.svg';
 import BrushingReport from './parent/BrushingReport';
 import ReminderSettings from './parent/ReminderSettings';
 import InfoGraphics from './parent/InfoGraphics';
+import { useUser } from '../../contexts/UserContext';
+import DatabaseService from '../../services/DatabaseService';
+import MigrationService from '../../services/MigrationService';
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
@@ -12,31 +15,83 @@ const ParentDashboard = () => {
   const [parentName, setParentName] = useState('');
   const [childName, setChildName] = useState('');
   
-  // Load user data from localStorage
+  const { currentUser } = useUser();
+  
   useEffect(() => {
-    const parentProfile = JSON.parse(localStorage.getItem('parentProfile') || '{}');
-    setParentName(parentProfile.fullName || 'والد گرامی');
+    const initDatabase = async () => {
+      try {
+        // Initialize database
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+        
+        // Run migration if needed
+        await MigrationService.migrateParentDataToDatabase();
+      } catch (error) {
+        console.error('Error initializing database:', error);
+      }
+    };
     
-    // For demo purposes, we would normally get the child name from a database
-    // or from a specific parent-child relationship in localStorage
-    const childProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
-    setChildName(childProfile.fullName || 'فرزند شما');
-  }, []);
+    initDatabase();
+    
+    const fetchProfileData = async () => {
+      try {
+        if (currentUser?.id) {
+          const parentProfile = JSON.parse(localStorage.getItem('parentProfile') || '{}');
+          setParentName(parentProfile.fullName || 'والد گرامی');
+          
+          await DatabaseService.ensureChildExists(currentUser.id, "کودک");
+          
+          const childData = await DatabaseService.getChildForParent(currentUser.id);
+          if (childData) {
+            setChildName(childData.name || 'فرزند شما');
+          } else {
+            setChildName('فرزند شما');
+          }
+        } else {
+          const parentProfile = JSON.parse(localStorage.getItem('parentProfile') || '{}');
+          setParentName(parentProfile.fullName || 'والد گرامی');
+          
+          const childProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
+          setChildName(childProfile.fullName || 'فرزند شما');
+        }
+      } catch (error) {
+        console.error('Error loading profile data:', error);
+        
+        const parentProfile = JSON.parse(localStorage.getItem('parentProfile') || '{}');
+        setParentName(parentProfile.fullName || 'والد گرامی');
+        
+        const childProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
+        setChildName(childProfile.fullName || 'فرزند شما');
+      }
+    };
+    
+    fetchProfileData();
+  }, [currentUser]);
+  
+  const handleLogout = async () => {
+    try {
+      if (DatabaseService.initialized) {
+        await DatabaseService.close();
+      }
+      
+      localStorage.removeItem('userAuth');
+      localStorage.removeItem('userRole');
+      
+      navigate('/login');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      
+      localStorage.removeItem('userAuth');
+      localStorage.removeItem('userRole');
+      navigate('/login');
+    }
+  };
   
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
   
-  const handleLogout = () => {
-    // Clear auth data
-    localStorage.removeItem('userAuth');
-    localStorage.removeItem('userRole');
-    
-    // Navigate to login page
-    navigate('/login');
-  };
-  
-  // Render the appropriate content based on the active tab
   const renderContent = () => {
     switch (activeTab) {
       case 'report':

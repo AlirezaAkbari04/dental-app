@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ParentComponents.css';
+import DatabaseService from '../../../services/DatabaseService';
 
 const InfoGraphics = () => {
   const [selectedInfoGraphic, setSelectedInfoGraphic] = useState(null);
-  
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
+
   // List of available infographics
   const infographics = [
     {
@@ -45,15 +47,48 @@ const InfoGraphics = () => {
       `
     }
   ];
-  
+
+  // Add this useEffect for database initialization
+  useEffect(() => {
+    const initDatabase = async () => {
+      try {
+        // Initialize database if needed
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+
+        // In the future, this could load infographic assets from the database
+        // For now, we'll just mark assets as loaded
+        setAssetsLoaded(true);
+      } catch (error) {
+        console.error('Error initializing database:', error);
+        // Still mark assets as loaded even if there's an error
+        setAssetsLoaded(true);
+      }
+    };
+
+    initDatabase();
+  }, []);
+
   const handleSelectInfoGraphic = (infographic) => {
     setSelectedInfoGraphic(infographic);
   };
-  
+
   const handleBackToList = () => {
     setSelectedInfoGraphic(null);
   };
-  
+
+  // Show loading state while assets are loading
+  if (!assetsLoaded) {
+    return (
+      <div className="infographics-container">
+        <div className="loading-indicator">
+          <p>در حال بارگذاری اینفوگرافی‌ها...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="infographics-container">
       <div className="infographics-header">
@@ -131,6 +166,14 @@ const InfoGraphics = () => {
           <li>با اشتراک‌گذاری این اطلاعات با دیگر والدین، به ارتقای سطح آگاهی درباره بهداشت دهان و دندان کمک کنید.</li>
         </ul>
       </div>
+      
+      <style jsx>{`
+        .loading-indicator {
+          text-align: center;
+          padding: 2rem;
+          color: #666;
+        }
+      `}</style>
     </div>
   );
 };

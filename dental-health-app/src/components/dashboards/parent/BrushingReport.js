@@ -19,6 +19,78 @@ const BrushingReport = ({ childName = "کودک" }) => {
     evening: { brushed: false, time: '' },
   });
 
+  // Initialize database when the component loads
+  useEffect(() => {
+    const initDatabase = async () => {
+      try {
+        // Initialize database if needed
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+      } catch (error) {
+        console.error('Error initializing database:', error);
+      }
+    };
+
+    initDatabase();
+  }, []);
+
+  // Fetch child data when the component mounts
+  useEffect(() => {
+    const fetchChildData = async () => {
+      if (!currentUser?.id) return;
+
+      try {
+        // Get children for the current parent
+        const children = await DatabaseService.getChildrenByParentId(currentUser.id);
+
+        if (children.length === 0) {
+          // Create a default child if none exists
+          const newChildId = await DatabaseService.createChild(
+            currentUser.id,
+            childName,
+            null, // age
+            null, // gender
+            null // avatarUrl
+          );
+
+          setChildId(newChildId);
+        } else {
+          // Use the first child
+          setChildId(children[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching child data:", error);
+      }
+    };
+
+    fetchChildData();
+  }, [currentUser, childName]);
+
+  // Load brushing data for the current month
+  useEffect(() => {
+    const loadBrushingData = async () => {
+      if (!childId) return;
+
+      try {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth() + 1;
+
+        const data = await DatabaseService.getBrushingRecordsForCalendar(childId, year, month);
+        setBrushingData(data);
+      } catch (error) {
+        console.error("Error loading brushing data:", error);
+      }
+    };
+
+    loadBrushingData();
+  }, [childId, currentMonth]);
+
+  // Save brushing data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('parentBrushingRecord', JSON.stringify(brushingData));
+  }, [brushingData]);
+
   // تابع های تبدیل تاریخ میلادی به شمسی
   const gregorianToJalali = (gy, gm, gd) => {
     var g_d_m, jy, jm, jd, gy2, days;
@@ -105,67 +177,6 @@ const BrushingReport = ({ childName = "کودک" }) => {
     for (gm = 0; gm < 13 && gd > sal_a[gm]; gm++) gd -= sal_a[gm];
     return [gy, gm, gd];
   };
-  
-  // Fetch child data when the component mounts
-  useEffect(() => {
-    const fetchChildData = async () => {
-      if (!currentUser?.id) return;
-
-      try {
-        // Initialize database if needed
-        if (!DatabaseService.initialized) {
-          await DatabaseService.init();
-        }
-
-        // Get children for the current parent
-        const children = await DatabaseService.getChildrenByParentId(currentUser.id);
-
-        if (children.length === 0) {
-          // Create a default child if none exists
-          const newChildId = await DatabaseService.createChild(
-            currentUser.id,
-            childName,
-            null, // age
-            null, // gender
-            null // avatarUrl
-          );
-
-          setChildId(newChildId);
-        } else {
-          // Use the first child
-          setChildId(children[0].id);
-        }
-      } catch (error) {
-        console.error("Error fetching child data:", error);
-      }
-    };
-
-    fetchChildData();
-  }, [currentUser, childName]);
-
-  // Load brushing data for the current month
-  useEffect(() => {
-    const loadBrushingData = async () => {
-      if (!childId) return;
-
-      try {
-        const year = currentMonth.getFullYear();
-        const month = currentMonth.getMonth() + 1;
-
-        const data = await DatabaseService.getBrushingRecordsForCalendar(childId, year, month);
-        setBrushingData(data);
-      } catch (error) {
-        console.error("Error loading brushing data:", error);
-      }
-    };
-
-    loadBrushingData();
-  }, [childId, currentMonth]);
-
-  // Save brushing data to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('parentBrushingRecord', JSON.stringify(brushingData));
-  }, [brushingData]);
   
   // Helper to format date as YYYY-MM-DD (for storage key)
   const formatDateKey = (date) => {
