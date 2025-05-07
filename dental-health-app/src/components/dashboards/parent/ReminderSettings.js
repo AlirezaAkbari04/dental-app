@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './ParentComponents.css';
 
 const ReminderSettings = ({ childName }) => {
@@ -16,6 +16,8 @@ const ReminderSettings = ({ childName }) => {
   });
   
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const audioRef = useRef(null);
   
   // Load reminders from localStorage
   useEffect(() => {
@@ -24,6 +26,19 @@ const ReminderSettings = ({ childName }) => {
       setReminders(savedReminders);
     }
   }, []);
+
+  useEffect(() => {
+    const audioElement = audioRef.current;
+  
+    return () => {
+      // Clean up audio when component unmounts
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+      }
+    };
+  }, []);
+  
   
   // Handle toggling reminder on/off
   const handleToggleReminder = (type, checked) => {
@@ -60,7 +75,7 @@ const ReminderSettings = ({ childName }) => {
   
   // Handle saving all reminders
   const handleSaveReminders = () => {
-    // In a real app, would save to local storage or database
+    // Save to local storage
     localStorage.setItem('parentReminders', JSON.stringify(reminders));
     
     // Show success message
@@ -70,16 +85,52 @@ const ReminderSettings = ({ childName }) => {
     }, 3000);
   };
   
+  // Handle testing a reminder alarm sound
+  const handleTestAlarm = () => {
+    if (isPlayingAudio) {
+      // Stop audio if already playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        setIsPlayingAudio(false);
+      }
+    } else {
+      // Play audio
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play()
+          .then(() => {
+            setIsPlayingAudio(true);
+            // Set a timeout to stop audio after 5 seconds
+            setTimeout(() => {
+              if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+                setIsPlayingAudio(false);
+              }
+            }, 5000);
+          })
+          .catch(err => {
+            console.error("Error playing audio:", err);
+            alert("خطا در پخش صدا. لطفاً مطمئن شوید که صدای دستگاه شما روشن است.");
+          });
+      }
+    }
+  };
+  
   // Handle testing a reminder (for demo purposes)
   const handleTestReminder = (type) => {
-    // In a real app, would show notification in the app
+    // Show a notification message
     alert(`آزمایش اعلان برنامه: ${reminders[type].message}`);
+    
+    // Play the alarm sound
+    handleTestAlarm();
   };
   
   return (
     <div className="reminder-settings-container">
       <div className="settings-header">
-        <h2>تنظیمات یادآوری برای {childName}</h2>
+        <h2>تنظیمات یادآوری برای {childName || "کودک"}</h2>
         <p className="settings-description">
           یادآوری‌ها از طریق برنامه به شما نمایش داده خواهند شد.
         </p>
@@ -126,11 +177,11 @@ const ReminderSettings = ({ childName }) => {
           
           <div className="reminder-actions">
             <button 
-              className="test-button"
+              className={`test-button ${isPlayingAudio ? 'playing' : ''}`}
               onClick={() => handleTestReminder('brushMorning')}
               disabled={!reminders.brushMorning.enabled}
             >
-              آزمایش اعلان
+              {isPlayingAudio ? 'توقف صدا' : 'آزمایش اعلان'}
             </button>
           </div>
         </div>
@@ -173,13 +224,38 @@ const ReminderSettings = ({ childName }) => {
           
           <div className="reminder-actions">
             <button 
-              className="test-button"
+              className={`test-button ${isPlayingAudio ? 'playing' : ''}`}
               onClick={() => handleTestReminder('brushEvening')}
               disabled={!reminders.brushEvening.enabled}
             >
-              آزمایش اعلان
+              {isPlayingAudio ? 'توقف صدا' : 'آزمایش اعلان'}
             </button>
           </div>
+        </div>
+      </div>
+      
+      <div className="alarm-preview">
+        <h3>صدای اعلان یادآوری</h3>
+        <div className="alarm-preview-container">
+          <div className="alarm-info">
+            <div className="alarm-name">آهنگ پیش‌فرض یادآوری</div>
+          </div>
+          <button 
+            className={`preview-button ${isPlayingAudio ? 'playing' : ''}`}
+            onClick={handleTestAlarm}
+          >
+            {isPlayingAudio ? (
+              <>
+                <span className="preview-icon">⏹️</span>
+                <span>توقف پخش</span>
+              </>
+            ) : (
+              <>
+                <span className="preview-icon">▶️</span>
+                <span>پخش صدا</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
       
@@ -213,6 +289,84 @@ const ReminderSettings = ({ childName }) => {
           <li>برای دریافت بهترین نتیجه، گوشی خود را هنگام خواب در حالت بی‌صدا قرار ندهید تا اعلان‌های یادآوری را از دست ندهید.</li>
         </ul>
       </div>
+      
+      {/* Audio element for alarm sound */}
+      <audio ref={audioRef} preload="auto">
+        <source src="/assets/audios/parent_alarm.mp3" type="audio/mpeg" />
+        <source src="/assets/audios/parent_alarm.ogg" type="audio/ogg" />
+      </audio>
+      
+      <style jsx>{`
+        .alarm-preview {
+          background-color: white;
+          border-radius: 12px;
+          padding: 20px;
+          margin: 20px 0;
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .alarm-preview h3 {
+          color: #4a6bff;
+          margin-top: 0;
+          margin-bottom: 15px;
+        }
+        
+        .alarm-preview-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 15px;
+          background-color: #f9f9f9;
+          border-radius: 8px;
+        }
+        
+        .alarm-info {
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .alarm-name {
+          font-weight: bold;
+          margin-bottom: 5px;
+        }
+        
+        .preview-button {
+          display: flex;
+          align-items: center;
+          background-color: #4a6bff;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 8px 15px;
+          cursor: pointer;
+          transition: background-color 0.3s;
+        }
+        
+        .preview-button:hover {
+          background-color: #3a5aee;
+        }
+        
+        .preview-button.playing {
+          background-color: #f44336;
+        }
+        
+        .preview-button.playing:hover {
+          background-color: #d32f2f;
+        }
+        
+        .preview-icon {
+          font-size: 18px;
+          margin-left: 8px;
+        }
+        
+        .test-button.playing {
+          background-color: #f44336;
+        }
+        
+        .test-button.playing:hover {
+          background-color: #d32f2f;
+        }
+      `}</style>
     </div>
   );
 };
