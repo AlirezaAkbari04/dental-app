@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProfileForm from './ProfileForm';
 import '../../styles/ProfileForm.css';
+import { useUser } from '../../contexts/UserContext';
+import DatabaseService from '../../services/DatabaseService';
 
 const ChildProfile = () => {
   const navigate = useNavigate();
+  const { currentUser } = useUser();
   const [formData, setFormData] = useState({
     age: '',
     gender: '',
@@ -20,7 +23,7 @@ const ChildProfile = () => {
       ...formData,
       [name]: value,
     });
-    
+
     // Clear error for this field when typing
     if (errors[name]) {
       setErrors({
@@ -32,46 +35,70 @@ const ChildProfile = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.age) {
       newErrors.age = 'لطفاً سن خود را انتخاب کنید';
     }
-    
+
     if (!formData.gender) {
       newErrors.gender = 'لطفاً جنسیت خود را انتخاب کنید';
     }
-    
+
     if (!formData.grade) {
       newErrors.grade = 'لطفاً مقطع تحصیلی خود را انتخاب کنید';
     }
-    
+
     if (!formData.schoolName) {
       newErrors.schoolName = 'لطفاً نام مدرسه خود را وارد کنید';
     }
-    
+
     if (!formData.educationDistrict) {
       newErrors.educationDistrict = 'لطفاً منطقه آموزش و پرورش خود را وارد کنید';
     }
-    
+
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const newErrors = validateForm();
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
-    // For demo purposes, store in localStorage and log
-    localStorage.setItem('childProfile', JSON.stringify(formData));
-    console.log('Child profile saved:', formData);
-    
-    // Navigate to child dashboard
-    navigate('/dashboard/child');
+
+    try {
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      if (currentUser?.id) {
+        // Create child profile
+        const childId = await DatabaseService.createChild(
+          currentUser.id,
+          formData.name || 'کودک',
+          formData.age,
+          formData.gender,
+          null // avatarUrl
+        );
+
+        // Initialize achievements
+        await DatabaseService.initializeChildAchievements(childId);
+
+        // For compatibility, still save to localStorage
+        localStorage.setItem('childProfile', JSON.stringify(formData));
+      }
+
+      // Navigate to child dashboard
+      navigate('/dashboard/child');
+    } catch (error) {
+      console.error('Error saving child profile:', error);
+      // Still navigate as fallback
+      navigate('/dashboard/child');
+    }
   };
 
   // Generate age options (6-12 years)
@@ -85,10 +112,7 @@ const ChildProfile = () => {
   }
 
   return (
-    <ProfileForm 
-      title="تکمیل پروفایل کودک" 
-      onSubmit={handleSubmit}
-    >
+    <ProfileForm title="تکمیل پروفایل کودک" onSubmit={handleSubmit}>
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="age">سن</label>
@@ -104,7 +128,7 @@ const ChildProfile = () => {
           </select>
           {errors.age && <div className="error-message">{errors.age}</div>}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="gender">جنسیت</label>
           <div className="radio-group">
@@ -132,7 +156,7 @@ const ChildProfile = () => {
           {errors.gender && <div className="error-message">{errors.gender}</div>}
         </div>
       </div>
-      
+
       <div className="form-group">
         <label htmlFor="grade">مقطع تحصیلی</label>
         <select
@@ -153,7 +177,7 @@ const ChildProfile = () => {
         </select>
         {errors.grade && <div className="error-message">{errors.grade}</div>}
       </div>
-      
+
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="schoolName">نام مدرسه</label>
@@ -168,7 +192,7 @@ const ChildProfile = () => {
           />
           {errors.schoolName && <div className="error-message">{errors.schoolName}</div>}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="educationDistrict">منطقه آموزش و پرورش</label>
           <input
@@ -183,7 +207,7 @@ const ChildProfile = () => {
           {errors.educationDistrict && <div className="error-message">{errors.educationDistrict}</div>}
         </div>
       </div>
-      
+
       <div className="achievements-section">
         <h3 className="section-title">امتیازات و دستاوردها</h3>
         <div className="achievements-display">

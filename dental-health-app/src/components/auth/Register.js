@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/Auth.css'; // Make sure this path is correct
+import { useUser } from '../../contexts/UserContext'; // Add this import
 
 function Register() {
   const navigate = useNavigate();
+  const { register } = useUser(); // Add this near the top of your component
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -20,36 +22,36 @@ function Register() {
     setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Basic validation
     if (!formData.email || !formData.password || !formData.name) {
       setError('لطفا تمام فیلدها را پر کنید');
       return;
     }
-    
+
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError('لطفا ایمیل معتبر وارد کنید');
       return;
     }
-    
+
     // Password validation - at least 6 characters
     if (formData.password.length < 6) {
       setError('رمز عبور باید حداقل ۶ کاراکتر باشد');
       return;
     }
 
-    // For demo purposes, store user data in localStorage
-    localStorage.setItem('userAuth', JSON.stringify({
-      email: formData.email,
-      name: formData.name
-    }));
-    
-    // Navigate to role selection page
-    navigate('/role-selection');
+    try {
+      // Use the register function from UserContext
+      await register(formData);
+      // Navigate to role selection page
+      navigate('/role-selection');
+    } catch (err) {
+      setError('خطایی رخ داده است. لطفا دوباره تلاش کنید.');
+    }
   };
 
   return (

@@ -1,11 +1,16 @@
+// src/components/auth/Login.js
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import '../../styles/Auth.css'; // Changed from '../styles/Auth.css'
-import logoImage from '../../logo.svg'; // Changed from '../logo.svg'
+import { useUser } from '../../contexts/UserContext';
+import '../../styles/Auth.css';
+import logoImage from '../../logo.svg';
 
 const Login = () => {
   const [credentials, setCredentials] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { login } = useUser();
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -13,7 +18,7 @@ const Login = () => {
     setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validate input (email or phone number)
@@ -25,12 +30,23 @@ const Login = () => {
       return;
     }
     
-    // For demo purposes, simulate login success
-    // In a real app, you would call your authentication API here
-    console.log('Login attempt with:', credentials);
+    setIsLoading(true);
     
-    // Navigate to role selection page upon successful login
-    navigate('/role-selection');
+    try {
+      const success = await login(credentials);
+      
+      if (success) {
+        // Navigate to role selection or dashboard
+        navigate('/role-selection');
+      } else {
+        setError('خطا در ورود. لطفاً دوباره تلاش کنید');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('خطا در ورود. لطفاً دوباره تلاش کنید');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -52,12 +68,13 @@ const Login = () => {
               placeholder="ایمیل یا شماره موبایل خود را وارد کنید"
               className={error ? 'input-error' : ''}
               dir="ltr" // Input direction is LTR even in RTL layout
+              disabled={isLoading}
             />
             {error && <div className="error-message">{error}</div>}
           </div>
           
-          <button type="submit" className="auth-button">
-            ادامه
+          <button type="submit" className="auth-button" disabled={isLoading}>
+            {isLoading ? 'در حال ورود...' : 'ادامه'}
           </button>
         </form>
         

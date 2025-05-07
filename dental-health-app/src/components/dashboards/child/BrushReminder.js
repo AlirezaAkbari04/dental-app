@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../../styles/ChildComponents.css';
+import { useUser } from '../../../contexts/UserContext'; // Add this import
+import DatabaseService from '../../../services/DatabaseService'; // Add this import
 
 const BrushReminder = () => {
+  const { currentUser } = useUser(); // Get current user
+  const [childId, setChildId] = useState(null); // Add child ID state
+
   const [alarms, setAlarms] = useState({
     morning: { hour: 7, minute: 30, enabled: true },
     evening: { hour: 20, minute: 0, enabled: true }
@@ -40,6 +45,61 @@ const BrushReminder = () => {
     }
   }, [alarms]);
   
+  // Load reminders from database
+  useEffect(() => {
+    const fetchReminders = async () => {
+      if (!currentUser?.id) return;
+
+      try {
+        // Initialize database if needed
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+
+        // Get children (if parent) or use current user ID (if child)
+        if (currentUser.role === 'parent') {
+          const children = await DatabaseService.getChildrenByParentId(currentUser.id);
+          if (children.length > 0) {
+            setChildId(children[0].id);
+          }
+        } else if (currentUser.role === 'child') {
+          setChildId(currentUser.id);
+        }
+
+        // Get reminders for the user
+        const reminders = await DatabaseService.getRemindersByUserId(currentUser.id);
+
+        if (reminders && reminders.length > 0) {
+          const updatedAlarms = { ...alarms };
+
+          for (const reminder of reminders) {
+            if (reminder.type === 'brushMorning') {
+              const [hour, minute] = reminder.time.split(':');
+              updatedAlarms.morning = {
+                hour: parseInt(hour, 10),
+                minute: parseInt(minute, 10),
+                enabled: reminder.enabled === 1,
+              };
+            } else if (reminder.type === 'brushEvening') {
+              const [hour, minute] = reminder.time.split(':');
+              updatedAlarms.evening = {
+                hour: parseInt(hour, 10),
+                minute: parseInt(minute, 10),
+                enabled: reminder.enabled === 1,
+              };
+            }
+          }
+
+          setAlarms(updatedAlarms);
+        }
+      } catch (error) {
+        console.error('Error loading reminders:', error);
+      }
+    };
+
+    fetchReminders();
+  }, [currentUser]);
+
   // Check if alarm should be triggered
   useEffect(() => {
     // Set up an interval to check if alarm should be triggered
@@ -208,33 +268,39 @@ const BrushReminder = () => {
     setTimeLeft(120);
   };
   
-  const showCongratulations = () => {
+  const showCongratulations = async () => {
     console.log("Showing congratulations");
     setShowCongrats(true);
-    
+
     // Play congratulations sound
     if (congratsAudioRef.current) {
-      congratsAudioRef.current.play().catch(error => {
-        console.error("Error playing congratulations audio:", error);
-        // Continue even if audio fails
+      congratsAudioRef.current.play().catch((error) => {
+        console.error('Error playing congratulations audio:', error);
       });
     }
-    
-    // Add to achievements
-    try {
-      const achievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
-      
-      const updatedAchievements = {
-        stars: (achievements.stars || 0) + 1,
-        regularBrushing: (achievements.regularBrushing || 0) + 1,
-        diamonds: (achievements.diamonds || 0),
-        cleanedAreas: (achievements.cleanedAreas || 0),
-        healthySnacks: (achievements.healthySnacks || 0)
-      };
-      
-      localStorage.setItem('childAchievements', JSON.stringify(updatedAchievements));
-    } catch (error) {
-      console.error("Error updating achievements:", error);
+
+    if (childId) {
+      try {
+        // Get current date as YYYY-MM-DD
+        const currentDate = DatabaseService.formatDate(new Date());
+
+        // Determine if it's morning or evening based on current time
+        const currentHour = new Date().getHours();
+        const timeOfDay = currentHour < 12 ? 'morning' : 'evening';
+
+        // Create brushing record in database
+        await DatabaseService.createBrushingRecord(
+          childId,
+          currentDate,
+          timeOfDay,
+          timeLeft.toString(), // Convert to string
+          true // Completed
+        );
+
+        console.log('Brushing record saved to database');
+      } catch (error) {
+        console.error('Error saving brushing record:', error);
+      }
     }
   };
   

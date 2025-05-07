@@ -1,6 +1,11 @@
+// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import './App.css'; // Changed from './styles/App.css'
+import './App.css';
+import { UserProvider } from './contexts/UserContext';
+import { useUser } from './contexts/UserContext';
+
+// Import components
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import RoleSelection from './components/auth/RoleSelection';
@@ -11,99 +16,132 @@ import ChildDashboard from './components/dashboards/ChildDashboard';
 import CaretakerDashboard from './components/dashboards/CaretakerDashboard';
 import ParentDashboard from './components/dashboards/ParentDashboard';
 
-// Simple auth check - in a real app, you would use a more robust solution
-const isAuthenticated = () => {
-  return localStorage.getItem('userAuth') !== null;
-};
+function AppContent() {
+  const { currentUser, isLoading } = useUser();
 
-// Protected route component
-const ProtectedRoute = ({ children }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" replace />;
+  if (isLoading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-indicator"></div>
+        <p>در حال بارگذاری...</p>
+      </div>
+    );
   }
-  return children;
-};
+
+  // Protected route component
+  const ProtectedRoute = ({ children, requiredRole }) => {
+    if (!currentUser) {
+      return <Navigate to="/login" replace />;
+    }
+    
+    if (requiredRole && currentUser.role !== requiredRole) {
+      // Redirect to appropriate dashboard based on role
+      if (currentUser.role === 'child') {
+        return <Navigate to="/dashboard/child" replace />;
+      } else if (currentUser.role === 'parent') {
+        return <Navigate to="/dashboard/parent" replace />;
+      } else if (currentUser.role === 'teacher') {
+        return <Navigate to="/dashboard/caretaker" replace />;
+      }
+    }
+    
+    return children;
+  };
+
+  return (
+    <div className="app" dir="rtl">
+      <Routes>
+        {/* Public routes */}
+        <Route path="/login" element={currentUser ? <Navigate to={`/dashboard/${currentUser.role}`} /> : <Login />} />
+        <Route path="/register" element={currentUser ? <Navigate to={`/dashboard/${currentUser.role}`} /> : <Register />} />
+        
+        {/* Protected routes */}
+        <Route 
+          path="/role-selection" 
+          element={
+            <ProtectedRoute>
+              <RoleSelection />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Profile completion routes */}
+        <Route 
+          path="/profile/child" 
+          element={
+            <ProtectedRoute requiredRole="child">
+              <ChildProfile />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/profile/parent" 
+          element={
+            <ProtectedRoute requiredRole="parent">
+              <ParentProfile />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/profile/teacher" 
+          element={
+            <ProtectedRoute requiredRole="teacher">
+              <TeacherProfile />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Dashboard routes */}
+        <Route 
+          path="/dashboard/child" 
+          element={
+            <ProtectedRoute requiredRole="child">
+              <ChildDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/dashboard/caretaker" 
+          element={
+            <ProtectedRoute requiredRole="teacher">
+              <CaretakerDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/dashboard/parent" 
+          element={
+            <ProtectedRoute requiredRole="parent">
+              <ParentDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Default redirect */}
+        <Route path="/" element={
+          currentUser 
+            ? <Navigate to={`/dashboard/${currentUser.role}`} replace /> 
+            : <Navigate to="/login" replace />
+        } />
+        
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </div>
+  );
+}
 
 function App() {
   return (
-    <Router>
-      <div className="app" dir="rtl">
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Protected routes */}
-          <Route 
-            path="/role-selection" 
-            element={
-              <ProtectedRoute>
-                <RoleSelection />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Profile completion routes */}
-          <Route 
-            path="/profile/child" 
-            element={
-              <ProtectedRoute>
-                <ChildProfile />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/profile/parent" 
-            element={
-              <ProtectedRoute>
-                <ParentProfile />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/profile/teacher" 
-            element={
-              <ProtectedRoute>
-                <TeacherProfile />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Dashboard routes */}
-          <Route 
-            path="/dashboard/child" 
-            element={
-              <ProtectedRoute>
-                <ChildDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/dashboard/caretaker" 
-            element={
-              <ProtectedRoute>
-                <CaretakerDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/dashboard/parent" 
-            element={
-              <ProtectedRoute>
-                <ParentDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Redirect to login if no route matches */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </div>
-    </Router>
+    <UserProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </UserProvider>
   );
 }
 

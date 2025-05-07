@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../../contexts/UserContext'; // Add this import
+import DatabaseService from '../../services/DatabaseService'; // Add this import
 
 function ParentRegistration() {
   const navigate = useNavigate();
+  const { currentUser } = useUser(); // Add this near the top of your component
   const [formData, setFormData] = useState({
     fullName: '',
     parentType: '',
@@ -29,12 +32,27 @@ function ParentRegistration() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically send this data to your backend
-    console.log('Parent Registration Data:', formData);
-    // Navigate to parent dashboard
-    navigate('/dashboard/parent');
+
+    try {
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      if (currentUser?.id) {
+        // Save data to database
+        await DatabaseService.createParentProfile(currentUser.id, formData);
+      }
+
+      // Navigate to parent dashboard
+      navigate('/dashboard/parent');
+    } catch (error) {
+      console.error('Error saving data:', error);
+      // Still navigate as fallback
+      navigate('/dashboard/parent');
+    }
   };
 
   return (

@@ -1,28 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../../contexts/UserContext'; // Add this import
+import DatabaseService from '../../services/DatabaseService'; // Add this import
 
 function ChildRegistration() {
   const navigate = useNavigate();
+  const { currentUser } = useUser(); // Add this near the top of your component
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     age: '',
     gender: '',
-    educationLevel: ''
+    educationLevel: '',
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleGenderSelect = (gender) => {
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      gender
+      gender,
     }));
   };
 
@@ -30,12 +33,33 @@ function ChildRegistration() {
     setSelectedAvatar(avatarIndex);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically send this data to your backend
-    console.log('Child Registration Data:', { ...formData, avatar: selectedAvatar });
-    // Navigate to child dashboard
-    navigate('/dashboard/child');
+
+    try {
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      if (currentUser?.id) {
+        // Save data to database
+        await DatabaseService.createChild(
+          currentUser.id,
+          formData.name,
+          formData.age,
+          formData.gender,
+          selectedAvatar // Save avatar index
+        );
+      }
+
+      // Navigate to child dashboard
+      navigate('/dashboard/child');
+    } catch (error) {
+      console.error('Error saving data:', error);
+      // Still navigate as fallback
+      navigate('/dashboard/child');
+    }
   };
 
   return (
@@ -43,9 +67,9 @@ function ChildRegistration() {
       <div className="register-card">
         <div className="logo">
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="logo-svg">
-            <path d="M50 10C33.4 10 20 23.4 20 40v30c0 11 9 20 20 20s20-9 20-20V50h-10v20c0 5.5-4.5 10-10 10s-10-4.5-10-10V40c0-11 9-20 20-20s20 9 20 20v5h10v-5c0-16.6-13.4-30-30-30z" fill="#4a6bff"/>
-            <circle cx="35" cy="35" r="5" fill="#ffcc00"/>
-            <circle cx="65" cy="35" r="5" fill="#ffcc00"/>
+            <path d="M50 10C33.4 10 20 23.4 20 40v30c0 11 9 20 20 20s20-9 20-20V50h-10v20c0 5.5-4.5 10-10 10s-10-4.5-10-10V40c0-11 9-20 20-20s20 9 20 20v5h10v-5c0-16.6-13.4-30-30-30z" fill="#4a6bff" />
+            <circle cx="35" cy="35" r="5" fill="#ffcc00" />
+            <circle cx="65" cy="35" r="5" fill="#ffcc00" />
           </svg>
         </div>
 

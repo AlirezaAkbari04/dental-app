@@ -2,25 +2,45 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/Auth.css';
 import logoImage from '../../logo.svg';
+import { useUser } from '../../contexts/UserContext';
+import DatabaseService from '../../services/DatabaseService';
 
 const RoleSelection = () => {
   const navigate = useNavigate();
+  const { currentUser } = useUser();
 
-  const handleRoleSelect = (role) => {
-    localStorage.setItem('userRole', role);
-    
-    switch (role) {
-      case 'child':
-        navigate('/profile/child');
-        break;
-      case 'teacher':
-        navigate('/profile/teacher');
-        break;
-      case 'parent':
-        navigate('/profile/parent');
-        break;
-      default:
-        navigate('/profile/child');
+  const handleRoleSelect = async (role) => {
+    try {
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      // Update user role in database
+      if (currentUser?.id) {
+        // Update user role in database (would need to add this method to DatabaseService)
+        // For now, still use localStorage for compatibility
+        localStorage.setItem('userRole', role);
+      }
+
+      // Navigate to appropriate profile page
+      switch (role) {
+        case 'child':
+          navigate('/profile/child');
+          break;
+        case 'teacher':
+          navigate('/profile/teacher');
+          break;
+        case 'parent':
+          navigate('/profile/parent');
+          break;
+        default:
+          navigate('/profile/child');
+      }
+    } catch (error) {
+      console.error("Error updating role:", error);
+      // Navigate anyway as fallback
+      navigate(`/profile/${role}`);
     }
   };
 

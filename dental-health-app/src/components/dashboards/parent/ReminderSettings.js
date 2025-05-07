@@ -1,31 +1,74 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ParentComponents.css';
+import { useUser } from '../../contexts/UserContext';
+import DatabaseService from '../../services/DatabaseService';
 
 const ReminderSettings = ({ childName }) => {
+  const { currentUser } = useUser(); // Get current user
+
   const [reminders, setReminders] = useState({
     brushMorning: {
+      id: null, // Add ID field
       enabled: true,
       time: '07:30',
-      message: 'یادآوری مسواک صبح'
+      message: 'یادآوری مسواک صبح',
     },
     brushEvening: {
+      id: null, // Add ID field
       enabled: true,
       time: '20:00',
-      message: 'یادآوری مسواک شب'
-    }
+      message: 'یادآوری مسواک شب',
+    },
   });
-  
+
   const [showSuccess, setShowSuccess] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const audioRef = useRef(null);
-  
-  // Load reminders from localStorage
+
+  // Load reminders from database
   useEffect(() => {
-    const savedReminders = JSON.parse(localStorage.getItem('parentReminders') || '{}');
-    if (Object.keys(savedReminders).length > 0) {
-      setReminders(savedReminders);
-    }
-  }, []);
+    const loadReminders = async () => {
+      if (!currentUser?.id) return;
+
+      try {
+        // Initialize database if needed
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+
+        // Get reminders for the parent
+        const dbReminders = await DatabaseService.getRemindersByUserId(currentUser.id);
+
+        if (dbReminders && dbReminders.length > 0) {
+          const updatedReminders = { ...reminders };
+
+          for (const reminder of dbReminders) {
+            if (reminder.type === 'brushMorning') {
+              updatedReminders.brushMorning = {
+                id: reminder.id,
+                enabled: reminder.enabled === 1,
+                time: reminder.time,
+                message: reminder.message,
+              };
+            } else if (reminder.type === 'brushEvening') {
+              updatedReminders.brushEvening = {
+                id: reminder.id,
+                enabled: reminder.enabled === 1,
+                time: reminder.time,
+                message: reminder.message,
+              };
+            }
+          }
+
+          setReminders(updatedReminders);
+        }
+      } catch (error) {
+        console.error('Error loading reminders from database:', error);
+      }
+    };
+
+    loadReminders();
+  }, [currentUser]);
 
   useEffect(() => {
     const audioElement = audioRef.current;
@@ -38,7 +81,6 @@ const ReminderSettings = ({ childName }) => {
       }
     };
   }, []);
-  
   
   // Handle toggling reminder on/off
   const handleToggleReminder = (type, checked) => {
@@ -73,16 +115,85 @@ const ReminderSettings = ({ childName }) => {
     }));
   };
   
-  // Handle saving all reminders
-  const handleSaveReminders = () => {
-    // Save to local storage
-    localStorage.setItem('parentReminders', JSON.stringify(reminders));
-    
-    // Show success message
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 3000);
+  // Update the save function to use the database
+  const handleSaveReminders = async () => {
+    if (!currentUser?.id) return;
+
+    try {
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      // Update or create morning reminder
+      if (reminders.brushMorning.id) {
+        // Update existing
+        await DatabaseService.updateReminder(
+          reminders.brushMorning.id,
+          'brushMorning',
+          reminders.brushMorning.time,
+          reminders.brushMorning.message,
+          reminders.brushMorning.enabled
+        );
+      } else {
+        // Create new
+        const newId = await DatabaseService.createReminder(
+          currentUser.id,
+          'brushMorning',
+          reminders.brushMorning.time,
+          reminders.brushMorning.message,
+          reminders.brushMorning.enabled
+        );
+
+        // Update state with new ID
+        setReminders((prev) => ({
+          ...prev,
+          brushMorning: {
+            ...prev.brushMorning,
+            id: newId,
+          },
+        }));
+      }
+
+      // Update or create evening reminder
+      if (reminders.brushEvening.id) {
+        // Update existing
+        await DatabaseService.updateReminder(
+          reminders.brushEvening.id,
+          'brushEvening',
+          reminders.brushEvening.time,
+          reminders.brushEvening.message,
+          reminders.brushEvening.enabled
+        );
+      } else {
+        // Create new
+        const newId = await DatabaseService.createReminder(
+          currentUser.id,
+          'brushEvening',
+          reminders.brushEvening.time,
+          reminders.brushEvening.message,
+          reminders.brushEvening.enabled
+        );
+
+        // Update state with new ID
+        setReminders((prev) => ({
+          ...prev,
+          brushEvening: {
+            ...prev.brushEvening,
+            id: newId,
+          },
+        }));
+      }
+
+      // Show success message
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Error saving reminders to database:', error);
+      alert('خطا در ذخیره‌سازی تنظیمات. لطفاً دوباره تلاش کنید.');
+    }
   };
   
   // Handle testing a reminder alarm sound

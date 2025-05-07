@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../../contexts/UserContext'; // Add this import
+import DatabaseService from '../../services/DatabaseService'; // Add this import
 
 function HealthConsultantRegistration() {
   const navigate = useNavigate();
+  const { currentUser } = useUser(); // Add this near the top of your component
   const [formData, setFormData] = useState({
     fullName: '',
     gender: '',
@@ -51,12 +54,27 @@ function HealthConsultantRegistration() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically send this data to your backend
-    console.log('Health Consultant Registration Data:', formData);
-    // Navigate to caretaker dashboard
-    navigate('/dashboard/caretaker');
+
+    try {
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      if (currentUser?.id) {
+        // Save data to database
+        await DatabaseService.createHealthConsultantProfile(currentUser.id, formData);
+      }
+
+      // Navigate to caretaker dashboard
+      navigate('/dashboard/caretaker');
+    } catch (error) {
+      console.error('Error saving consultant data:', error);
+      // Still navigate as fallback
+      navigate('/dashboard/caretaker');
+    }
   };
 
   return (

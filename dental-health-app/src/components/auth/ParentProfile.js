@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProfileForm from './ProfileForm';
 import '../../styles/ProfileForm.css';
+import { useUser } from '../../contexts/UserContext'; // Add this import
+import DatabaseService from '../../services/DatabaseService'; // Add this import
 
 const ParentProfile = () => {
   const navigate = useNavigate();
+  const { currentUser } = useUser(); // Add this near the top of your component
   const [formData, setFormData] = useState({
     parentType: '',
     relationship: '',
@@ -63,7 +66,7 @@ const ParentProfile = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     const newErrors = validateForm();
@@ -73,12 +76,25 @@ const ParentProfile = () => {
       return;
     }
     
-    // For demo purposes, store in localStorage and log
-    localStorage.setItem('parentProfile', JSON.stringify(formData));
-    console.log('Parent profile saved:', formData);
-    
-    // Navigate to parent dashboard
-    navigate('/dashboard/parent');
+    try {
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      // Update parent profile in database
+      // (Note: You would need to extend DatabaseService to support this)
+
+      // For compatibility, still save to localStorage
+      localStorage.setItem('parentProfile', JSON.stringify(formData));
+
+      // Navigate to parent dashboard
+      navigate('/dashboard/parent');
+    } catch (error) {
+      console.error('Error saving parent profile:', error);
+      // Still navigate as fallback
+      navigate('/dashboard/parent');
+    }
   };
 
   // Education options

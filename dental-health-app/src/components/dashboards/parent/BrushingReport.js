@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
-// BrushingReport.js
+import { useUser } from '../../../contexts/UserContext'; // Added this import
+import DatabaseService from '../../../services/DatabaseService'; // Added this import
 
 const BrushingReport = ({ childName = "کودک" }) => {
-  // States
+  const { currentUser } = useUser(); // Get current user from context
+
+  // Add childId state
+  const [childId, setChildId] = useState(null);
+
+  // Existing states
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [brushingData, setBrushingData] = useState({});
   const [dateRange, setDateRange] = useState('week');
@@ -10,9 +16,9 @@ const BrushingReport = ({ childName = "کودک" }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentRecord, setCurrentRecord] = useState({
     morning: { brushed: false, time: '' },
-    evening: { brushed: false, time: '' }
+    evening: { brushed: false, time: '' },
   });
-  
+
   // تابع های تبدیل تاریخ میلادی به شمسی
   const gregorianToJalali = (gy, gm, gd) => {
     var g_d_m, jy, jm, jd, gy2, days;
@@ -100,19 +106,62 @@ const BrushingReport = ({ childName = "کودک" }) => {
     return [gy, gm, gd];
   };
   
-  // Load brushing data from localStorage
+  // Fetch child data when the component mounts
   useEffect(() => {
-    const savedData = localStorage.getItem('parentBrushingRecord');
-    if (savedData) {
+    const fetchChildData = async () => {
+      if (!currentUser?.id) return;
+
       try {
-        setBrushingData(JSON.parse(savedData));
-      } catch (e) {
-        console.error("Error parsing saved data:", e);
-        setBrushingData({});
+        // Initialize database if needed
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+
+        // Get children for the current parent
+        const children = await DatabaseService.getChildrenByParentId(currentUser.id);
+
+        if (children.length === 0) {
+          // Create a default child if none exists
+          const newChildId = await DatabaseService.createChild(
+            currentUser.id,
+            childName,
+            null, // age
+            null, // gender
+            null // avatarUrl
+          );
+
+          setChildId(newChildId);
+        } else {
+          // Use the first child
+          setChildId(children[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching child data:", error);
       }
-    }
-  }, []);
-  
+    };
+
+    fetchChildData();
+  }, [currentUser, childName]);
+
+  // Load brushing data for the current month
+  useEffect(() => {
+    const loadBrushingData = async () => {
+      if (!childId) return;
+
+      try {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth() + 1;
+
+        const data = await DatabaseService.getBrushingRecordsForCalendar(childId, year, month);
+        setBrushingData(data);
+      } catch (error) {
+        console.error("Error loading brushing data:", error);
+      }
+    };
+
+    loadBrushingData();
+  }, [childId, currentMonth]);
+
   // Save brushing data to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('parentBrushingRecord', JSON.stringify(brushingData));
@@ -153,19 +202,41 @@ const BrushingReport = ({ childName = "کودک" }) => {
   };
   
   // Save record from modal and update state
-  const handleSaveRecord = () => {
-    if (!selectedDate) return;
-    
+  const handleSaveRecord = async () => {
+    if (!selectedDate || !childId) return;
+
     const dateKey = formatDateKey(selectedDate);
-    
-    // Create a new object to ensure React detects the state change
-    const newBrushingData = {
-      ...brushingData,
-      [dateKey]: currentRecord
-    };
-    
-    setBrushingData(newBrushingData);
-    setShowAddModal(false);
+
+    try {
+      // Save morning record
+      await DatabaseService.createBrushingRecord(
+        childId,
+        dateKey,
+        'morning',
+        currentRecord.morning.time,
+        currentRecord.morning.brushed
+      );
+
+      // Save evening record
+      await DatabaseService.createBrushingRecord(
+        childId,
+        dateKey,
+        'evening',
+        currentRecord.evening.time,
+        currentRecord.evening.brushed
+      );
+
+      // Update local state
+      setBrushingData((prev) => ({
+        ...prev,
+        [dateKey]: currentRecord,
+      }));
+
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Error saving brushing record:", error);
+      alert("خطا در ذخیره‌سازی اطلاعات");
+    }
   };
   
   // Handle record changes in the modal
