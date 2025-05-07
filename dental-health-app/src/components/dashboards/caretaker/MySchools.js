@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './CaretakerComponents.css';
+import DatabaseService from '../../../services/DatabaseService'; // Add this import
 
 const MySchools = () => {
   const [schools, setSchools] = useState([]);
@@ -13,18 +14,45 @@ const MySchools = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
-  
-  // Load schools from localStorage
+
+  // Load schools from database or localStorage
   useEffect(() => {
-    const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-    setSchools(savedSchools);
+    const fetchSchools = async () => {
+      try {
+        // Initialize database if needed
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+
+        // Get current user ID
+        const userAuth = JSON.parse(localStorage.getItem('userAuth') || '{}');
+        const userId = userAuth.id;
+
+        if (userId) {
+          // Get schools from database
+          const schoolsData = await DatabaseService.getSchoolsByCaretakerId(userId);
+          setSchools(schoolsData);
+        } else {
+          // Fallback to localStorage if user ID not found
+          const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+          setSchools(savedSchools);
+        }
+      } catch (error) {
+        console.error('Error loading schools:', error);
+        // Fallback to localStorage
+        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+        setSchools(savedSchools);
+      }
+    };
+
+    fetchSchools();
   }, []);
-  
+
   // Save schools to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('caretakerSchools', JSON.stringify(schools));
   }, [schools]);
-  
+
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -33,71 +61,136 @@ const MySchools = () => {
       [name]: value
     });
   };
-  
+
   // Handle checkbox changes for activity days
   const handleDayChange = (day) => {
     const updatedDays = formData.activityDays.includes(day)
       ? formData.activityDays.filter(d => d !== day)
       : [...formData.activityDays, day];
-    
+
     setFormData({
       ...formData,
       activityDays: updatedDays
     });
   };
-  
+
   // Handle adding a new school
-  const handleAddSchool = () => {
+  const handleAddSchool = async () => {
     // Simple validation
     if (!formData.name) {
       alert('لطفاً نام مدرسه را وارد کنید');
       return;
     }
-    
-    const newSchool = {
-      id: Date.now().toString(),
-      name: formData.name,
-      type: formData.type,
-      activityDays: formData.activityDays,
-      students: []
-    };
-    
-    setSchools([...schools, newSchool]);
-    resetForm();
-    setShowAddModal(false);
+
+    try {
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      // Get current user ID
+      const userAuth = JSON.parse(localStorage.getItem('userAuth') || '{}');
+      const userId = userAuth.id;
+
+      // Create new school
+      const schoolId = await DatabaseService.createSchool(
+        userId,
+        formData.name,
+        formData.type,
+        formData.activityDays
+      );
+
+      if (schoolId) {
+        const newSchool = {
+          id: schoolId,
+          name: formData.name,
+          type: formData.type,
+          activityDays: formData.activityDays,
+          students: []
+        };
+
+        setSchools([...schools, newSchool]);
+        resetForm();
+        setShowAddModal(false);
+      } else {
+        alert('خطا در ایجاد مدرسه. لطفاً دوباره تلاش کنید');
+      }
+    } catch (error) {
+      console.error('Error adding school:', error);
+      alert('خطا در ایجاد مدرسه. لطفاً دوباره تلاش کنید');
+    }
   };
-  
+
   // Handle updating a school
-  const handleUpdateSchool = () => {
+  const handleUpdateSchool = async () => {
     if (!formData.name) {
       alert('لطفاً نام مدرسه را وارد کنید');
       return;
     }
-    
-    const updatedSchools = schools.map(school => 
-      school.id === currentSchool.id 
-        ? {
-            ...school,
-            name: formData.name,
-            type: formData.type,
-            activityDays: formData.activityDays
-          }
-        : school
-    );
-    
-    setSchools(updatedSchools);
-    resetForm();
-    setShowEditModal(false);
-  };
-  
-  // Handle deleting a school
-  const handleDeleteSchool = (id) => {
-    if (window.confirm('آیا از حذف این مدرسه اطمینان دارید؟')) {
-      const updatedSchools = schools.filter(school => school.id !== id);
-      setSchools(updatedSchools);
+
+    try {
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      // Update school in database
+      const success = await DatabaseService.updateSchool(
+        currentSchool.id,
+        formData.name,
+        formData.type,
+        formData.activityDays
+      );
+
+      if (success) {
+        const updatedSchools = schools.map(school =>
+          school.id === currentSchool.id
+            ? {
+                ...school,
+                name: formData.name,
+                type: formData.type,
+                activityDays: formData.activityDays
+              }
+            : school
+        );
+
+        setSchools(updatedSchools);
+        resetForm();
+        setShowEditModal(false);
+      } else {
+        alert('خطا در به‌روزرسانی مدرسه. لطفاً دوباره تلاش کنید');
+      }
+    } catch (error) {
+      console.error('Error updating school:', error);
+      alert('خطا در به‌روزرسانی مدرسه. لطفاً دوباره تلاش کنید');
     }
   };
-  
+
+  // Handle deleting a school
+  const handleDeleteSchool = async (id) => {
+    if (window.confirm('آیا از حذف این مدرسه اطمینان دارید؟')) {
+      try {
+        // Initialize database if needed
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+
+        // Delete school from database
+        const success = await DatabaseService.deleteSchool(id);
+
+        if (success) {
+          const updatedSchools = schools.filter(school => school.id !== id);
+          setSchools(updatedSchools);
+        } else {
+          alert('خطا در حذف مدرسه. لطفاً دوباره تلاش کنید');
+        }
+      } catch (error) {
+        console.error('Error deleting school:', error);
+        alert('خطا در حذف مدرسه. لطفاً دوباره تلاش کنید');
+      }
+    }
+  };
+
   // Open the edit modal with school data
   const openEditModal = (school) => {
     setCurrentSchool(school);
@@ -108,7 +201,7 @@ const MySchools = () => {
     });
     setShowEditModal(true);
   };
-  
+
   // Reset the form data
   const resetForm = () => {
     setFormData({
@@ -118,7 +211,7 @@ const MySchools = () => {
     });
     setCurrentSchool(null);
   };
-  
+
   // Get days of week in Persian
   const weekDays = [
     { value: 'saturday', label: 'شنبه' },
@@ -128,24 +221,24 @@ const MySchools = () => {
     { value: 'wednesday', label: 'چهارشنبه' },
     { value: 'thursday', label: 'پنج‌شنبه' }
   ];
-  
+
   // Format activity days for display
   const formatActivityDays = (days) => {
     if (!days || !Array.isArray(days) || days.length === 0) return 'تعیین نشده';
-    
+
     return days
       .map(day => weekDays.find(d => d.value === day)?.label || day)
       .join('، ');
   };
-  
+
   // Filter and search schools
   const filteredSchools = schools.filter(school => {
     const matchesSearch = school.name.includes(searchTerm);
     const matchesType = filterType === 'all' || school.type === filterType;
-    
+
     return matchesSearch && matchesType;
   });
-  
+
   return (
     <div className="my-schools-container">
       <div className="content-header">
@@ -155,7 +248,7 @@ const MySchools = () => {
           افزودن مدرسه جدید
         </button>
       </div>
-      
+
       <div className="filter-container">
         <input
           type="text"
@@ -164,7 +257,7 @@ const MySchools = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        
+
         <select
           className="select-filter"
           value={filterType}
@@ -175,7 +268,7 @@ const MySchools = () => {
           <option value="girls">مدارس دخترانه</option>
         </select>
       </div>
-      
+
       <div className="card">
         {filteredSchools.length === 0 ? (
           <div className="empty-state">
@@ -215,7 +308,7 @@ const MySchools = () => {
           </table>
         )}
       </div>
-      
+
       {/* Add School Modal */}
       {showAddModal && (
         <div className="modal-overlay">
@@ -254,7 +347,7 @@ const MySchools = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div className="form-group">
                 <label>روزهای فعالیت</label>
                 <div className="checkbox-group">
@@ -283,7 +376,7 @@ const MySchools = () => {
           </div>
         </div>
       )}
-      
+
       {/* Edit School Modal */}
       {showEditModal && currentSchool && (
         <div className="modal-overlay">
@@ -322,7 +415,7 @@ const MySchools = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div className="form-group">
                 <label>روزهای فعالیت</label>
                 <div className="checkbox-group">

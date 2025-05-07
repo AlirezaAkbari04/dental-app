@@ -96,6 +96,40 @@ class DatabaseService {
         last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (child_id) REFERENCES children(id)
       );
+      
+      CREATE TABLE IF NOT EXISTS schools (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        caretaker_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL CHECK(type IN ('boys', 'girls')),
+        activity_days TEXT,
+        FOREIGN KEY (caretaker_id) REFERENCES users(id)
+      );
+      
+      CREATE TABLE IF NOT EXISTS students (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        school_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        age INTEGER,
+        grade TEXT,
+        FOREIGN KEY (school_id) REFERENCES schools(id)
+      );
+      
+      CREATE TABLE IF NOT EXISTS health_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        has_brushed BOOLEAN DEFAULT 0,
+        has_cavity BOOLEAN DEFAULT 0,
+        has_healthy_gums BOOLEAN DEFAULT 1,
+        score INTEGER DEFAULT 5,
+        notes TEXT,
+        warning_flags TEXT,
+        needs_referral BOOLEAN DEFAULT 0,
+        referral_notes TEXT,
+        resolved BOOLEAN DEFAULT 0,
+        FOREIGN KEY (student_id) REFERENCES students(id)
+      );
     `;
 
     try {
@@ -609,6 +643,197 @@ class DatabaseService {
     } catch (error) {
       console.error("Error getting achievements:", error);
       return [];
+    }
+  }
+
+  // School Operations for Caretaker
+  async getSchoolsByCaretakerId(caretakerId) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      return JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+    }
+
+    try {
+      const statement = `
+        SELECT * FROM schools 
+        WHERE caretaker_id = ?
+      `;
+      const result = await this.db.query(statement, [caretakerId]);
+      return result.values || [];
+    } catch (error) {
+      console.error("Error getting schools:", error);
+      return JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+    }
+  }
+
+  async createSchool(caretakerId, name, type, activityDays) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      const newSchool = {
+        id: Date.now().toString(),
+        caretaker_id: caretakerId,
+        name,
+        type,
+        activityDays,
+        students: []
+      };
+      schools.push(newSchool);
+      localStorage.setItem('caretakerSchools', JSON.stringify(schools));
+      return newSchool.id;
+    }
+
+    try {
+      const statement = `
+        INSERT INTO schools (caretaker_id, name, type, activity_days)
+        VALUES (?, ?, ?, ?)
+      `;
+      const activityDaysJson = JSON.stringify(activityDays);
+      const values = [caretakerId, name, type, activityDaysJson];
+      const result = await this.db.run(statement, values);
+      return result.changes.lastId;
+    } catch (error) {
+      console.error("Error creating school:", error);
+      return null;
+    }
+  }
+
+  async updateSchool(schoolId, name, type, activityDays) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      const index = schools.findIndex(school => school.id === schoolId);
+      if (index !== -1) {
+        schools[index].name = name;
+        schools[index].type = type;
+        schools[index].activityDays = activityDays;
+        localStorage.setItem('caretakerSchools', JSON.stringify(schools));
+        return true;
+      }
+      return false;
+    }
+
+    try {
+      const statement = `
+        UPDATE schools
+        SET name = ?, type = ?, activity_days = ?
+        WHERE id = ?
+      `;
+      const activityDaysJson = JSON.stringify(activityDays);
+      const values = [name, type, activityDaysJson, schoolId];
+      await this.db.run(statement, values);
+      return true;
+    } catch (error) {
+      console.error("Error updating school:", error);
+      return false;
+    }
+  }
+
+  async deleteSchool(schoolId) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      const updatedSchools = schools.filter(school => school.id !== schoolId);
+      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
+      return true;
+    }
+
+    try {
+      // First delete associated students
+      await this.db.run(`DELETE FROM students WHERE school_id = ?`, [schoolId]);
+      // Then delete the school
+      await this.db.run(`DELETE FROM schools WHERE id = ?`, [schoolId]);
+      return true;
+    } catch (error) {
+      console.error("Error deleting school:", error);
+      return false;
+    }
+  }
+
+  // Student Operations for Caretaker
+  async getStudentsBySchoolId(schoolId) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      const school = schools.find(s => s.id === schoolId);
+      return school ? school.students || [] : [];
+    }
+
+    try {
+      const statement = `
+        SELECT * FROM students WHERE school_id = ?
+      `;
+      const result = await this.db.query(statement, [schoolId]);
+      return result.values || [];
+    } catch (error) {
+      console.error("Error getting students:", error);
+      return [];
+    }
+  }
+
+  async createStudent(schoolId, name, age, grade) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      const newStudent = {
+        id: Date.now().toString(),
+        name,
+        age,
+        grade
+      };
+      const updatedSchools = schools.map(school => {
+        if (school.id === schoolId) {
+          return {
+            ...school,
+            students: [...(school.students || []), newStudent]
+          };
+        }
+        return school;
+      });
+      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
+      return newStudent.id;
+    }
+
+    try {
+      const statement = `
+        INSERT INTO students (school_id, name, age, grade)
+        VALUES (?, ?, ?, ?)
+      `;
+      const values = [schoolId, name, age, grade];
+      const result = await this.db.run(statement, values);
+      return result.changes.lastId;
+    } catch (error) {
+      console.error("Error creating student:", error);
+      return null;
+    }
+  }
+
+  async deleteStudent(studentId) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      const updatedSchools = schools.map(school => {
+        if (school.students && school.students.some(s => s.id === studentId)) {
+          return {
+            ...school,
+            students: school.students.filter(s => s.id !== studentId)
+          };
+        }
+        return school;
+      });
+      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
+      return true;
+    }
+
+    try {
+      // First delete associated health records
+      await this.db.run(`DELETE FROM health_records WHERE student_id = ?`, [studentId]);
+      // Then delete the student
+      await this.db.run(`DELETE FROM students WHERE id = ?`, [studentId]);
+      return true;
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      return false;
     }
   }
 

@@ -126,6 +126,103 @@ class MigrationService {
       return false;
     }
   }
+
+  async migrateCaretakerDataToDatabase() {
+    try {
+      // Check if caretaker migration has been run already
+      const caretakerMigrationCompleted = localStorage.getItem('dbCaretakerMigrationCompleted');
+      if (caretakerMigrationCompleted === 'true') {
+        console.log('Caretaker migration already completed');
+        return true;
+      }
+
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      // Get current user data
+      const userAuthData = JSON.parse(localStorage.getItem('userAuth') || '{}');
+      let userId = null;
+
+      if (userAuthData.username && userAuthData.role === 'teacher') {
+        // Check if user already exists in DB
+        const existingUser = await DatabaseService.getUserByUsername(userAuthData.username);
+
+        if (!existingUser) {
+          // Create user in database
+          userId = await DatabaseService.createUser(
+            userAuthData.username,
+            'teacher'
+          );
+
+          console.log(`Migrated caretaker ${userAuthData.username} to database with ID ${userId}`);
+        } else {
+          userId = existingUser.id;
+        }
+
+        if (userId) {
+          // Migrate schools and students
+          const caretakerSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+
+          for (const school of caretakerSchools) {
+            // Create school
+            const schoolId = await DatabaseService.createSchool(
+              userId,
+              school.name,
+              school.type,
+              school.activityDays || []
+            );
+
+            console.log(`Migrated school ${school.name} with ID ${schoolId}`);
+
+            // Migrate students
+            if (school.students && Array.isArray(school.students)) {
+              for (const student of school.students) {
+                // Create student
+                const studentId = await DatabaseService.createStudent(
+                  schoolId,
+                  student.name,
+                  student.age,
+                  student.grade
+                );
+
+                console.log(`Migrated student ${student.name} with ID ${studentId}`);
+
+                // Migrate health records
+                if (student.healthRecords && Array.isArray(student.healthRecords)) {
+                  for (const record of student.healthRecords) {
+                    await DatabaseService.createHealthRecord(studentId, {
+                      date: record.date,
+                      hasBrushed: record.hasBrushed,
+                      hasCavity: record.hasCavity,
+                      hasHealthyGums: record.hasHealthyGums !== false, // Default to true if not specifically false
+                      score: record.score || 5,
+                      notes: record.notes || '',
+                      warningFlags: record.warningFlags || {},
+                      needsReferral: record.needsReferral || false,
+                      referralNotes: record.referralNotes || '',
+                      resolved: record.resolved || false
+                    });
+                  }
+
+                  console.log(`Migrated ${student.healthRecords.length} health records for student ${student.name}`);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Mark migration as completed
+      localStorage.setItem('dbCaretakerMigrationCompleted', 'true');
+      console.log('Caretaker database migration completed successfully');
+      return true;
+    } catch (error) {
+      console.error('Error during caretaker database migration:', error);
+      return false;
+    }
+  }
 }
 
 export default new MigrationService();

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './CaretakerComponents.css';
+import DatabaseService from '../../../services/DatabaseService'; // Add this import
 
 const StudentsList = () => {
   const [schools, setSchools] = useState([]);
@@ -15,37 +16,84 @@ const StudentsList = () => {
     schoolId: ''
   });
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Load data from localStorage
+
+  // Load data from database or localStorage
   useEffect(() => {
-    const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-    setSchools(savedSchools);
-    
-    // Extract all students from all schools
-    const allStudents = [];
-    savedSchools.forEach(school => {
-      if (school.students && Array.isArray(school.students)) {
-        school.students.forEach(student => {
-          allStudents.push({
-            ...student,
-            schoolId: school.id,
-            schoolName: school.name
+    const fetchData = async () => {
+      try {
+        // Initialize database if needed
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+
+        // Get current user ID
+        const userAuth = JSON.parse(localStorage.getItem('userAuth') || '{}');
+        const userId = userAuth.id;
+
+        if (userId) {
+          // Get schools from database
+          const schoolsData = await DatabaseService.getSchoolsByCaretakerId(userId);
+          setSchools(schoolsData);
+
+          // Get all students
+          const studentsData = await DatabaseService.getAllStudentsForCaretaker(userId);
+          setStudents(studentsData);
+        } else {
+          // Fallback to localStorage
+          const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+          setSchools(savedSchools);
+
+          // Extract all students from all schools
+          const allStudents = [];
+          savedSchools.forEach(school => {
+            if (school.students && Array.isArray(school.students)) {
+              school.students.forEach(student => {
+                allStudents.push({
+                  ...student,
+                  schoolId: school.id,
+                  schoolName: school.name
+                });
+              });
+            }
           });
+
+          setStudents(allStudents);
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        // Fallback to localStorage
+        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+        setSchools(savedSchools);
+
+        // Extract all students from all schools
+        const allStudents = [];
+        savedSchools.forEach(school => {
+          if (school.students && Array.isArray(school.students)) {
+            school.students.forEach(student => {
+              allStudents.push({
+                ...student,
+                schoolId: school.id,
+                schoolName: school.name
+              });
+            });
+          }
         });
+
+        setStudents(allStudents);
       }
-    });
-    
-    setStudents(allStudents);
+    };
+
+    fetchData();
   }, []);
-  
+
   // Filter students based on search term and selected school
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.includes(searchTerm);
     const matchesSchool = selectedSchool ? student.schoolId === selectedSchool : true;
-    
+
     return matchesSearch && matchesSchool;
   });
-  
+
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -54,147 +102,128 @@ const StudentsList = () => {
       [name]: value
     });
   };
-  
+
   // Handle adding a new student
-  const handleAddStudent = () => {
+  const handleAddStudent = async () => {
     // Simple validation
     if (!formData.name || !formData.age || !formData.grade || !formData.schoolId) {
       alert('لطفاً تمام فیلدها را پر کنید');
       return;
     }
-    
-    const newStudent = {
-      id: Date.now().toString(),
-      name: formData.name,
-      age: formData.age,
-      grade: formData.grade
-    };
-    
-    // Update the school's students array
-    const updatedSchools = schools.map(school => {
-      if (school.id === formData.schoolId) {
-        return {
-          ...school,
-          students: [...(school.students || []), newStudent]
+
+    try {
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      // Create student in database
+      const studentId = await DatabaseService.createStudent(
+        formData.schoolId,
+        formData.name,
+        formData.age,
+        formData.grade
+      );
+
+      if (studentId) {
+        // Add school information to the student for display
+        const schoolName = schools.find(s => s.id === formData.schoolId)?.name || '';
+
+        // Add to students list
+        const newStudent = {
+          id: studentId,
+          name: formData.name,
+          age: formData.age,
+          grade: formData.grade,
+          schoolId: formData.schoolId,
+          schoolName
         };
+
+        setStudents([...students, newStudent]);
+
+        // Reset form and close modal
+        resetForm();
+        setShowAddModal(false);
+      } else {
+        alert('خطا در ایجاد دانش‌آموز. لطفاً دوباره تلاش کنید');
       }
-      return school;
-    });
-    
-    // Save updated schools to localStorage
-    localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
-    
-    // Update local state
-    setSchools(updatedSchools);
-    
-    // Add school information to the student for display
-    const schoolName = schools.find(s => s.id === formData.schoolId)?.name || '';
-    
-    // Update students list
-    setStudents([
-      ...students,
-      {
-        ...newStudent,
-        schoolId: formData.schoolId,
-        schoolName
-      }
-    ]);
-    
-    // Reset form and close modal
-    resetForm();
-    setShowAddModal(false);
+    } catch (error) {
+      console.error('Error adding student:', error);
+      alert('خطا در ایجاد دانش‌آموز. لطفاً دوباره تلاش کنید');
+    }
   };
-  
+
   // Handle updating a student
-  const handleUpdateStudent = () => {
+  const handleUpdateStudent = async () => {
     // Simple validation
     if (!formData.name || !formData.age || !formData.grade || !formData.schoolId) {
       alert('لطفاً تمام فیلدها را پر کنید');
       return;
     }
-    
-    const updatedStudent = {
-      id: currentStudent.id,
-      name: formData.name,
-      age: formData.age,
-      grade: formData.grade
-    };
-    
-    let updatedStudents = [...students];
-    
-    // If school changed, need to update both schools
-    if (currentStudent.schoolId !== formData.schoolId) {
-      // Remove student from old school and add to new school
-      const updatedSchools = schools.map(school => {
-        if (school.id === currentStudent.schoolId) {
-          // Remove from old school
-          return {
-            ...school,
-            students: (school.students || []).filter(s => s.id !== currentStudent.id)
-          };
-        } else if (school.id === formData.schoolId) {
-          // Add to new school
-          return {
-            ...school,
-            students: [...(school.students || []), updatedStudent]
-          };
-        }
-        return school;
-      });
-      
-      // Save updated schools
-      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
-      setSchools(updatedSchools);
-      
-      // Update student in the list with new school info
-      const newSchoolName = schools.find(s => s.id === formData.schoolId)?.name || '';
-      updatedStudents = updatedStudents.map(student => 
-        student.id === currentStudent.id
-          ? {
-              ...updatedStudent,
-              schoolId: formData.schoolId,
-              schoolName: newSchoolName
-            }
-          : student
+
+    try {
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      // Update student in database
+      const success = await DatabaseService.updateStudent(
+        currentStudent.id,
+        formData.schoolId,
+        formData.name,
+        formData.age,
+        formData.grade
       );
-    } else {
-      // Just update student in the same school
-      const updatedSchools = schools.map(school => {
-        if (school.id === currentStudent.schoolId) {
-          return {
-            ...school,
-            students: (school.students || []).map(s => 
-              s.id === currentStudent.id ? updatedStudent : s
-            )
-          };
+
+      if (success) {
+        let updatedStudents = [...students];
+
+        // If school changed, update school info
+        if (currentStudent.schoolId !== formData.schoolId) {
+          const newSchoolName = schools.find(s => s.id === formData.schoolId)?.name || '';
+
+          updatedStudents = updatedStudents.map(student =>
+            student.id === currentStudent.id
+              ? {
+                  ...student,
+                  name: formData.name,
+                  age: formData.age,
+                  grade: formData.grade,
+                  schoolId: formData.schoolId,
+                  schoolName: newSchoolName
+                }
+              : student
+          );
+        } else {
+          // Just update student details
+          updatedStudents = updatedStudents.map(student =>
+            student.id === currentStudent.id
+              ? {
+                  ...student,
+                  name: formData.name,
+                  age: formData.age,
+                  grade: formData.grade
+                }
+              : student
+          );
         }
-        return school;
-      });
-      
-      // Save updated schools
-      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
-      setSchools(updatedSchools);
-      
-      // Update student in the list
-      updatedStudents = updatedStudents.map(student => 
-        student.id === currentStudent.id
-          ? {
-              ...updatedStudent,
-              schoolId: currentStudent.schoolId,
-              schoolName: currentStudent.schoolName
-            }
-          : student
-      );
+
+        // Update students state
+        setStudents(updatedStudents);
+
+        // Reset form and close modal
+        resetForm();
+        setShowEditModal(false);
+      } else {
+        alert('خطا در به‌روزرسانی دانش‌آموز. لطفاً دوباره تلاش کنید');
+      }
+    } catch (error) {
+      console.error('Error updating student:', error);
+      alert('خطا در به‌روزرسانی دانش‌آموز. لطفاً دوباره تلاش کنید');
     }
-    
-    // Update students state
-    setStudents(updatedStudents);
-    
-    // Reset form and close modal
-    resetForm();
-    setShowEditModal(false);
   };
-  
+
   // Handle deleting a student
   const handleDeleteStudent = (student) => {
     if (window.confirm('آیا از حذف این دانش‌آموز اطمینان دارید؟')) {
@@ -208,17 +237,17 @@ const StudentsList = () => {
         }
         return school;
       });
-      
+
       // Save updated schools
       localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
       setSchools(updatedSchools);
-      
+
       // Remove student from list
       const updatedStudents = students.filter(s => s.id !== student.id);
       setStudents(updatedStudents);
     }
   };
-  
+
   // Open the edit modal with student data
   const openEditModal = (student) => {
     setCurrentStudent(student);
@@ -230,7 +259,7 @@ const StudentsList = () => {
     });
     setShowEditModal(true);
   };
-  
+
   // Reset the form data
   const resetForm = () => {
     setFormData({
@@ -241,7 +270,7 @@ const StudentsList = () => {
     });
     setCurrentStudent(null);
   };
-  
+
   // Format grade for display
   const formatGrade = (grade) => {
     switch (grade) {
@@ -263,7 +292,7 @@ const StudentsList = () => {
         return grade;
     }
   };
-  
+
   return (
     <div className="students-list-container">
       <div className="content-header">
@@ -276,7 +305,7 @@ const StudentsList = () => {
           افزودن دانش‌آموز جدید
         </button>
       </div>
-      
+
       <div className="filter-container">
         <input
           type="text"
@@ -285,7 +314,7 @@ const StudentsList = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        
+
         <select
           className="select-filter"
           value={selectedSchool}
@@ -299,7 +328,7 @@ const StudentsList = () => {
           ))}
         </select>
       </div>
-      
+
       <div className="card">
         {filteredStudents.length === 0 ? (
           <div className="empty-state">
@@ -343,7 +372,7 @@ const StudentsList = () => {
           </table>
         )}
       </div>
-      
+
       {/* Add Student Modal */}
       {showAddModal && (
         <div className="modal-overlay">
@@ -373,7 +402,7 @@ const StudentsList = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="name">نام و نام خانوادگی</label>
@@ -404,7 +433,7 @@ const StudentsList = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="grade">کلاس</label>
                 <select
@@ -437,7 +466,7 @@ const StudentsList = () => {
           </div>
         </div>
       )}
-      
+
       {/* Edit Student Modal */}
       {showEditModal && currentStudent && (
         <div className="modal-overlay">
@@ -467,7 +496,7 @@ const StudentsList = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="edit-name">نام و نام خانوادگی</label>
@@ -498,7 +527,7 @@ const StudentsList = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="edit-grade">کلاس</label>
                 <select

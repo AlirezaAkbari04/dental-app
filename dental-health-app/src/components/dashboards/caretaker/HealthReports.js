@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './CaretakerComponents.css';
+import DatabaseService from '../../../services/DatabaseService'; // Add this import
 
 const HealthReports = () => {
   const [schools, setSchools] = useState([]);
@@ -27,41 +28,100 @@ const HealthReports = () => {
     needsReferral: false,
     referralNotes: ''
   });
-  
-  // Load data from localStorage
+
+  // Load data from database or localStorage
   useEffect(() => {
-    const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-    setSchools(savedSchools);
-    
-    // Extract all students from all schools
-    const allStudents = [];
-    savedSchools.forEach(school => {
-      if (school.students && Array.isArray(school.students)) {
-        school.students.forEach(student => {
-          allStudents.push({
-            ...student,
-            schoolId: school.id,
-            schoolName: school.name
+    const fetchData = async () => {
+      try {
+        // Initialize database if needed
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+
+        // Get current user ID
+        const userAuth = JSON.parse(localStorage.getItem('userAuth') || '{}');
+        const userId = userAuth.id;
+
+        if (userId) {
+          // Get schools from database
+          const schoolsData = await DatabaseService.getSchoolsByCaretakerId(userId);
+          setSchools(schoolsData);
+
+          // Get all students with school info
+          const studentsData = await DatabaseService.getAllStudentsForCaretaker(userId);
+
+          // For each student, get their health records
+          const studentsWithHealthRecords = await Promise.all(
+            studentsData.map(async student => {
+              const healthRecords = await DatabaseService.getHealthRecordsByStudentId(student.id);
+              return {
+                ...student,
+                healthRecords
+              };
+            })
+          );
+
+          setStudents(studentsWithHealthRecords);
+        } else {
+          // Fallback to localStorage
+          const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+          setSchools(savedSchools);
+
+          // Extract all students from all schools
+          const allStudents = [];
+          savedSchools.forEach(school => {
+            if (school.students && Array.isArray(school.students)) {
+              school.students.forEach(student => {
+                allStudents.push({
+                  ...student,
+                  schoolId: school.id,
+                  schoolName: school.name
+                });
+              });
+            }
           });
+
+          setStudents(allStudents);
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        // Fallback to localStorage
+        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+        setSchools(savedSchools);
+
+        // Extract all students from all schools
+        const allStudents = [];
+        savedSchools.forEach(school => {
+          if (school.students && Array.isArray(school.students)) {
+            school.students.forEach(student => {
+              allStudents.push({
+                ...student,
+                schoolId: school.id,
+                schoolName: school.name
+              });
+            });
+          }
         });
+
+        setStudents(allStudents);
       }
-    });
-    
-    setStudents(allStudents);
+    };
+
+    fetchData();
   }, []);
-  
+
   // Filter students based on search term and selected school
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.includes(searchTerm);
     const matchesSchool = selectedSchool ? student.schoolId === selectedSchool : true;
-    
+
     return matchesSearch && matchesSchool;
   });
-  
+
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     if (type === 'checkbox') {
       if (name.startsWith('warningFlags.')) {
         const flagName = name.split('.')[1];
@@ -85,11 +145,11 @@ const HealthReports = () => {
       }));
     }
   };
-  
+
   // Check for any warning flags being set
   useEffect(() => {
     const hasAnyWarningFlag = Object.values(formData.warningFlags).some(flag => flag);
-    
+
     if (hasAnyWarningFlag && !formData.needsReferral) {
       setFormData(prev => ({
         ...prev,
@@ -97,14 +157,14 @@ const HealthReports = () => {
       }));
     }
   }, [formData.warningFlags, formData.needsReferral]);
-  
+
   // Open the report modal for a student
   const openReportModal = (student) => {
     setCurrentStudent(student);
-    
+
     // Initialize form with today's date and defaults
     const today = new Date().toISOString().split('T')[0];
-    
+
     // If student has health records, pre-fill with the most recent one
     if (student.healthRecords && student.healthRecords.length > 0) {
       const latestRecord = student.healthRecords[0];
@@ -149,35 +209,46 @@ const HealthReports = () => {
         referralNotes: ''
       });
     }
-    
+
     setShowReportModal(true);
   };
-  
+
   // Save the health report
-  const saveHealthReport = () => {
+  const saveHealthReport = async () => {
     if (!formData.date) {
       alert('لطفاً تاریخ بررسی را وارد کنید');
       return;
     }
-    
-    // Create the health record object
-    const healthRecord = {
-      id: Date.now().toString(),
-      date: formData.date,
-      hasBrushed: formData.hasBrushed,
-      hasCavity: formData.hasCavity,
-      hasHealthyGums: formData.hasHealthyGums,
-      score: formData.score,
-      notes: formData.notes,
-      warningFlags: formData.warningFlags,
-      needsReferral: formData.needsReferral,
-      referralNotes: formData.referralNotes
-    };
-    
-    // Update schools and students with the new health record
-    const updatedSchools = schools.map(school => {
-      if (school.id === currentStudent.schoolId) {
-        const updatedStudents = school.students.map(student => {
+
+    try {
+      // Initialize database if needed
+      if (!DatabaseService.initialized) {
+        await DatabaseService.init();
+      }
+
+      // Create the health record object
+      const healthRecord = {
+        date: formData.date,
+        hasBrushed: formData.hasBrushed,
+        hasCavity: formData.hasCavity,
+        hasHealthyGums: formData.hasHealthyGums,
+        score: formData.score,
+        notes: formData.notes,
+        warningFlags: formData.warningFlags,
+        needsReferral: formData.needsReferral,
+        referralNotes: formData.referralNotes,
+        resolved: false
+      };
+
+      // Save to database
+      const recordId = await DatabaseService.createHealthRecord(currentStudent.id, healthRecord);
+
+      if (recordId) {
+        // Add ID to the record
+        healthRecord.id = recordId;
+
+        // Update students state with the new health record
+        const updatedStudents = students.map(student => {
           if (student.id === currentStudent.id) {
             return {
               ...student,
@@ -186,50 +257,35 @@ const HealthReports = () => {
           }
           return student;
         });
-        
-        return {
-          ...school,
-          students: updatedStudents
-        };
+
+        setStudents(updatedStudents);
+
+        // Close the modal
+        setShowReportModal(false);
+        setCurrentStudent(null);
+      } else {
+        alert('خطا در ثبت گزارش سلامت. لطفاً دوباره تلاش کنید');
       }
-      return school;
-    });
-    
-    // Save updated schools to localStorage
-    localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
-    setSchools(updatedSchools);
-    
-    // Update students state with the new health record
-    const updatedStudents = students.map(student => {
-      if (student.id === currentStudent.id) {
-        return {
-          ...student,
-          healthRecords: [healthRecord, ...(student.healthRecords || [])]
-        };
-      }
-      return student;
-    });
-    setStudents(updatedStudents);
-    
-    // Close the modal
-    setShowReportModal(false);
-    setCurrentStudent(null);
+    } catch (error) {
+      console.error('Error saving health report:', error);
+      alert('خطا در ثبت گزارش سلامت. لطفاً دوباره تلاش کنید');
+    }
   };
-  
+
   // Generate a PDF report
   const generatePDF = (student) => {
     // In a real app, this would generate a PDF report
     alert(`در یک برنامه واقعی، گزارش PDF برای ${student.name} تولید می‌شود.`);
   };
-  
+
   // Get the latest health status for a student
   const getLatestHealthStatus = (student) => {
     if (!student.healthRecords || student.healthRecords.length === 0) {
       return 'بررسی نشده';
     }
-    
+
     const latest = student.healthRecords[0];
-    
+
     if (latest.needsReferral) {
       return 'نیاز به ارجاع';
     } else if (latest.hasCavity) {
@@ -242,7 +298,7 @@ const HealthReports = () => {
       return 'سالم';
     }
   };
-  
+
   // Get health status class for styling
   const getHealthStatusClass = (status) => {
     switch (status) {
@@ -258,19 +314,19 @@ const HealthReports = () => {
         return 'status-info';
     }
   };
-  
+
   // Format date for display
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
   };
-  
+
   return (
     <div className="health-reports-container">
       <div className="content-header">
         <h2>گزارش سلامت دهان و دندان</h2>
       </div>
-      
+
       <div className="filter-container">
         <input
           type="text"
@@ -279,7 +335,7 @@ const HealthReports = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        
+
         <select
           className="select-filter"
           value={selectedSchool}
@@ -293,7 +349,7 @@ const HealthReports = () => {
           ))}
         </select>
       </div>
-      
+
       <div className="card">
         {filteredStudents.length === 0 ? (
           <div className="empty-state">
@@ -318,7 +374,7 @@ const HealthReports = () => {
                 const hasRecords = student.healthRecords && student.healthRecords.length > 0;
                 const latestRecord = hasRecords ? student.healthRecords[0] : null;
                 const healthStatus = getLatestHealthStatus(student);
-                
+
                 return (
                   <tr key={student.id}>
                     <td>{student.name}</td>
@@ -355,7 +411,7 @@ const HealthReports = () => {
           </table>
         )}
       </div>
-      
+
       {/* Health Report Modal */}
       {showReportModal && currentStudent && (
         <div className="modal-overlay">
@@ -378,7 +434,7 @@ const HealthReports = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="form-row">
                 <div className="form-group checkbox-group">
                   <label className="checkbox-label">
@@ -390,7 +446,7 @@ const HealthReports = () => {
                     />
                     مسواک زده؟
                   </label>
-                  
+
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
@@ -400,7 +456,7 @@ const HealthReports = () => {
                     />
                     پوسیدگی دارد؟
                   </label>
-                  
+
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
@@ -412,7 +468,7 @@ const HealthReports = () => {
                   </label>
                 </div>
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="score">امتیاز سلامت دهان (از 1 تا 10)</label>
                 <input
@@ -427,7 +483,7 @@ const HealthReports = () => {
                 />
                 <div className="range-value">{formData.score}</div>
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="notes">یادداشت‌های بررسی</label>
                 <textarea
@@ -439,7 +495,7 @@ const HealthReports = () => {
                   placeholder="توضیحات تکمیلی درباره وضعیت دهان و دندان دانش‌آموز..."
                 ></textarea>
               </div>
-              
+
               <div className="warning-flags-section">
                 <h4>علائم هشداردهنده (ارجاع فوری به دندانپزشک)</h4>
                 <div className="checkbox-group warning-checkboxes">
@@ -452,7 +508,7 @@ const HealthReports = () => {
                     />
                     دندان شکسته
                   </label>
-                  
+
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
@@ -462,7 +518,7 @@ const HealthReports = () => {
                     />
                     درد شدید
                   </label>
-                  
+
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
@@ -472,7 +528,7 @@ const HealthReports = () => {
                     />
                     آبسه یا ورم چرکی
                   </label>
-                  
+
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
@@ -482,7 +538,7 @@ const HealthReports = () => {
                     />
                     خونریزی لثه
                   </label>
-                  
+
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
@@ -492,7 +548,7 @@ const HealthReports = () => {
                     />
                     تب همراه با درد دهان
                   </label>
-                  
+
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
@@ -502,7 +558,7 @@ const HealthReports = () => {
                     />
                     فیستول یا مجرای خروج چرک به صورت جوش رو لثه
                   </label>
-                  
+
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
@@ -514,7 +570,7 @@ const HealthReports = () => {
                   </label>
                 </div>
               </div>
-              
+
               <div className="form-group">
                 <label className="checkbox-label">
                   <input
@@ -526,7 +582,7 @@ const HealthReports = () => {
                   <strong>نیاز به ارجاع فوری به دندانپزشک</strong>
                 </label>
               </div>
-              
+
               {formData.needsReferral && (
                 <div className="form-group">
                   <label htmlFor="referralNotes">توضیحات ارجاع</label>

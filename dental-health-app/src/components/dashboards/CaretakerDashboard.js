@@ -6,14 +6,33 @@ import MySchools from './caretaker/MySchools';
 import StudentsList from './caretaker/StudentsList';
 import HealthReports from './caretaker/HealthReports';
 import UrgentReferrals from './caretaker/UrgentReferrals';
+import DatabaseService from '../../services/DatabaseService'; // Add this import
+import MigrationService from '../../services/MigrationService'; // Add this import
 
 const CaretakerDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('schools');
   const [teacherName, setTeacherName] = useState('');
   
-  // Load user data from localStorage
+  // Load user data and initialize database
   useEffect(() => {
+    const initDatabase = async () => {
+      try {
+        // Initialize database
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+        
+        // Run migration if needed
+        await MigrationService.migrateCaretakerDataToDatabase();
+      } catch (error) {
+        console.error('Error initializing database:', error);
+      }
+    };
+    
+    initDatabase();
+    
+    // Existing code to load user data from localStorage
     const teacherProfile = JSON.parse(localStorage.getItem('teacherProfile') || '{}');
     setTeacherName(teacherProfile.name || 'معلم بهداشت');
   }, []);
