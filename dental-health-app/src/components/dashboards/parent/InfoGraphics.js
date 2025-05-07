@@ -54,23 +54,6 @@ const InfoGraphics = () => {
     setSelectedInfoGraphic(null);
   };
   
-  // Handle sharing infographic
-  const handleShare = () => {
-    // In a real app, this would open a sharing dialog
-    alert('در یک برنامه واقعی، این قسمت امکان اشتراک‌گذاری اینفوگرافیک را فراهم می‌کند.');
-  };
-  
-  // Handle downloading infographic
-  const handleDownload = () => {
-    // In a real app, this would trigger a download
-    alert('در یک برنامه واقعی، این قسمت اینفوگرافیک را دانلود می‌کند.');
-  };
-  
-  // Handle printing infographic
-  const handlePrint = () => {
-    window.print();
-  };
-  
   return (
     <div className="infographics-container">
       <div className="infographics-header">
@@ -115,21 +98,6 @@ const InfoGraphics = () => {
               className="infographic-text"
               dangerouslySetInnerHTML={{ __html: selectedInfoGraphic.content }}
             />
-          </div>
-          
-          <div className="infographic-actions">
-            <button className="action-button share-button" onClick={handleShare}>
-              <span className="action-icon">🔗</span>
-              <span className="action-text">اشتراک‌گذاری</span>
-            </button>
-            <button className="action-button download-button" onClick={handleDownload}>
-              <span className="action-icon">📥</span>
-              <span className="action-text">دانلود</span>
-            </button>
-            <button className="action-button print-button" onClick={handlePrint}>
-              <span className="action-icon">🖨️</span>
-              <span className="action-text">چاپ</span>
-            </button>
           </div>
         </div>
       ) : (

@@ -379,11 +379,6 @@ const BrushingReport = ({ childName = "کودک" }) => {
   const stats = calculateStats();
   const filteredData = getFilteredData();
   
-  // Handle printing the report
-  const handlePrint = () => {
-    window.print();
-  };
-  
   return (
     <div className="parent-brushing-dashboard">
       <h1>داشبورد مسواک {childName}</h1>
@@ -422,9 +417,6 @@ const BrushingReport = ({ childName = "کودک" }) => {
                   <option value="month">ماه اخیر</option>
                 </select>
               </div>
-              <button className="print-button" onClick={handlePrint}>
-                چاپ گزارش
-              </button>
             </div>
           </div>
           
@@ -480,6 +472,15 @@ const BrushingReport = ({ childName = "کودک" }) => {
           </div>
           
           <div className="report-tips">
+            <h3>راهنمای استفاده از تقویم</h3>
+            <ul>
+              <li>برای ثبت وضعیت مسواک کودک، روی روز مورد نظر در تقویم کلیک کنید.</li>
+              <li>در پنجره باز شده، وضعیت مسواک صبح و شب را مشخص کنید و مدت زمان مسواک زدن را وارد نمایید.</li>
+              <li>پس از ثبت اطلاعات، نمادهای ☀️ و 🌙 در تقویم نمایش داده می‌شوند.</li>
+              <li>برای مشاهده گزارش هفتگی، گزینه "هفته اخیر" را از منوی بازه زمانی انتخاب کنید.</li>
+              <li>می‌توانید با کلیک روی هر سطر در جدول گزارش نیز اطلاعات آن روز را ویرایش کنید.</li>
+            </ul>
+            
             <h3>توصیه‌های بهداشتی</h3>
             <ul>
               <li>مسواک زدن باید دو بار در روز (صبح و شب) و هر بار به مدت حداقل ۲ دقیقه انجام شود.</li>
@@ -734,7 +735,6 @@ const BrushingReport = ({ childName = "کودک" }) => {
           gap: 15px;
           align-items: center;
         }
-        
         .date-range-filter {
           display: flex;
           align-items: center;
@@ -745,15 +745,6 @@ const BrushingReport = ({ childName = "کودک" }) => {
           padding: 8px 10px;
           border: 1px solid #ddd;
           border-radius: 6px;
-        }
-        
-        .print-button {
-          background-color: #4a6bff;
-          color: white;
-          border: none;
-          padding: 8px 15px;
-          border-radius: 6px;
-          cursor: pointer;
         }
         
         .report-stats {
@@ -939,7 +930,6 @@ const BrushingReport = ({ childName = "کودک" }) => {
         @media print {
           .calendar-section,
           .modal-overlay,
-          .print-button,
           .date-range-filter {
             display: none !important;
           }

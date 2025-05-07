@@ -67,8 +67,7 @@ const StudentsList = () => {
       id: Date.now().toString(),
       name: formData.name,
       age: formData.age,
-      grade: formData.grade,
-      healthRecords: []
+      grade: formData.grade
     };
     
     // Update the school's students array
@@ -118,8 +117,7 @@ const StudentsList = () => {
       id: currentStudent.id,
       name: formData.name,
       age: formData.age,
-      grade: formData.grade,
-      healthRecords: currentStudent.healthRecords || []
+      grade: formData.grade
     };
     
     let updatedStudents = [...students];
@@ -266,12 +264,6 @@ const StudentsList = () => {
     }
   };
   
-  // View student health profile
-  const viewHealthProfile = (student) => {
-    // In a real app, this would navigate to the student health profile
-    alert(`در یک برنامه واقعی، به پروفایل سلامت ${student.name} منتقل می‌شوید.`);
-  };
-  
   return (
     <div className="students-list-container">
       <div className="content-header">
@@ -321,7 +313,6 @@ const StudentsList = () => {
                 <th>سن</th>
                 <th>کلاس</th>
                 <th>مدرسه</th>
-                <th>وضعیت سلامت دهان</th>
                 <th>عملیات</th>
               </tr>
             </thead>
@@ -332,26 +323,7 @@ const StudentsList = () => {
                   <td>{student.age} سال</td>
                   <td>{formatGrade(student.grade)}</td>
                   <td>{student.schoolName}</td>
-                  <td>
-                    {student.healthRecords && student.healthRecords.length > 0 ? (
-                      <span className={`status-badge ${
-                        student.healthRecords[0].needsReferral ? 'status-error' : 
-                        student.healthRecords[0].hasCavity ? 'status-warning' : 'status-success'
-                      }`}>
-                        {student.healthRecords[0].needsReferral ? 'نیاز به ارجاع' : 
-                         student.healthRecords[0].hasCavity ? 'دارای پوسیدگی' : 'سالم'}
-                      </span>
-                    ) : (
-                      <span className="status-badge status-info">بررسی نشده</span>
-                    )}
-                  </td>
                   <td className="table-action">
-                    <span 
-                      className="action-link view-link" 
-                      onClick={() => viewHealthProfile(student)}
-                    >
-                      پروفایل سلامت
-                    </span>
                     <span 
                       className="action-link edit-link" 
                       onClick={() => openEditModal(student)}
