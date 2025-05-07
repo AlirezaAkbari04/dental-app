@@ -6,6 +6,9 @@ import ChildHome from './child/ChildHome';
 import BrushReminder from './child/BrushReminder';
 import ChildGames from './child/ChildGames';
 import ChildVideos from './child/ChildVideos';
+import { useUser } from '../../contexts/UserContext';
+import DatabaseService from '../../services/DatabaseService';
+import MigrationService from '../../services/MigrationService';
 
 const ChildDashboard = () => {
   const navigate = useNavigate();
@@ -13,16 +16,36 @@ const ChildDashboard = () => {
   const [showMessage, setShowMessage] = useState(false);
   const [childName, setChildName] = useState('');
   
+  const { currentUser } = useUser();
+  
   useEffect(() => {
-    // Get child profile from localStorage
-    const childProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
-    setChildName(childProfile.fullName || 'کودک عزیز');
+    const initDatabase = async () => {
+      try {
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+        
+        await MigrationService.migrateChildDataToDatabase();
+        
+        if (currentUser?.id) {
+          const childProfile = await DatabaseService.getChildProfile(currentUser.id);
+          setChildName(childProfile.fullName || 'کودک عزیز');
+        } else {
+          const storedProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
+          setChildName(storedProfile.fullName || 'کودک عزیز');
+        }
+      } catch (error) {
+        console.error('Error initializing database:', error);
+        const storedProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
+        setChildName(storedProfile.fullName || 'کودک عزیز');
+      }
+    };
     
-    // Show the logo message after a short delay
+    initDatabase();
+    
     const messageTimer = setTimeout(() => {
       setShowMessage(true);
       
-      // Hide the message after 5 seconds
       const hideTimer = setTimeout(() => {
         setShowMessage(false);
       }, 5000);
@@ -31,22 +54,18 @@ const ChildDashboard = () => {
     }, 1000);
     
     return () => clearTimeout(messageTimer);
-  }, []);
+  }, [currentUser]);
   
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
   
   const handleLogout = () => {
-    // Clear auth data
     localStorage.removeItem('userAuth');
     localStorage.removeItem('userRole');
-    
-    // Navigate to login page
     navigate('/login');
   };
   
-  // Render the appropriate content based on the active tab
   const renderContent = () => {
     switch (activeTab) {
       case 'home':

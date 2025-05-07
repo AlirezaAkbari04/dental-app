@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../../styles/ChildComponents.css';
+import { useUser } from '../../../contexts/UserContext'; // Added this import
+import DatabaseService from '../../../services/DatabaseService'; // Added this import
 
 const ChildHome = ({ childName }) => {
   const [achievements, setAchievements] = useState({
@@ -10,13 +12,42 @@ const ChildHome = ({ childName }) => {
     healthySnacks: 0
   });
   
-  // Load achievements from localStorage
+  // Add current user
+  const { currentUser } = useUser();
+  
+  // Update useEffect to use database
   useEffect(() => {
-    const savedAchievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
-    if (Object.keys(savedAchievements).length > 0) {
-      setAchievements(savedAchievements);
-    }
-  }, []);
+    const fetchAchievements = async () => {
+      try {
+        // Initialize database if needed
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+        
+        if (currentUser?.id) {
+          // Get achievements from database
+          const achievementsData = await DatabaseService.getChildAchievements(currentUser.id);
+          setAchievements(achievementsData);
+        } else {
+          // Fallback to localStorage
+          const savedAchievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
+          if (Object.keys(savedAchievements).length > 0) {
+            setAchievements(savedAchievements);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading achievements:', error);
+        
+        // Fallback to localStorage
+        const savedAchievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
+        if (Object.keys(savedAchievements).length > 0) {
+          setAchievements(savedAchievements);
+        }
+      }
+    };
+    
+    fetchAchievements();
+  }, [currentUser]);
   
   // Medals based on achievements
   const medals = [

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../../../styles/ChildComponents.css';
+import { useUser } from '../../../contexts/UserContext'; // Added this import
+import DatabaseService from '../../../services/DatabaseService'; // Added this import
 
 // Food items array defined outside the component to avoid dependency issues
 const FOOD_ITEMS = [
@@ -29,49 +31,89 @@ const ChildGames = () => {
   const [touchDevice, setTouchDevice] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   const [feedbackImage, setFeedbackImage] = useState('');
-  
+
+  // Add current user
+  const { currentUser } = useUser();
+
   // Refs for drop zones
   const healthyZoneRef = useRef(null);
   const unhealthyZoneRef = useRef(null);
-  
-  // Load saved score from localStorage
+
+  // Update the useEffect for loading score
   useEffect(() => {
-    try {
-      const savedScore = localStorage.getItem('healthySnackScore');
-      if (savedScore) {
-        setScore(parseInt(savedScore, 10));
+    const loadScore = async () => {
+      try {
+        // Initialize database if needed
+        if (!DatabaseService.initialized) {
+          await DatabaseService.init();
+        }
+
+        if (currentUser?.id) {
+          // Get achievements which contain the game score
+          const achievements = await DatabaseService.getChildAchievements(currentUser.id);
+          if (achievements && achievements.healthySnacks) {
+            setScore(achievements.healthySnacks);
+          }
+        } else {
+          // Fallback to localStorage
+          const savedScore = localStorage.getItem('healthySnackScore');
+          if (savedScore) {
+            setScore(parseInt(savedScore, 10));
+          }
+        }
+
+        // Detect if device supports touch
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        setTouchDevice(isTouchDevice);
+
+        console.log("Game initialized, touch device:", isTouchDevice);
+      } catch (error) {
+        console.error("Error loading score:", error);
+
+        // Fallback to localStorage
+        const savedScore = localStorage.getItem('healthySnackScore');
+        if (savedScore) {
+          setScore(parseInt(savedScore, 10));
+        }
       }
-      
-      // Detect if device supports touch
-      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      setTouchDevice(isTouchDevice);
-      
-      console.log("Game initialized, touch device:", isTouchDevice);
-    } catch (error) {
-      console.error("Error loading score:", error);
-    }
-  }, []);
-  
-  // Save score to localStorage when it changes
+    };
+
+    loadScore();
+  }, [currentUser]);
+
+  // Update the useEffect for saving score
   useEffect(() => {
-    try {
-      localStorage.setItem('healthySnackScore', score.toString());
-      
-      // Update achievements
-      if (score > 0) {
-        const achievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
-        
-        const updatedAchievements = {
-          ...achievements,
-          healthySnacks: score
-        };
-        
-        localStorage.setItem('childAchievements', JSON.stringify(updatedAchievements));
+    const saveScore = async () => {
+      try {
+        if (score > 0) {
+          if (currentUser?.id && DatabaseService.initialized) {
+            // Save to database
+            await DatabaseService.updateAchievement(currentUser.id, 'healthySnacks', 1);
+          } else {
+            // Fallback to localStorage
+            localStorage.setItem('healthySnackScore', score.toString());
+
+            // Update achievements in localStorage
+            const achievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
+
+            const updatedAchievements = {
+              ...achievements,
+              healthySnacks: score
+            };
+
+            localStorage.setItem('childAchievements', JSON.stringify(updatedAchievements));
+          }
+        }
+      } catch (error) {
+        console.error("Error saving score:", error);
+
+        // Fallback to localStorage
+        localStorage.setItem('healthySnackScore', score.toString());
       }
-    } catch (error) {
-      console.error("Error saving score:", error);
-    }
-  }, [score]);
+    };
+
+    saveScore();
+  }, [score, currentUser]);
 
   // Get random food items for the game
   const getRandomFoodItems = useCallback(() => {
@@ -191,14 +233,24 @@ const ChildGames = () => {
     setDraggedItem(null);
   };
   
-  // Common function to handle answer selection
-  const handleAnswerSelection = useCallback((item, targetType) => {
+  // Update the handleAnswerSelection function
+  const handleAnswerSelection = useCallback(async (item, targetType) => {
     console.log("Answer selected:", item.name, "as", targetType);
-    
+
     if (item.type === targetType) {
       // Correct answer
       setIsCorrect(true);
       setScore(prevScore => prevScore + 1);
+
+      // Save score increment to database if we have a user
+      if (currentUser?.id && DatabaseService.initialized) {
+        try {
+          await DatabaseService.updateAchievement(currentUser.id, 'healthySnacks', 1);
+        } catch (error) {
+          console.error("Error updating achievement:", error);
+        }
+      }
+
       setFeedbackMessage(
         targetType === 'healthy' 
           ? `آفرین! ${item.name} یک میان‌وعده سالم است.` 
@@ -217,18 +269,18 @@ const ChildGames = () => {
       setAnimationClass('wrong-answer-animation');
       setFeedbackImage('❌');
     }
-    
+
     setShowFeedback(true);
-    
+
     // Load next food items after a delay
     const timer = setTimeout(() => {
       setShowFeedback(false);
       setAnimationClass('');
       setCurrentFoodItems(getRandomFoodItems());
     }, 2000);
-    
+
     return () => clearTimeout(timer);
-  }, [getRandomFoodItems]);
+  }, [getRandomFoodItems, currentUser]);
   
   // For direct click/tap on mobile if drag not working
   const handleDirectSelection = useCallback((item, type) => {

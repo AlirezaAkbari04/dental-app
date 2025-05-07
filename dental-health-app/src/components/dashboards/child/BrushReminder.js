@@ -190,7 +190,7 @@ const BrushReminder = () => {
     };
   }, [timerRunning, timeLeft]);
   
-  const handleTimeChange = (alarmType, timeString) => {
+  const handleTimeChange = async (alarmType, timeString) => {
     // Parse the time string (format: HH:MM)
     const [hourStr, minuteStr] = timeString.split(':');
     const hour = parseInt(hourStr, 10);
@@ -198,25 +198,48 @@ const BrushReminder = () => {
     
     console.log(`Setting ${alarmType} alarm to ${hour}:${minute}`);
     
-    // Update the alarm
-    setAlarms(prev => ({
-      ...prev,
+    // Update the alarm locally
+    const updatedAlarms = {
+      ...alarms,
       [alarmType]: {
-        ...prev[alarmType],
+        ...alarms[alarmType],
         hour,
         minute
       }
-    }));
+    };
+    
+    setAlarms(updatedAlarms);
+    
+    // Save to database if we have a user
+    if (childId && DatabaseService.initialized) {
+      try {
+        await DatabaseService.saveChildAlarms(childId, updatedAlarms);
+      } catch (error) {
+        console.error(`Error saving ${alarmType} alarm:`, error);
+      }
+    }
   };
-  
-  const handleEnabledChange = (alarmType, enabled) => {
-    setAlarms(prev => ({
-      ...prev,
+
+  const handleEnabledChange = async (alarmType, enabled) => {
+    // Update the alarm locally
+    const updatedAlarms = {
+      ...alarms,
       [alarmType]: {
-        ...prev[alarmType],
+        ...alarms[alarmType],
         enabled
       }
-    }));
+    };
+    
+    setAlarms(updatedAlarms);
+    
+    // Save to database if we have a user
+    if (childId && DatabaseService.initialized) {
+      try {
+        await DatabaseService.saveChildAlarms(childId, updatedAlarms);
+      } catch (error) {
+        console.error(`Error saving ${alarmType} alarm enabled state:`, error);
+      }
+    }
   };
   
   const startTimer = () => {

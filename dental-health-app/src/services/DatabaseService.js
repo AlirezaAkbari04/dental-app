@@ -96,7 +96,27 @@ class DatabaseService {
         last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (child_id) REFERENCES children(id)
       );
-      
+
+      CREATE TABLE IF NOT EXISTS game_scores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        child_id INTEGER NOT NULL,
+        game_type TEXT NOT NULL,
+        score INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (child_id) REFERENCES children(id)
+      );
+
+      CREATE TABLE IF NOT EXISTS video_progress (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        child_id INTEGER NOT NULL,
+        video_id TEXT NOT NULL,
+        progress REAL DEFAULT 0,
+        completed BOOLEAN DEFAULT 0,
+        last_watched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (child_id) REFERENCES children(id)
+      );
+
       CREATE TABLE IF NOT EXISTS schools (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         caretaker_id INTEGER NOT NULL,
@@ -105,7 +125,7 @@ class DatabaseService {
         activity_days TEXT,
         FOREIGN KEY (caretaker_id) REFERENCES users(id)
       );
-      
+
       CREATE TABLE IF NOT EXISTS students (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         school_id INTEGER NOT NULL,
@@ -114,7 +134,7 @@ class DatabaseService {
         grade TEXT,
         FOREIGN KEY (school_id) REFERENCES schools(id)
       );
-      
+
       CREATE TABLE IF NOT EXISTS health_records (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         student_id INTEGER NOT NULL,
@@ -1036,6 +1056,272 @@ class DatabaseService {
       console.log("Parent tables created successfully");
     } catch (error) {
       console.error("Error creating parent tables:", error);
+    }
+  }
+
+  // Child Dashboard specific methods
+
+  // Get child achievements
+  async getChildAchievements(childId) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      return JSON.parse(localStorage.getItem('childAchievements') || '{}');
+    }
+
+    try {
+      const statement = `
+        SELECT * FROM achievements 
+        WHERE child_id = ?
+      `;
+      const result = await this.db.query(statement, [childId]);
+      
+      // Convert to expected format
+      const achievements = {
+        stars: 0,
+        diamonds: 0,
+        regularBrushing: 0,
+        cleanedAreas: 0,
+        healthySnacks: 0
+      };
+      
+      if (result.values && result.values.length > 0) {
+        result.values.forEach(row => {
+          if (achievements.hasOwnProperty(row.type)) {
+            achievements[row.type] = row.count;
+          }
+        });
+      }
+      
+      return achievements;
+    } catch (error) {
+      console.error("Error getting child achievements:", error);
+      // Fallback to localStorage
+      return JSON.parse(localStorage.getItem('childAchievements') || '{}');
+    }
+  }
+
+  // Update a specific achievement
+  async updateAchievement(childId, type, incrementBy = 1) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      const achievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
+      
+      const updatedAchievements = {
+        ...achievements,
+        [type]: (achievements[type] || 0) + incrementBy,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      localStorage.setItem('childAchievements', JSON.stringify(updatedAchievements));
+      return true;
+    }
+
+    try {
+      // Check if achievement exists
+      const statement = `
+        SELECT * FROM achievements 
+        WHERE child_id = ? AND type = ?
+      `;
+      const result = await this.db.query(statement, [childId, type]);
+      
+      if (result.values && result.values.length > 0) {
+        // Update existing achievement
+        await this.db.run(`
+          UPDATE achievements
+          SET count = count + ?, last_updated = CURRENT_TIMESTAMP
+          WHERE child_id = ? AND type = ?
+        `, [incrementBy, childId, type]);
+      } else {
+        // Insert new achievement
+        await this.db.run(`
+          INSERT INTO achievements (child_id, type, count)
+          VALUES (?, ?, ?)
+        `, [childId, type, incrementBy]);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error updating achievement:", error);
+      return false;
+    }
+  }
+
+  // Get child profile
+  async getChildProfile(childId) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      return JSON.parse(localStorage.getItem('childProfile') || '{}');
+    }
+
+    try {
+      const statement = `
+        SELECT * FROM children 
+        WHERE id = ?
+      `;
+      const result = await this.db.query(statement, [childId]);
+      
+      if (result.values && result.values.length > 0) {
+        return {
+          id: result.values[0].id,
+          fullName: result.values[0].name,
+          age: result.values[0].age,
+          gender: result.values[0].gender,
+          avatarUrl: result.values[0].avatar_url
+        };
+      }
+      
+      return {};
+    } catch (error) {
+      console.error("Error getting child profile:", error);
+      // Fallback to localStorage
+      return JSON.parse(localStorage.getItem('childProfile') || '{}');
+    }
+  }
+
+  // Save game scores
+  async saveGameScore(childId, gameType, score) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      localStorage.setItem(`${gameType}Score`, score.toString());
+      
+      // Update achievements
+      await this.updateAchievement(childId, gameType, score);
+      return true;
+    }
+
+    try {
+      const statement = `
+        SELECT * FROM game_scores
+        WHERE child_id = ? AND game_type = ?
+      `;
+      const result = await this.db.query(statement, [childId, gameType]);
+      
+      if (result.values && result.values.length > 0) {
+        // Update existing score
+        await this.db.run(`
+          UPDATE game_scores
+          SET score = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE child_id = ? AND game_type = ?
+        `, [score, childId, gameType]);
+      } else {
+        // Insert new score
+        await this.db.run(`
+          INSERT INTO game_scores (child_id, game_type, score)
+          VALUES (?, ?, ?)
+        `, [childId, gameType, score]);
+      }
+      
+      // Update achievements
+      await this.updateAchievement(childId, gameType, score);
+      return true;
+    } catch (error) {
+      console.error("Error saving game score:", error);
+      return false;
+    }
+  }
+
+  // Update child alarms
+  async saveChildAlarms(childId, alarms) {
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback for web development
+      localStorage.setItem('brushAlarms', JSON.stringify(alarms));
+      return true;
+    }
+
+    try {
+      // Convert time to HH:MM format
+      const morningTime = `${alarms.morning.hour.toString().padStart(2, '0')}:${alarms.morning.minute.toString().padStart(2, '0')}`;
+      const eveningTime = `${alarms.evening.hour.toString().padStart(2, '0')}:${alarms.evening.minute.toString().padStart(2, '0')}`;
+      
+      // Check if reminders exist
+      const statement = `
+        SELECT * FROM reminders
+        WHERE user_id = ? AND (type = 'brushMorning' OR type = 'brushEvening')
+      `;
+      const result = await this.db.query(statement, [childId]);
+      
+      const existingReminders = result.values || [];
+      
+      // Handle morning reminder
+      const morningReminder = existingReminders.find(r => r.type === 'brushMorning');
+      if (morningReminder) {
+        // Update existing
+        await this.updateReminder(
+          morningReminder.id,
+          'brushMorning',
+          morningTime,
+          'یادآوری مسواک صبح',
+          alarms.morning.enabled
+        );
+      } else {
+        // Create new
+        await this.createReminder(
+          childId,
+          'brushMorning',
+          morningTime,
+          'یادآوری مسواک صبح',
+          alarms.morning.enabled
+        );
+      }
+      
+      // Handle evening reminder
+      const eveningReminder = existingReminders.find(r => r.type === 'brushEvening');
+      if (eveningReminder) {
+        // Update existing
+        await this.updateReminder(
+          eveningReminder.id,
+          'brushEvening',
+          eveningTime,
+          'یادآوری مسواک شب',
+          alarms.evening.enabled
+        );
+      } else {
+        // Create new
+        await this.createReminder(
+          childId,
+          'brushEvening',
+          eveningTime,
+          'یادآوری مسواک شب',
+          alarms.evening.enabled
+        );
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error saving child alarms:", error);
+      return false;
+    }
+  }
+
+  // Create tables for child dashboard
+  async createChildTables() {
+    const statements = `
+      CREATE TABLE IF NOT EXISTS game_scores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        child_id INTEGER NOT NULL,
+        game_type TEXT NOT NULL,
+        score INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (child_id) REFERENCES children(id)
+      );
+      
+      CREATE TABLE IF NOT EXISTS video_progress (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        child_id INTEGER NOT NULL,
+        video_id TEXT NOT NULL,
+        progress REAL DEFAULT 0,
+        completed BOOLEAN DEFAULT 0,
+        last_watched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (child_id) REFERENCES children(id)
+      );
+    `;
+
+    try {
+      await this.db.execute({ statements });
+      console.log("Child tables created successfully");
+    } catch (error) {
+      console.error("Error creating child tables:", error);
     }
   }
 
