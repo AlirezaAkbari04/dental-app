@@ -6,7 +6,6 @@ import MySchools from './caretaker/MySchools';
 import StudentsList from './caretaker/StudentsList';
 import HealthReports from './caretaker/HealthReports';
 import UrgentReferrals from './caretaker/UrgentReferrals';
-import ParentMessages from './caretaker/ParentMessages';
 
 const CaretakerDashboard = () => {
   const navigate = useNavigate();
@@ -43,8 +42,6 @@ const CaretakerDashboard = () => {
         return <HealthReports />;
       case 'referrals':
         return <UrgentReferrals />;
-      case 'messages':
-        return <ParentMessages />;
       default:
         return <MySchools />;
     }
@@ -103,13 +100,6 @@ const CaretakerDashboard = () => {
             >
               <span className="nav-icon">🔴</span>
               <span className="nav-text">ارجاع‌های فوری</span>
-            </li>
-            <li 
-              className={`nav-item ${activeTab === 'messages' ? 'active' : ''}`}
-              onClick={() => handleTabChange('messages')}
-            >
-              <span className="nav-icon">📨</span>
-              <span className="nav-text">پیام به والدین</span>
             </li>
           </ul>
         </nav>

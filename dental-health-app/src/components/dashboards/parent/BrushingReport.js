@@ -9,8 +9,8 @@ const BrushingReport = ({ childName = "کودک" }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentRecord, setCurrentRecord] = useState({
-    morning: { brushed: false, time: 0, quadrants: 0 },
-    evening: { brushed: false, time: 0, quadrants: 0 }
+    morning: { brushed: false, time: '' },
+    evening: { brushed: false, time: '' }
   });
   
   // تابع های تبدیل تاریخ میلادی به شمسی
@@ -133,30 +133,38 @@ const BrushingReport = ({ childName = "کودک" }) => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   };
   
-  // Open add/edit record modal
-  const handleDayClick = (day) => {
-    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+  // Open add/edit record modal for a specific date
+  const handleDayClick = (date) => {
     const dateKey = formatDateKey(date);
     
     setSelectedDate(date);
-    setCurrentRecord(brushingData[dateKey] || {
-      morning: { brushed: false, time: 0, quadrants: 0 },
-      evening: { brushed: false, time: 0, quadrants: 0 }
-    });
+    
+    // Initialize with empty values or existing data
+    if (brushingData[dateKey]) {
+      setCurrentRecord(brushingData[dateKey]);
+    } else {
+      setCurrentRecord({
+        morning: { brushed: false, time: '' },
+        evening: { brushed: false, time: '' }
+      });
+    }
     
     setShowAddModal(true);
   };
   
-  // Save record from modal
+  // Save record from modal and update state
   const handleSaveRecord = () => {
     if (!selectedDate) return;
     
     const dateKey = formatDateKey(selectedDate);
-    setBrushingData(prev => ({
-      ...prev,
-      [dateKey]: currentRecord
-    }));
     
+    // Create a new object to ensure React detects the state change
+    const newBrushingData = {
+      ...brushingData,
+      [dateKey]: currentRecord
+    };
+    
+    setBrushingData(newBrushingData);
     setShowAddModal(false);
   };
   
@@ -272,7 +280,7 @@ const BrushingReport = ({ childName = "کودک" }) => {
         <div 
           key={day} 
           className={`calendar-day ${isToday ? 'today' : ''}`}
-          onClick={() => handleDayClick(date.getDate())}
+          onClick={() => handleDayClick(date)}
         >
           <div className="day-number">{persianDigits(day)}</div>
           {dayData && (
@@ -314,6 +322,7 @@ const BrushingReport = ({ childName = "کودک" }) => {
   
   // تبدیل اعداد انگلیسی به فارسی
   const persianDigits = (n) => {
+    if (n === null || n === undefined || n === '') return '';
     const farsiDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
     return n.toString().replace(/\d/g, x => farsiDigits[x]);
   };
@@ -344,8 +353,8 @@ const BrushingReport = ({ childName = "کودک" }) => {
     while (current <= today) {
       const dateKey = formatDateKey(current);
       const dayData = brushingData[dateKey] || {
-        morning: { brushed: false, time: 0, quadrants: 0 },
-        evening: { brushed: false, time: 0, quadrants: 0 }
+        morning: { brushed: false, time: '' },
+        evening: { brushed: false, time: '' }
       };
       
       filteredData.push({
@@ -443,16 +452,14 @@ const BrushingReport = ({ childName = "کودک" }) => {
                 <tr>
                   <th>تاریخ</th>
                   <th>مسواک صبح</th>
-                  <th>زمان (ثانیه)</th>
-                  <th>بخش‌های تمیز شده</th>
+                  <th>زمان (دقیقه)</th>
                   <th>مسواک شب</th>
-                  <th>زمان (ثانیه)</th>
-                  <th>بخش‌های تمیز شده</th>
+                  <th>زمان (دقیقه)</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredData.map((day, index) => (
-                  <tr key={index}>
+                  <tr key={index} onClick={() => handleDayClick(day.date)} className="clickable-row">
                     <td>{formatDate(day.date)}</td>
                     <td>
                       <span className={`status-indicator ${day.morning.brushed ? 'success' : 'error'}`}>
@@ -460,14 +467,12 @@ const BrushingReport = ({ childName = "کودک" }) => {
                       </span>
                     </td>
                     <td>{persianDigits(day.morning.time)}</td>
-                    <td>{persianDigits(day.morning.quadrants)}/۴</td>
                     <td>
                       <span className={`status-indicator ${day.evening.brushed ? 'success' : 'error'}`}>
                         {day.evening.brushed ? '✓' : '✗'}
                       </span>
                     </td>
                     <td>{persianDigits(day.evening.time)}</td>
-                    <td>{persianDigits(day.evening.quadrants)}/۴</td>
                   </tr>
                 ))}
               </tbody>
@@ -478,7 +483,6 @@ const BrushingReport = ({ childName = "کودک" }) => {
             <h3>توصیه‌های بهداشتی</h3>
             <ul>
               <li>مسواک زدن باید دو بار در روز (صبح و شب) و هر بار به مدت حداقل ۲ دقیقه انجام شود.</li>
-              <li>برای رسیدن به نتیجه مطلوب، هر چهار ناحیه دندان (بالا راست، بالا چپ، پایین راست، پایین چپ) باید تمیز شوند.</li>
               <li>تعویض مسواک هر ۳ ماه یکبار توصیه می‌شود.</li>
               <li>مراجعه به دندانپزشک هر ۶ ماه یکبار برای معاینه دوره‌ای ضروری است.</li>
             </ul>
@@ -507,42 +511,21 @@ const BrushingReport = ({ childName = "کودک" }) => {
               </div>
               
               <div className="record-field">
-                <label>مدت زمان (ثانیه):</label>
+                <label>مدت زمان (دقیقه):</label>
                 <input 
-                  type="number" 
-                  min="0" 
-                  max="300"
+                  type="text" 
                   value={currentRecord.morning.time}
                   onChange={(e) => {
-                    // Convert to number or 0 if empty
-                    const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    // فقط اعداد قبول می‌شود
+                    const value = e.target.value.replace(/[^0-9]/g, '');
                     handleRecordChange('morning', 'time', value);
                   }}
                   onClick={(e) => {
-                    // Select all text when field is clicked
+                    // انتخاب کامل متن در هنگام کلیک
                     e.target.select();
                   }}
                   disabled={!currentRecord.morning.brushed}
-                />
-              </div>
-              
-              <div className="record-field">
-                <label>تعداد بخش‌های تمیز شده (۰-۴):</label>
-                <input 
-                  type="number" 
-                  min="0" 
-                  max="4"
-                  value={currentRecord.morning.quadrants}
-                  onChange={(e) => {
-                    // Convert to number or 0 if empty
-                    const value = e.target.value === '' ? 0 : parseInt(e.target.value);
-                    handleRecordChange('morning', 'quadrants', value);
-                  }}
-                  onClick={(e) => {
-                    // Select all text when field is clicked
-                    e.target.select();
-                  }}
-                  disabled={!currentRecord.morning.brushed}
+                  placeholder=""
                 />
               </div>
             </div>
@@ -561,42 +544,21 @@ const BrushingReport = ({ childName = "کودک" }) => {
               </div>
               
               <div className="record-field">
-                <label>مدت زمان (ثانیه):</label>
+                <label>مدت زمان (دقیقه):</label>
                 <input 
-                  type="number" 
-                  min="0" 
-                  max="300"
+                  type="text" 
                   value={currentRecord.evening.time}
                   onChange={(e) => {
-                    // Convert to number or 0 if empty
-                    const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                    // فقط اعداد قبول می‌شود
+                    const value = e.target.value.replace(/[^0-9]/g, '');
                     handleRecordChange('evening', 'time', value);
                   }}
                   onClick={(e) => {
-                    // Select all text when field is clicked
+                    // انتخاب کامل متن در هنگام کلیک
                     e.target.select();
                   }}
                   disabled={!currentRecord.evening.brushed}
-                />
-              </div>
-              
-              <div className="record-field">
-                <label>تعداد بخش‌های تمیز شده (۰-۴):</label>
-                <input 
-                  type="number" 
-                  min="0" 
-                  max="4"
-                  value={currentRecord.evening.quadrants}
-                  onChange={(e) => {
-                    // Convert to number or 0 if empty
-                    const value = e.target.value === '' ? 0 : parseInt(e.target.value);
-                    handleRecordChange('evening', 'quadrants', value);
-                  }}
-                  onClick={(e) => {
-                    // Select all text when field is clicked
-                    e.target.select();
-                  }}
-                  disabled={!currentRecord.evening.brushed}
+                  placeholder=""
                 />
               </div>
             </div>
@@ -671,12 +633,6 @@ const BrushingReport = ({ childName = "کودک" }) => {
         }
         
         .month-nav {
-          background: none;
-          border: none;
-          color: white;
-          font-size: 20px;
-          cursor: pointer;
-          padding:.month-nav {
           background: none;
           border: none;
           color: white;
@@ -854,6 +810,15 @@ const BrushingReport = ({ childName = "کودک" }) => {
           font-weight: bold;
         }
         
+        .clickable-row {
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+        
+        .clickable-row:hover {
+          background-color: #f0f5ff;
+        }
+        
         .status-indicator {
           display: inline-block;
           width: 25px;
@@ -938,6 +903,7 @@ const BrushingReport = ({ childName = "کودک" }) => {
           margin-bottom: 15px;
         }
         
+        .record-field input[type="text"],
         .record-field input[type="number"] {
           width: 80px;
           padding: 8px;
