@@ -1,6 +1,7 @@
 {
   "name": "dental-health-app",
   "version": "0.1.0",
+  "homepage": ".",
   "private": true,
   "dependencies": {
     "@capacitor-community/sqlite": "^3.7.0",
