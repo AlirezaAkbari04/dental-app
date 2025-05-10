@@ -1,16 +1,18 @@
 {
-    "appId": "com.dentalhealth.app",
-    "appName": "لبخند شاد دندان سالم",
-    "webDir": "build",
-    "bundledWebRuntime": false,
-    "plugins": {
-      "CapacitorSQLite": {
-        "androidIsEncryption": false,
-        "androidBiometric": {
-          "biometricAuth": false,
-          "biometricTitle": "Biometric login",
-          "biometricSubTitle": "Login using your biometric"
-        }
+  "appId": "com.dentalhealth.app",
+  "appName": "لبخند شاد دندان سالم",
+  "webDir": "C:/Users/Asus/Desktop/yekta/dental-health-app/dental-health-app/build",
+  "plugins": {
+    "CapacitorSQLite": {
+      "androidIsEncryption": false,
+      "androidBiometric": {
+        "biometricAuth": false,
+        "biometricTitle": "Biometric login",
+        "biometricSubTitle": "Login using your biometric"
       }
     }
+  },
+  "server": {
+    "androidScheme": "https"
   }
+}
