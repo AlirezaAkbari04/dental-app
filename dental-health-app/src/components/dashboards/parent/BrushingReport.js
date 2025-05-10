@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useUser } from '../../../contexts/UserContext'; // Added this import
-import DatabaseService from '../../../services/DatabaseService'; // Added this import
+import { useUser } from '../../../contexts/UserContext';
+import DatabaseService from '../../../services/DatabaseService';
 
 const BrushingReport = ({ childName = "کودک" }) => {
-  const { currentUser } = useUser(); // Get current user from context
+  const { currentUser } = useUser();
 
   // Add childId state
   const [childId, setChildId] = useState(null);
@@ -18,6 +18,11 @@ const BrushingReport = ({ childName = "کودک" }) => {
     morning: { brushed: false, time: '' },
     evening: { brushed: false, time: '' },
   });
+
+  // Add debug function
+  const logDebug = (message, data) => {
+    console.log(`[BrushingReport] ${message}`, data || '');
+  };
 
   // Initialize database when the component loads
   useEffect(() => {
@@ -88,7 +93,11 @@ const BrushingReport = ({ childName = "کودک" }) => {
 
   // Save brushing data to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('parentBrushingRecord', JSON.stringify(brushingData));
+    try {
+      localStorage.setItem('parentBrushingRecord', JSON.stringify(brushingData));
+    } catch (e) {
+      console.error("Error saving to localStorage:", e);
+    }
   }, [brushingData]);
 
   // تابع های تبدیل تاریخ میلادی به شمسی
@@ -212,40 +221,70 @@ const BrushingReport = ({ childName = "کودک" }) => {
     setShowAddModal(true);
   };
   
-  // Save record from modal and update state
-  const handleSaveRecord = async () => {
-    if (!selectedDate || !childId) return;
+  // FIXED: Save record from modal and update state
+  const handleSaveRecord = () => {
+    logDebug("Save button clicked");
+    
+    if (!selectedDate || !childId) {
+      logDebug("Missing required data", { selectedDate, childId });
+      alert("خطا: اطلاعات ناقص است");
+      return;
+    }
 
     const dateKey = formatDateKey(selectedDate);
-
+    
     try {
-      // Save morning record
-      await DatabaseService.createBrushingRecord(
+      // Update state immediately (this is important)
+      const updatedBrushingData = {
+        ...brushingData,
+        [dateKey]: {...currentRecord}
+      };
+      
+      // Set state with the updated data
+      setBrushingData(updatedBrushingData);
+      logDebug("State updated successfully", { dateKey, data: currentRecord });
+      
+      // Save to localStorage as backup
+      try {
+        localStorage.setItem('parentBrushingRecord', JSON.stringify(updatedBrushingData));
+        logDebug("Data saved to localStorage");
+      } catch (e) {
+        logDebug("Error saving to localStorage", e);
+      }
+      
+      // Also try to save to database (but don't wait for it to complete)
+      logDebug("Attempting to save to database");
+      
+      // Fire and forget database calls
+      DatabaseService.createBrushingRecord(
         childId,
         dateKey,
         'morning',
-        currentRecord.morning.time,
+        currentRecord.morning.time || '0',
         currentRecord.morning.brushed
-      );
-
-      // Save evening record
-      await DatabaseService.createBrushingRecord(
+      ).then(() => {
+        logDebug("Morning record saved to database");
+      }).catch(err => {
+        logDebug("Error saving morning record", err);
+      });
+      
+      DatabaseService.createBrushingRecord(
         childId,
         dateKey,
         'evening',
-        currentRecord.evening.time,
+        currentRecord.evening.time || '0',
         currentRecord.evening.brushed
-      );
-
-      // Update local state
-      setBrushingData((prev) => ({
-        ...prev,
-        [dateKey]: currentRecord,
-      }));
-
+      ).then(() => {
+        logDebug("Evening record saved to database");
+      }).catch(err => {
+        logDebug("Error saving evening record", err);
+      });
+      
+      // Close modal immediately after updating state
       setShowAddModal(false);
+      
     } catch (error) {
-      console.error("Error saving brushing record:", error);
+      logDebug("Error in save process", error);
       alert("خطا در ذخیره‌سازی اطلاعات");
     }
   };
@@ -608,7 +647,7 @@ const BrushingReport = ({ childName = "کودک" }) => {
                     e.target.select();
                   }}
                   disabled={!currentRecord.morning.brushed}
-                  placeholder=""
+                  placeholder="0"
                 />
               </div>
             </div>
@@ -641,7 +680,7 @@ const BrushingReport = ({ childName = "کودک" }) => {
                     e.target.select();
                   }}
                   disabled={!currentRecord.evening.brushed}
-                  placeholder=""
+                  placeholder="0"
                 />
               </div>
             </div>

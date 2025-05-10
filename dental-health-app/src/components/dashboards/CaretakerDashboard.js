@@ -6,6 +6,7 @@ import MySchools from './caretaker/MySchools';
 import StudentsList from './caretaker/StudentsList';
 import HealthReports from './caretaker/HealthReports';
 import UrgentReferrals from './caretaker/UrgentReferrals';
+import EducationalContent from './caretaker/EducationalContent'; // Import new component
 import DatabaseService from '../../services/DatabaseService'; // Add this import
 import MigrationService from '../../services/MigrationService'; // Add this import
 
@@ -61,6 +62,8 @@ const CaretakerDashboard = () => {
         return <HealthReports />;
       case 'referrals':
         return <UrgentReferrals />;
+      case 'educational':
+        return <EducationalContent />;
       default:
         return <MySchools />;
     }
@@ -119,6 +122,13 @@ const CaretakerDashboard = () => {
             >
               <span className="nav-icon">🔴</span>
               <span className="nav-text">ارجاع‌های فوری</span>
+            </li>
+            <li 
+              className={`nav-item ${activeTab === 'educational' ? 'active' : ''}`}
+              onClick={() => handleTabChange('educational')}
+            >
+              <span className="nav-icon">📚</span>
+              <span className="nav-text">محتوای آموزشی</span>
             </li>
           </ul>
         </nav>
