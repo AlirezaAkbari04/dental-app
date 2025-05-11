@@ -1,3 +1,4 @@
+// src/components/auth/Register.js
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import '../../styles/Auth.css';
@@ -70,15 +71,20 @@ function Register() {
 
     try {
       // Register with the username (email or phone)
-      const result = await register(username);
+      // Adjust based on your UserContext.js implementation
+      const success = await register(username);
       
-      if (result.success) {
+      if (success) {
+        // Clear any stored role
+        localStorage.removeItem('userRole');
+        
         // Navigate to role selection page after successful registration
         navigate('/role-selection');
       } else {
-        setError(result.message || 'خطایی رخ داده است. لطفا دوباره تلاش کنید.');
+        setError('خطایی رخ داده است. لطفا دوباره تلاش کنید.');
       }
     } catch (err) {
+      console.error("Registration error:", err);
       setError('خطایی رخ داده است. لطفا دوباره تلاش کنید.');
     } finally {
       setIsLoading(false);

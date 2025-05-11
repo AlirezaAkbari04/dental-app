@@ -333,29 +333,47 @@ class DatabaseService {
     
     if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
+      console.log("Using localStorage fallback for updateUserRole");
       const users = JSON.parse(localStorage.getItem('db_users') || '[]');
       const updatedUsers = users.map(user => {
         if (user.id === userId || user.id === parseInt(userId)) {
+          console.log(`Found user ${user.id}, updating role from ${user.role} to ${role}`);
           return { ...user, role };
         }
         return user;
       });
       localStorage.setItem('db_users', JSON.stringify(updatedUsers));
+      
+      // Also update the currentUser in localStorage if it exists
+      const currentUserString = localStorage.getItem('currentUser');
+      if (currentUserString) {
+        try {
+          const currentUser = JSON.parse(currentUserString);
+          if (currentUser.id === userId || currentUser.id === parseInt(userId)) {
+            currentUser.role = role;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            console.log("Updated role in currentUser localStorage");
+          }
+        } catch (e) {
+          console.error("Error parsing currentUser from localStorage:", e);
+        }
+      }
+      
       return true;
     }
-
+  
     try {
       const statement = `
         UPDATE users SET role = ? WHERE id = ?
       `;
       await this.db.run(statement, [role, userId]);
+      console.log(`Successfully updated user ${userId} role to ${role} in database`);
       return true;
     } catch (error) {
       console.error("Error updating user role:", error);
       return false;
     }
   }
-  
   async getUserById(id) {
     console.log(`Getting user by ID: ${id}`);
     

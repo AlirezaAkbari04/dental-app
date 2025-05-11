@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/Auth.css';
 import logoImage from '../../logo.svg';
@@ -7,38 +7,56 @@ import DatabaseService from '../../services/DatabaseService';
 
 const RoleSelection = () => {
   const navigate = useNavigate();
-  const { currentUser } = useUser();
+  const { currentUser, updateUserRole } = useUser();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleRoleSelect = async (role) => {
+    setIsLoading(true);
+    setError('');
+    
     try {
-      // Initialize the database if not already done
-      if (!DatabaseService.initialized) {
-        await DatabaseService.init();
-      }
-
+      console.log("Selecting role:", role);
+      
       if (currentUser?.id) {
-        // Update the user's role in the database
-        await DatabaseService.updateUserRole(currentUser.id, role); // Ensure this method exists in DatabaseService
-        localStorage.setItem('userRole', role); // Save the role in localStorage
-      }
-
-      // Navigate to the appropriate profile or dashboard based on the selected role
-      switch (role) {
-        case 'child':
-          navigate('/profile/child');
-          break;
-        case 'teacher':
-          navigate('/profile/teacher');
-          break;
-        case 'parent':
-          navigate('/profile/parent');
-          break;
-        default:
-          navigate('/profile/child'); // Default to child profile
+        // Update localStorage first
+        localStorage.setItem('userRole', role);
+        
+        // Then update in database
+        await DatabaseService.updateUserRole(currentUser.id, role);
+        
+        // Try to update context if available
+        if (typeof updateUserRole === 'function') {
+          try {
+            await updateUserRole(role);
+          } catch (e) {
+            console.warn("Error updating role in context:", e);
+          }
+        }
+        
+        // Redirect based on role
+        switch (role) {
+          case 'child':
+            navigate('/profile/child');
+            break;
+          case 'parent':
+            navigate('/profile/parent');
+            break;
+          case 'teacher':
+            navigate('/profile/teacher');
+            break;
+          default:
+            navigate('/profile/parent');
+        }
+      } else {
+        setError('لطفا ابتدا وارد شوید');
+        navigate('/login');
       }
     } catch (error) {
       console.error("Error updating role:", error);
-      navigate(`/profile/${role}`);
+      setError('خطا در انتخاب نقش');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,6 +72,12 @@ const RoleSelection = () => {
           <h2>لطفاً نقش خود را انتخاب کنید</h2>
           <p className="role-instruction">برای ادامه، نقش خود را از گزینه‌های زیر انتخاب کنید</p>
 
+          {error && (
+            <div style={{ color: 'red', marginBottom: '15px', textAlign: 'center' }}>
+              {error}
+            </div>
+          )}
+
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -67,12 +91,13 @@ const RoleSelection = () => {
                 flexDirection: 'row',
                 alignItems: 'center',
                 padding: '15px',
-                backgroundColor: 'white',
+                backgroundColor: isLoading ? '#f0f0f0' : 'white',
                 borderRadius: '10px',
                 boxShadow: '0 3px 10px rgba(0, 0, 0, 0.08)',
-                cursor: 'pointer'
+                cursor: isLoading ? 'default' : 'pointer',
+                opacity: isLoading ? 0.7 : 1
               }}
-              onClick={() => handleRoleSelect('child')}
+              onClick={() => !isLoading && handleRoleSelect('child')}
             >
               <span style={{ fontSize: '30px', marginLeft: '15px' }}>👶</span>
               <div>
@@ -87,12 +112,13 @@ const RoleSelection = () => {
                 flexDirection: 'row',
                 alignItems: 'center',
                 padding: '15px',
-                backgroundColor: 'white',
+                backgroundColor: isLoading ? '#f0f0f0' : 'white',
                 borderRadius: '10px',
                 boxShadow: '0 3px 10px rgba(0, 0, 0, 0.08)',
-                cursor: 'pointer'
+                cursor: isLoading ? 'default' : 'pointer',
+                opacity: isLoading ? 0.7 : 1
               }}
-              onClick={() => handleRoleSelect('teacher')}
+              onClick={() => !isLoading && handleRoleSelect('teacher')}
             >
               <span style={{ fontSize: '30px', marginLeft: '15px' }}>👨‍⚕️</span>
               <div>
@@ -107,12 +133,13 @@ const RoleSelection = () => {
                 flexDirection: 'row',
                 alignItems: 'center',
                 padding: '15px',
-                backgroundColor: 'white',
+                backgroundColor: isLoading ? '#f0f0f0' : 'white',
                 borderRadius: '10px',
                 boxShadow: '0 3px 10px rgba(0, 0, 0, 0.08)',
-                cursor: 'pointer'
+                cursor: isLoading ? 'default' : 'pointer',
+                opacity: isLoading ? 0.7 : 1
               }}
-              onClick={() => handleRoleSelect('parent')}
+              onClick={() => !isLoading && handleRoleSelect('parent')}
             >
               <span style={{ fontSize: '30px', marginLeft: '15px' }}>👪</span>
               <div>
@@ -121,6 +148,12 @@ const RoleSelection = () => {
               </div>
             </div>
           </div>
+
+          {isLoading && (
+            <div style={{ textAlign: 'center', margin: '20px 0' }}>
+              در حال پردازش...
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -20,22 +20,17 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate input (email or phone number)
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^09[0-9]{9}$/; // Persian mobile format: 09XXXXXXXXX
-    
-    if (!emailRegex.test(credentials) && !phoneRegex.test(credentials)) {
-      setError('لطفا ایمیل یا شماره موبایل معتبر وارد کنید');
-      return;
-    }
-    
     setIsLoading(true);
-    
+  
     try {
-      const success = await login(credentials);
-      
+      // Pass the credentials in the expected format
+      const success = await login({ username: credentials });
+  
       if (success) {
+        // Clear any stored role to force role selection
+        localStorage.removeItem('userRole');
+        
+        // Navigate to role selection after login
         navigate('/role-selection');
       } else {
         setError('خطا در ورود. لطفاً دوباره تلاش کنید');
@@ -47,7 +42,6 @@ const Login = () => {
       setIsLoading(false);
     }
   };
-  
 
   return (
     <div className="auth-container" dir="rtl">

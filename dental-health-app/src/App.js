@@ -28,20 +28,28 @@ function AppContent() {
     );
   }
 
-  // Protected route component
   const ProtectedRoute = ({ children, requiredRole }) => {
     if (!currentUser) {
       return <Navigate to="/login" replace />;
     }
     
-    if (requiredRole && currentUser.role !== requiredRole) {
-      // Redirect to appropriate dashboard based on role
-      if (currentUser.role === 'child') {
+    // Get role from localStorage as backup
+    const storedRole = localStorage.getItem('userRole');
+    
+    // Use the most recent role - either from localStorage or currentUser
+    const effectiveRole = storedRole || currentUser.role;
+    
+    if (requiredRole && effectiveRole !== requiredRole) {
+      // Handle different user roles by redirecting to the appropriate dashboard
+      if (effectiveRole === 'child') {
         return <Navigate to="/dashboard/child" replace />;
-      } else if (currentUser.role === 'parent') {
+      } else if (effectiveRole === 'parent') {
         return <Navigate to="/dashboard/parent" replace />;
-      } else if (currentUser.role === 'teacher') {
+      } else if (effectiveRole === 'teacher') {
         return <Navigate to="/dashboard/caretaker" replace />;
+      } else {
+        // If no effective role is found, redirect to role selection
+        return <Navigate to="/role-selection" replace />;
       }
     }
     
