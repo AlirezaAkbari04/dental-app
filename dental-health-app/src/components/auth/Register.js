@@ -73,8 +73,8 @@ function Register() {
       const result = await register(username);
       
       if (result.success) {
-        // Navigate to login page after successful registration
-        navigate('/login');
+        // Navigate to role selection page after successful registration
+        navigate('/role-selection');
       } else {
         setError(result.message || 'خطایی رخ داده است. لطفا دوباره تلاش کنید.');
       }

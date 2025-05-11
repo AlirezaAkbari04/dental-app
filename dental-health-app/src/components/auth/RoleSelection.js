@@ -11,19 +11,18 @@ const RoleSelection = () => {
 
   const handleRoleSelect = async (role) => {
     try {
-      // Initialize database if needed
+      // Initialize the database if not already done
       if (!DatabaseService.initialized) {
         await DatabaseService.init();
       }
 
-      // Update user role in database
       if (currentUser?.id) {
-        // Update user role in database (would need to add this method to DatabaseService)
-        // For now, still use localStorage for compatibility
-        localStorage.setItem('userRole', role);
+        // Update the user's role in the database
+        await DatabaseService.updateUserRole(currentUser.id, role); // Ensure this method exists in DatabaseService
+        localStorage.setItem('userRole', role); // Save the role in localStorage
       }
 
-      // Navigate to appropriate profile page
+      // Navigate to the appropriate profile or dashboard based on the selected role
       switch (role) {
         case 'child':
           navigate('/profile/child');
@@ -35,11 +34,10 @@ const RoleSelection = () => {
           navigate('/profile/parent');
           break;
         default:
-          navigate('/profile/child');
+          navigate('/profile/child'); // Default to child profile
       }
     } catch (error) {
       console.error("Error updating role:", error);
-      // Navigate anyway as fallback
       navigate(`/profile/${role}`);
     }
   };
@@ -51,19 +49,19 @@ const RoleSelection = () => {
           <img src={logoImage} alt="لبخند شاد دندان سالم" className="app-logo" />
           <h1 className="app-title">لبخند شاد دندان سالم</h1>
         </div>
-        
+
         <div className="role-selection">
           <h2>لطفاً نقش خود را انتخاب کنید</h2>
           <p className="role-instruction">برای ادامه، نقش خود را از گزینه‌های زیر انتخاب کنید</p>
-          
-          <div style={{ 
-            display: 'flex', 
+
+          <div style={{
+            display: 'flex',
             flexDirection: 'column',
             gap: '15px',
             width: '100%',
             margin: '20px 0'
           }}>
-            <div 
+            <div
               style={{
                 display: 'flex',
                 flexDirection: 'row',
@@ -82,8 +80,8 @@ const RoleSelection = () => {
                 <div style={{ fontSize: '13px', color: '#666' }}>آموزش بهداشت دهان و دندان برای کودکان</div>
               </div>
             </div>
-            
-            <div 
+
+            <div
               style={{
                 display: 'flex',
                 flexDirection: 'row',
@@ -102,8 +100,8 @@ const RoleSelection = () => {
                 <div style={{ fontSize: '13px', color: '#666' }}>مدیریت آموزش بهداشت دهان و دندان برای کودکان</div>
               </div>
             </div>
-            
-            <div 
+
+            <div
               style={{
                 display: 'flex',
                 flexDirection: 'row',

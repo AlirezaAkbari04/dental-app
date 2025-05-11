@@ -5,7 +5,7 @@ import logoImage from '../logo.svg';
 import BrushingReport from './parent/BrushingReport';
 import ReminderSettings from './parent/ReminderSettings';
 import InfoGraphics from './parent/InfoGraphics';
-import { useUser } from '../../contexts/UserContext';
+import { useUser } from '../../contexts/UserContext';  
 import DatabaseService from '../../services/DatabaseService';
 import MigrationService from '../../services/MigrationService';
 
@@ -14,9 +14,10 @@ const ParentDashboard = () => {
   const [activeTab, setActiveTab] = useState('report');
   const [parentName, setParentName] = useState('');
   const [childName, setChildName] = useState('');
-  
-  const { currentUser } = useUser();
-  
+
+  // Access the currentUser and logout method from the UserContext
+  const { currentUser, logout } = useUser();
+
   useEffect(() => {
     const initDatabase = async () => {
       try {
@@ -31,9 +32,9 @@ const ParentDashboard = () => {
         console.error('Error initializing database:', error);
       }
     };
-    
+
     initDatabase();
-    
+
     const fetchProfileData = async () => {
       try {
         if (currentUser?.id) {
@@ -65,33 +66,49 @@ const ParentDashboard = () => {
         setChildName(childProfile.fullName || 'فرزند شما');
       }
     };
-    
+
     fetchProfileData();
   }, [currentUser]);
-  
+
+  // Handle the logout process
   const handleLogout = async () => {
     try {
+      // Ensure the database is closed (if it's initialized)
       if (DatabaseService.initialized) {
+        console.log('Closing database...');
         await DatabaseService.close();
+        console.log('Database closed.');
       }
-      
+
+      // Clear user authentication data
+      console.log('Clearing user authentication data...');
       localStorage.removeItem('userAuth');
       localStorage.removeItem('userRole');
-      
+
+      // Reset currentUser state in UserContext
+      logout();  // Using the logout function from UserContext
+
+      // Redirect to the login page
       navigate('/login');
     } catch (error) {
       console.error('Error during logout:', error);
-      
+
+      // Ensure data is still cleared even if an error occurs
       localStorage.removeItem('userAuth');
       localStorage.removeItem('userRole');
+
+      // Reset currentUser state in case of an error
+      logout();  // Reset user context here
+
+      // Navigate to the login page
       navigate('/login');
     }
   };
-  
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
-  
+
   const renderContent = () => {
     switch (activeTab) {
       case 'report':
@@ -104,7 +121,7 @@ const ParentDashboard = () => {
         return <BrushingReport childName={childName} />;
     }
   };
-  
+
   return (
     <div className="parent-dashboard">
       <header className="dashboard-header">
@@ -121,7 +138,7 @@ const ParentDashboard = () => {
           <button onClick={handleLogout} className="logout-button">خروج</button>
         </div>
       </header>
-      
+
       <div className="dashboard-container">
         <nav className="dashboard-sidebar">
           <div className="user-profile">
@@ -129,7 +146,7 @@ const ParentDashboard = () => {
             <div className="profile-name">{parentName}</div>
             <div className="child-name">والد {childName}</div>
           </div>
-          
+
           <ul className="nav-menu">
             <li 
               className={`nav-item ${activeTab === 'report' ? 'active' : ''}`}
@@ -154,12 +171,12 @@ const ParentDashboard = () => {
             </li>
           </ul>
         </nav>
-        
+
         <main className="dashboard-content">
           {renderContent()}
         </main>
       </div>
-      
+
       <footer className="dashboard-footer">
         <p>لبخند شاد دندان سالم &copy; {new Date().getFullYear()}</p>
       </footer>

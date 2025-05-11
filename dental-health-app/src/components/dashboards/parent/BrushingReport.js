@@ -221,7 +221,6 @@ const BrushingReport = ({ childName = "کودک" }) => {
     setShowAddModal(true);
   };
   
-  // FIXED: Save record from modal and update state
   const handleSaveRecord = () => {
     logDebug("Save button clicked");
     
@@ -230,59 +229,45 @@ const BrushingReport = ({ childName = "کودک" }) => {
       alert("خطا: اطلاعات ناقص است");
       return;
     }
-
+  
     const dateKey = formatDateKey(selectedDate);
     
+    if (!currentRecord.morning.brushed || !currentRecord.evening.brushed) {
+      alert("خطا: اطلاعات ناقص است"); // Prompt if any brushing record is missing
+      return;
+    }
+  
     try {
-      // Update state immediately (this is important)
       const updatedBrushingData = {
         ...brushingData,
-        [dateKey]: {...currentRecord}
+        [dateKey]: { ...currentRecord }
       };
-      
-      // Set state with the updated data
+  
       setBrushingData(updatedBrushingData);
-      logDebug("State updated successfully", { dateKey, data: currentRecord });
-      
-      // Save to localStorage as backup
-      try {
-        localStorage.setItem('parentBrushingRecord', JSON.stringify(updatedBrushingData));
-        logDebug("Data saved to localStorage");
-      } catch (e) {
-        logDebug("Error saving to localStorage", e);
-      }
-      
-      // Also try to save to database (but don't wait for it to complete)
-      logDebug("Attempting to save to database");
-      
-      // Fire and forget database calls
+      localStorage.setItem('parentBrushingRecord', JSON.stringify(updatedBrushingData));
+  
       DatabaseService.createBrushingRecord(
         childId,
         dateKey,
         'morning',
         currentRecord.morning.time || '0',
         currentRecord.morning.brushed
-      ).then(() => {
-        logDebug("Morning record saved to database");
-      }).catch(err => {
+      ).catch(err => {
         logDebug("Error saving morning record", err);
       });
-      
+  
       DatabaseService.createBrushingRecord(
         childId,
         dateKey,
         'evening',
         currentRecord.evening.time || '0',
         currentRecord.evening.brushed
-      ).then(() => {
-        logDebug("Evening record saved to database");
-      }).catch(err => {
+      ).catch(err => {
         logDebug("Error saving evening record", err);
       });
-      
-      // Close modal immediately after updating state
+  
       setShowAddModal(false);
-      
+  
     } catch (error) {
       logDebug("Error in save process", error);
       alert("خطا در ذخیره‌سازی اطلاعات");

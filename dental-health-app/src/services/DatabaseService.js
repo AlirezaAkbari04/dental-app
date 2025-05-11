@@ -212,6 +212,33 @@ class DatabaseService {
         FOREIGN KEY (child_id) REFERENCES children(id),
         UNIQUE(child_id, video_id)
       );
+      
+      CREATE TABLE IF NOT EXISTS schools (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        caretaker_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        type TEXT,
+        activity_days TEXT,
+        FOREIGN KEY (caretaker_id) REFERENCES users(id)
+      );
+      
+      CREATE TABLE IF NOT EXISTS students (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        school_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        age INTEGER,
+        grade TEXT,
+        FOREIGN KEY (school_id) REFERENCES schools(id)
+      );
+      
+      CREATE TABLE IF NOT EXISTS health_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        record_type TEXT NOT NULL,
+        details TEXT,
+        FOREIGN KEY (student_id) REFERENCES students(id)
+      );
     `;
 
     try {
@@ -228,10 +255,7 @@ class DatabaseService {
   async createUser(username, role) {
     console.log(`Creating user: ${username} with role: ${role}`);
     
-    // Always try to reset the database first for native platforms
-    if (Capacitor.isNativePlatform()) {
-      await this.resetDatabase();
-    }
+    await this.ensureInitialized();
     
     if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development or when database is not available
@@ -274,9 +298,10 @@ class DatabaseService {
       return newUser.id;
     }
   }
-
   async getUserByUsername(username) {
     console.log(`Getting user by username: ${username}`);
+    
+    await this.ensureInitialized();
     
     if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development or when database is not available
@@ -286,17 +311,6 @@ class DatabaseService {
     }
 
     try {
-      if (!this.initialized) {
-        console.log("Database not initialized, initializing now");
-        await this.init();
-      }
-      
-      if (!this.db) {
-        console.log("Database still null after initialization, using localStorage fallback");
-        const users = JSON.parse(localStorage.getItem('db_users') || '[]');
-        return users.find(user => user.username === username) || null;
-      }
-      
       const statement = `
         SELECT * FROM users WHERE username = ?
       `;
@@ -312,28 +326,49 @@ class DatabaseService {
     }
   }
 
+  async updateUserRole(userId, role) {
+    console.log(`Updating user role: userID ${userId} to role ${role}`);
+    
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      const users = JSON.parse(localStorage.getItem('db_users') || '[]');
+      const updatedUsers = users.map(user => {
+        if (user.id === userId || user.id === parseInt(userId)) {
+          return { ...user, role };
+        }
+        return user;
+      });
+      localStorage.setItem('db_users', JSON.stringify(updatedUsers));
+      return true;
+    }
+
+    try {
+      const statement = `
+        UPDATE users SET role = ? WHERE id = ?
+      `;
+      await this.db.run(statement, [role, userId]);
+      return true;
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      return false;
+    }
+  }
+  
   async getUserById(id) {
     console.log(`Getting user by ID: ${id}`);
+    
+    await this.ensureInitialized();
     
     if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development or when database is not available
       console.log("Using localStorage fallback for getUserById");
       const users = JSON.parse(localStorage.getItem('db_users') || '[]');
-      return users.find(user => user.id === id) || null;
+      return users.find(user => user.id === parseInt(id) || user.id === id) || null;
     }
 
     try {
-      if (!this.initialized) {
-        console.log("Database not initialized, initializing now");
-        await this.init();
-      }
-      
-      if (!this.db) {
-        console.log("Database still null after initialization, using localStorage fallback");
-        const users = JSON.parse(localStorage.getItem('db_users') || '[]');
-        return users.find(user => user.id === id) || null;
-      }
-      
       const statement = `
         SELECT * FROM users WHERE id = ?
       `;
@@ -345,13 +380,15 @@ class DatabaseService {
       console.error("Error getting user:", error);
       // Still provide a fallback
       const users = JSON.parse(localStorage.getItem('db_users') || '[]');
-      return users.find(user => user.id === id) || null;
+      return users.find(user => user.id === parseInt(id) || user.id === id) || null;
     }
   }
 
   // CHILD OPERATIONS
   async createChild(parentId, name, age, gender, avatarUrl) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const children = JSON.parse(localStorage.getItem('db_children') || '[]');
       const newChild = {
@@ -394,7 +431,7 @@ class DatabaseService {
   async initializeChildAchievements(childId) {
     const achievementTypes = ['stars', 'regularBrushing', 'diamonds', 'cleanedAreas', 'healthySnacks'];
     
-    if (!Capacitor.isNativePlatform()) {
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const achievements = JSON.parse(localStorage.getItem('db_achievements') || '[]');
       
@@ -426,10 +463,12 @@ class DatabaseService {
   }
 
   async getChildrenByParentId(parentId) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const children = JSON.parse(localStorage.getItem('db_children') || '[]');
-      return children.filter(child => child.parent_id === parentId);
+      return children.filter(child => child.parent_id === parentId || child.parent_id === parseInt(parentId));
     }
 
     try {
@@ -445,10 +484,12 @@ class DatabaseService {
   }
 
   async getChildById(childId) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const children = JSON.parse(localStorage.getItem('db_children') || '[]');
-      return children.find(child => child.id === childId) || null;
+      return children.find(child => child.id === childId || child.id === parseInt(childId)) || null;
     }
 
     try {
@@ -465,7 +506,9 @@ class DatabaseService {
 
   // BRUSHING RECORD OPERATIONS
   async createBrushingRecord(childId, date, timeOfDay, durationMinutes, brushed) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const records = JSON.parse(localStorage.getItem('db_brushing_records') || '[]');
       const newRecord = {
@@ -521,13 +564,14 @@ class DatabaseService {
       return null;
     }
   }
-
   async getBrushingRecord(childId, date, timeOfDay) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const records = JSON.parse(localStorage.getItem('db_brushing_records') || '[]');
       return records.find(
-        record => record.child_id === childId && 
+        record => (record.child_id === childId || record.child_id === parseInt(childId)) && 
                  record.date === date && 
                  record.time_of_day === timeOfDay
       ) || null;
@@ -547,10 +591,12 @@ class DatabaseService {
   }
 
   async updateBrushingRecord(recordId, durationMinutes, brushed) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const records = JSON.parse(localStorage.getItem('db_brushing_records') || '[]');
-      const index = records.findIndex(record => record.id === recordId);
+      const index = records.findIndex(record => record.id === recordId || record.id === parseInt(recordId));
       
       if (index !== -1) {
         records[index].duration_minutes = durationMinutes;
@@ -577,10 +623,12 @@ class DatabaseService {
   }
 
   async getBrushingRecordsByChildId(childId, startDate = null, endDate = null) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const records = JSON.parse(localStorage.getItem('db_brushing_records') || '[]');
-      let filtered = records.filter(record => record.child_id === childId);
+      let filtered = records.filter(record => record.child_id === childId || record.child_id === parseInt(childId));
       
       if (startDate) {
         filtered = filtered.filter(record => record.date >= startDate);
@@ -656,7 +704,9 @@ class DatabaseService {
 
   // REMINDER OPERATIONS
   async createReminder(userId, type, time, message, enabled = true) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const reminders = JSON.parse(localStorage.getItem('db_reminders') || '[]');
       const newReminder = {
@@ -687,10 +737,12 @@ class DatabaseService {
   }
 
   async getRemindersByUserId(userId) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const reminders = JSON.parse(localStorage.getItem('db_reminders') || '[]');
-      return reminders.filter(reminder => reminder.user_id === userId);
+      return reminders.filter(reminder => reminder.user_id === userId || reminder.user_id === parseInt(userId));
     }
 
     try {
@@ -706,10 +758,12 @@ class DatabaseService {
   }
 
   async updateReminder(id, type, time, message, enabled) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const reminders = JSON.parse(localStorage.getItem('db_reminders') || '[]');
-      const index = reminders.findIndex(reminder => reminder.id === id);
+      const index = reminders.findIndex(reminder => reminder.id === id || reminder.id === parseInt(id));
       
       if (index !== -1) {
         reminders[index].type = type;
@@ -736,13 +790,14 @@ class DatabaseService {
       return false;
     }
   }
-
   // ACHIEVEMENT OPERATIONS
   async updateAchievement(childId, type, incrementBy = 1) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const achievements = JSON.parse(localStorage.getItem('db_achievements') || '[]');
-      const achievement = achievements.find(a => a.child_id === childId && a.type === type);
+      const achievement = achievements.find(a => (a.child_id === childId || a.child_id === parseInt(childId)) && a.type === type);
       
       if (achievement) {
         achievement.count += incrementBy;
@@ -769,10 +824,12 @@ class DatabaseService {
   }
 
   async getAchievementsByChildId(childId) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const achievements = JSON.parse(localStorage.getItem('db_achievements') || '[]');
-      return achievements.filter(achievement => achievement.child_id === childId);
+      return achievements.filter(achievement => achievement.child_id === childId || achievement.child_id === parseInt(childId));
     }
 
     try {
@@ -789,7 +846,9 @@ class DatabaseService {
 
   // School Operations for Caretaker
   async getSchoolsByCaretakerId(caretakerId) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       return JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
     }
@@ -808,7 +867,9 @@ class DatabaseService {
   }
 
   async createSchool(caretakerId, name, type, activityDays) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
       const newSchool = {
@@ -840,10 +901,12 @@ class DatabaseService {
   }
 
   async updateSchool(schoolId, name, type, activityDays) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-      const index = schools.findIndex(school => school.id === schoolId);
+      const index = schools.findIndex(school => school.id === schoolId || school.id === parseInt(schoolId));
       if (index !== -1) {
         schools[index].name = name;
         schools[index].type = type;
@@ -871,10 +934,12 @@ class DatabaseService {
   }
 
   async deleteSchool(schoolId) {
-    if (!Capacitor.isNativePlatform()) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
       // Fallback for web development
       const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-      const updatedSchools = schools.filter(school => school.id !== schoolId);
+      const updatedSchools = schools.filter(school => school.id !== schoolId && school.id !== parseInt(schoolId));
       localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
       return true;
     }
@@ -887,541 +952,574 @@ class DatabaseService {
       return true;
     } catch (error) {
       console.error("Error deleting school:", error);
-      return false;}
+      return false;
     }
-  
-    // Student Operations for Caretaker
-    async getStudentsBySchoolId(schoolId) {
-      if (!Capacitor.isNativePlatform()) {
-        // Fallback for web development
-        const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-        const school = schools.find(s => s.id === schoolId);
-        return school ? school.students || [] : [];
-      }
-  
-      try {
-        const statement = `
-          SELECT * FROM students WHERE school_id = ?
-        `;
-        const result = await this.db.query(statement, [schoolId]);
-        return result.values || [];
-      } catch (error) {
-        console.error("Error getting students:", error);
-        return [];
-      }
+  }
+  // Student Operations for Caretaker
+  async getStudentsBySchoolId(schoolId) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      const school = schools.find(s => s.id === schoolId || s.id === parseInt(schoolId));
+      return school ? school.students || [] : [];
     }
-  
-    async createStudent(schoolId, name, age, grade) {
-      if (!Capacitor.isNativePlatform()) {
-        // Fallback for web development
-        const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-        const newStudent = {
-          id: Date.now().toString(),
-          name,
-          age,
-          grade
-        };
-        const updatedSchools = schools.map(school => {
-          if (school.id === schoolId) {
-            return {
-              ...school,
-              students: [...(school.students || []), newStudent]
-            };
-          }
-          return school;
-        });
-        localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
-        return newStudent.id;
-      }
-  
-      try {
-        const statement = `
-          INSERT INTO students (school_id, name, age, grade)
-          VALUES (?, ?, ?, ?)
-        `;
-        const values = [schoolId, name, age, grade];
-        const result = await this.db.run(statement, values);
-        return result.changes.lastId;
-      } catch (error) {
-        console.error("Error creating student:", error);
-        return null;
-      }
-    }
-  
-    async deleteStudent(studentId) {
-      if (!Capacitor.isNativePlatform()) {
-        // Fallback for web development
-        const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-        const updatedSchools = schools.map(school => {
-          if (school.students && school.students.some(s => s.id === studentId)) {
-            return {
-              ...school,
-              students: school.students.filter(s => s.id !== studentId)
-            };
-          }
-          return school;
-        });
-        localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
-        return true;
-      }
-  
-      try {
-        // First delete associated health records
-        await this.db.run(`DELETE FROM health_records WHERE student_id = ?`, [studentId]);
-        // Then delete the student
-        await this.db.run(`DELETE FROM students WHERE id = ?`, [studentId]);
-        return true;
-      } catch (error) {
-        console.error("Error deleting student:", error);
-        return false;
-      }
-    }
-  
-    // Parent Dashboard specific methods
-  
-    // Get child data for the current parent
-    async getChildForParent(parentId) {
-      if (!Capacitor.isNativePlatform()) {
-        // Fallback for web development
-        const children = JSON.parse(localStorage.getItem('db_children') || '[]');
-        return children.find(child => child.parent_id === parentId) || null;
-      }
-  
-      try {
-        const statement = `
-          SELECT * FROM children 
-          WHERE parent_id = ?
-          LIMIT 1
-        `;
-        const result = await this.db.query(statement, [parentId]);
-        return result.values && result.values.length > 0 ? result.values[0] : null;
-      } catch (error) {
-        console.error("Error getting child for parent:", error);
-        return null;
-      }
-    }
-  
-    // Create the child profile if it doesn't exist
-    async ensureChildExists(parentId, childName) {
-      try {
-        // Check if child exists
-        const child = await this.getChildForParent(parentId);
-        
-        if (!child) {
-          // Create new child
-          const childId = await this.createChild(
-            parentId,
-            childName || "کودک",
-            null, // age
-            null, // gender
-            null  // avatarUrl
-          );
-          
-          return childId;
-        }
-        
-        return child.id;
-      } catch (error) {
-        console.error("Error ensuring child exists:", error);
-        return null;
-      }
-    }
-  
-    // Get all reminders specific to this parent
-    async getParentReminders(parentId) {
-      if (!Capacitor.isNativePlatform()) {
-        // Fallback for web development
-        return JSON.parse(localStorage.getItem('parentReminders') || '{}');
-      }
-  
-      try {
-        const reminders = await this.getRemindersByUserId(parentId);
-        
-        // Convert to the format expected by the component
-        const reminderData = {
-          brushMorning: null,
-          brushEvening: null
-        };
-        
-        reminders.forEach(reminder => {
-          if (reminder.type === 'brushMorning') {
-            reminderData.brushMorning = {
-              id: reminder.id,
-              enabled: reminder.enabled === 1,
-              time: reminder.time,
-              message: reminder.message
-            };
-          } else if (reminder.type === 'brushEvening') {
-            reminderData.brushEvening = {
-              id: reminder.id,
-              enabled: reminder.enabled === 1,
-              time: reminder.time,
-              message: reminder.message
-            };
-          }
-        });
-        
-        return reminderData;
-      } catch (error) {
-        console.error("Error getting parent reminders:", error);
-        return {
-          brushMorning: null,
-          brushEvening: null
-        };
-      }
-    }
-  
-    // Save parent profile data
-    async updateParentProfile(parentId, profileData) {
-      if (!Capacitor.isNativePlatform()) {
-        // Fallback for web development
-        localStorage.setItem('parentProfile', JSON.stringify(profileData));
-        return true;
-      }
-  
-      try {
-        // For now, we'll just create a minimal users table update
-        // In a complete implementation, you would have a parent_profiles table
-        const statement = `
-          UPDATE users
-          SET profile_data = ?
-          WHERE id = ?
-        `;
-        
-        await this.db.run(statement, [JSON.stringify(profileData), parentId]);
-        return true;
-      } catch (error) {
-        console.error("Error updating parent profile:", error);
-        return false;
-      }
-    }
-  
-    // Get asset data (for future use - loading infographics from database)
-    async getInfographicAssets() {
-      if (!Capacitor.isNativePlatform()) {
-        // For web development, we'll just return the hardcoded assets
-        return null;
-      }
-  
-      try {
-        // In a real implementation, you would have an assets table
-        // For now, we'll just return null to indicate using built-in assets
-        return null;
-      } catch (error) {
-        console.error("Error getting infographic assets:", error);
-        return null;
-      }
-    }
-  
-    // Track user interaction with infographics (for future analytics)
-    async trackInfoGraphicView(userId, infographicId) {
-      if (!Capacitor.isNativePlatform()) {
-        // For web development, we'll just log it
-        console.log(`User ${userId} viewed infographic ${infographicId}`);
-        return true;
-      }
-  
-      try {
-        // In a real implementation, you would log this to an analytics table
-        // For now, we'll just log it
-        console.log(`User ${userId} viewed infographic ${infographicId}`);
-        return true;
-      } catch (error) {
-        console.error("Error tracking infographic view:", error);
-        return false;
-      }
-    }
-  
-    // Create tables for parent dashboard
-    async createParentTables() {
-      const statements = `
-        -- Add profile_data column to users table if it doesn't exist
-        PRAGMA table_info(users);
-        
-        -- Create table for infographic assets if needed in the future
-        CREATE TABLE IF NOT EXISTS infographic_assets (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          title TEXT NOT NULL,
-          description TEXT,
-          content TEXT,
-          image_path TEXT,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        
-        -- Create table for tracking user interactions with infographics
-        CREATE TABLE IF NOT EXISTS infographic_views (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_id INTEGER NOT NULL,
-          infographic_id INTEGER NOT NULL,
-          viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (user_id) REFERENCES users(id)
-        );
+
+    try {
+      const statement = `
+        SELECT * FROM students WHERE school_id = ?
       `;
-  
-      try {
-        // Execute the SQL to create tables
-        await this.db.execute({ statements });
-        
-        // Check if profile_data column exists in users table
-        const result = await this.db.query('PRAGMA table_info(users);');
-        const columns = result.values || [];
-        
-        // If profile_data column doesn't exist, add it
-        if (!columns.some(column => column.name === 'profile_data')) {
-          await this.db.execute({
-            statements: 'ALTER TABLE users ADD COLUMN profile_data TEXT;'
-          });
-        }
-        
-        console.log("Parent tables created successfully");
-      } catch (error) {
-        console.error("Error creating parent tables:", error);
-      }
+      const result = await this.db.query(statement, [schoolId]);
+      return result.values || [];
+    } catch (error) {
+      console.error("Error getting students:", error);
+      return [];
     }
-  
-    // Child Dashboard specific methods
-  
-    // Get child achievements
-    async getChildAchievements(childId) {
-      if (!Capacitor.isNativePlatform()) {
-        // Fallback for web development
-        return JSON.parse(localStorage.getItem('childAchievements') || '{}');
-      }
-  
-      try {
-        const statement = `
-          SELECT * FROM achievements 
-          WHERE child_id = ?
-        `;
-        const result = await this.db.query(statement, [childId]);
-        
-        // Convert to expected format
-        const achievements = {
-          stars: 0,
-          diamonds: 0,
-          regularBrushing: 0,
-          cleanedAreas: 0,
-          healthySnacks: 0
-        };
-        
-        if (result.values && result.values.length > 0) {
-          result.values.forEach(row => {
-            if (achievements.hasOwnProperty(row.type)) {
-              achievements[row.type] = row.count;
-            }
-          });
-        }
-        
-        return achievements;
-      } catch (error) {
-        console.error("Error getting child achievements:", error);
-        // Fallback to localStorage
-        return JSON.parse(localStorage.getItem('childAchievements') || '{}');
-      }
-    }
-  
-    // Get child profile
-    async getChildProfile(childId) {
-      if (!Capacitor.isNativePlatform()) {
-        // Fallback for web development
-        return JSON.parse(localStorage.getItem('childProfile') || '{}');
-      }
-  
-      try {
-        const statement = `
-          SELECT * FROM children 
-          WHERE id = ?
-        `;
-        const result = await this.db.query(statement, [childId]);
-        
-        if (result.values && result.values.length > 0) {
+  }
+
+  async createStudent(schoolId, name, age, grade) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      const newStudent = {
+        id: Date.now().toString(),
+        name,
+        age,
+        grade
+      };
+      const updatedSchools = schools.map(school => {
+        if (school.id === schoolId || school.id === parseInt(schoolId)) {
           return {
-            id: result.values[0].id,
-            fullName: result.values[0].name,
-            age: result.values[0].age,
-            gender: result.values[0].gender,
-            avatarUrl: result.values[0].avatar_url
+            ...school,
+            students: [...(school.students || []), newStudent]
           };
         }
-        
-        return {};
-      } catch (error) {
-        console.error("Error getting child profile:", error);
-        // Fallback to localStorage
-        return JSON.parse(localStorage.getItem('childProfile') || '{}');
-      }
+        return school;
+      });
+      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
+      return newStudent.id;
     }
-  
-    // Save game scores
-    async saveGameScore(childId, gameType, score) {
-      if (!Capacitor.isNativePlatform()) {
-        // Fallback for web development
-        localStorage.setItem(`${gameType}Score`, score.toString());
-        
-        // Update achievements
-        await this.updateAchievement(childId, gameType, score);
-        return true;
-      }
-  
-      try {
-        const statement = `
-          SELECT * FROM game_scores
-          WHERE child_id = ? AND game_type = ?
-        `;
-        const result = await this.db.query(statement, [childId, gameType]);
-        
-        if (result.values && result.values.length > 0) {
-          // Update existing score
-          await this.db.run(`
-            UPDATE game_scores
-            SET score = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE child_id = ? AND game_type = ?
-          `, [score, childId, gameType]);
-        } else {
-          // Insert new score
-          await this.db.run(`
-            INSERT INTO game_scores (child_id, game_type, score)
-            VALUES (?, ?, ?)
-          `, [childId, gameType, score]);
-        }
-        
-        // Update achievements
-        await this.updateAchievement(childId, gameType, score);
-        return true;
-      } catch (error) {
-        console.error("Error saving game score:", error);
-        return false;
-      }
-    }
-  
-    // Update child alarms
-    async saveChildAlarms(childId, alarms) {
-      if (!Capacitor.isNativePlatform()) {
-        // Fallback for web development
-        localStorage.setItem('brushAlarms', JSON.stringify(alarms));
-        return true;
-      }
-  
-      try {
-        // Convert time to HH:MM format
-        const morningTime = `${alarms.morning.hour.toString().padStart(2, '0')}:${alarms.morning.minute.toString().padStart(2, '0')}`;
-        const eveningTime = `${alarms.evening.hour.toString().padStart(2, '0')}:${alarms.evening.minute.toString().padStart(2, '0')}`;
-        
-        // Check if reminders exist
-        const statement = `
-          SELECT * FROM reminders
-          WHERE user_id = ? AND (type = 'brushMorning' OR type = 'brushEvening')
-        `;
-        const result = await this.db.query(statement, [childId]);
-        
-        const existingReminders = result.values || [];
-        
-        // Handle morning reminder
-        const morningReminder = existingReminders.find(r => r.type === 'brushMorning');
-        if (morningReminder) {
-          // Update existing
-          await this.updateReminder(
-            morningReminder.id,
-            'brushMorning',
-            morningTime,
-            'یادآوری مسواک صبح',
-            alarms.morning.enabled
-          );
-        } else {
-          // Create new
-          await this.createReminder(
-            childId,
-            'brushMorning',
-            morningTime,
-            'یادآوری مسواک صبح',
-            alarms.morning.enabled
-          );
-        }
-        
-        // Handle evening reminder
-        const eveningReminder = existingReminders.find(r => r.type === 'brushEvening');
-        if (eveningReminder) {
-          // Update existing
-          await this.updateReminder(
-            eveningReminder.id,
-            'brushEvening',
-            eveningTime,
-            'یادآوری مسواک شب',
-            alarms.evening.enabled
-          );
-        } else {
-          // Create new
-          await this.createReminder(
-            childId,
-            'brushEvening',
-            eveningTime,
-            'یادآوری مسواک شب',
-            alarms.evening.enabled
-          );
-        }
-        
-        return true;
-      } catch (error) {
-        console.error("Error saving child alarms:", error);
-        return false;
-      }
-    }
-  
-    // Create tables for child dashboard
-    async createChildTables() {
-      const statements = `
-        CREATE TABLE IF NOT EXISTS game_scores (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          child_id INTEGER NOT NULL,
-          game_type TEXT NOT NULL,
-          score INTEGER DEFAULT 0,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (child_id) REFERENCES children(id)
-        );
-        
-        CREATE TABLE IF NOT EXISTS video_progress (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          child_id INTEGER NOT NULL,
-          video_id TEXT NOT NULL,
-          progress REAL DEFAULT 0,
-          completed BOOLEAN DEFAULT 0,
-          last_watched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (child_id) REFERENCES children(id)
-        );
+
+    try {
+      const statement = `
+        INSERT INTO students (school_id, name, age, grade)
+        VALUES (?, ?, ?, ?)
       `;
-  
-      try {
-        await this.db.execute({ statements });
-        console.log("Child tables created successfully");
-      } catch (error) {
-        console.error("Error creating child tables:", error);
-      }
+      const values = [schoolId, name, age, grade];
+      const result = await this.db.run(statement, values);
+      return result.changes.lastId;
+    } catch (error) {
+      console.error("Error creating student:", error);
+      return null;
     }
-  
-    // UTILITY FUNCTIONS
-    // Helper method to format date as YYYY-MM-DD
-    formatDate(date) {
-      const d = new Date(date);
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    }
-  
-    // Close the database connection
-    async close() {
-      if (Capacitor.isNativePlatform() && this.db) {
-        try {
-          console.log("Closing database connection");
-          await this.db.close();
-          await this.sqlite.closeConnection(this.dbName, false);
-          this.initialized = false;
-          this.db = null;
-          console.log("Database connection closed successfully");
-        } catch (error) {
-          console.error("Error closing database connection:", error);
+  }
+
+  async deleteStudent(studentId) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      const schools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      const updatedSchools = schools.map(school => {
+        if (school.students && school.students.some(s => s.id === studentId || s.id === parseInt(studentId))) {
+          return {
+            ...school,
+            students: school.students.filter(s => s.id !== studentId && s.id !== parseInt(studentId))
+          };
         }
-      }
+        return school;
+      });
+      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
+      return true;
+    }
+
+    try {
+      // First delete associated health records
+      await this.db.run(`DELETE FROM health_records WHERE student_id = ?`, [studentId]);
+      // Then delete the student
+      await this.db.run(`DELETE FROM students WHERE id = ?`, [studentId]);
+      return true;
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      return false;
     }
   }
   
-  // Export as singleton
-  export default new DatabaseService();
+  // Parent Dashboard specific methods
+  
+  // Get child data for the current parent
+  async getChildForParent(parentId) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      const children = JSON.parse(localStorage.getItem('db_children') || '[]');
+      return children.find(child => child.parent_id === parentId || child.parent_id === parseInt(parentId)) || null;
+    }
+
+    try {
+      const statement = `
+        SELECT * FROM children 
+        WHERE parent_id = ?
+        LIMIT 1
+      `;
+      const result = await this.db.query(statement, [parentId]);
+      return result.values && result.values.length > 0 ? result.values[0] : null;
+    } catch (error) {
+      console.error("Error getting child for parent:", error);
+      return null;
+    }
+  }
+
+  // Create the child profile if it doesn't exist
+  async ensureChildExists(parentId, childName) {
+    await this.ensureInitialized();
+    
+    try {
+      // Check if child exists
+      const child = await this.getChildForParent(parentId);
+      
+      if (!child) {
+        // Create new child
+        const childId = await this.createChild(
+          parentId,
+          childName || "کودک",
+          null, // age
+          null, // gender
+          null  // avatarUrl
+        );
+        
+        return childId;
+      }
+      
+      return child.id;
+    } catch (error) {
+      console.error("Error ensuring child exists:", error);
+      return null;
+    }
+  }
+
+  // Get all reminders specific to this parent
+  async getParentReminders(parentId) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      return JSON.parse(localStorage.getItem('parentReminders') || '{}');
+    }
+
+    try {
+      const reminders = await this.getRemindersByUserId(parentId);
+      
+      // Convert to the format expected by the component
+      const reminderData = {
+        brushMorning: null,
+        brushEvening: null
+      };
+      
+      reminders.forEach(reminder => {
+        if (reminder.type === 'brushMorning') {
+          reminderData.brushMorning = {
+            id: reminder.id,
+            enabled: reminder.enabled === 1,
+            time: reminder.time,
+            message: reminder.message
+          };
+        } else if (reminder.type === 'brushEvening') {
+          reminderData.brushEvening = {
+            id: reminder.id,
+            enabled: reminder.enabled === 1,
+            time: reminder.time,
+            message: reminder.message
+          };
+        }
+      });
+      
+      return reminderData;
+    } catch (error) {
+      console.error("Error getting parent reminders:", error);
+      return {
+        brushMorning: null,
+        brushEvening: null
+      };
+    }
+  }
+
+  // Save parent profile data
+  async updateParentProfile(parentId, profileData) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      localStorage.setItem('parentProfile', JSON.stringify(profileData));
+      return true;
+    }
+
+    try {
+      // For now, we'll just create a minimal users table update
+      const statement = `
+        UPDATE users
+        SET profile_data = ?
+        WHERE id = ?
+      `;
+      
+      await this.db.run(statement, [JSON.stringify(profileData), parentId]);
+      return true;
+    } catch (error) {
+      console.error("Error updating parent profile:", error);
+      return false;
+    }
+  }
+  // Get asset data (for future use - loading infographics from database)
+  async getInfographicAssets() {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // For web development, we'll just return the hardcoded assets
+      return null;
+    }
+
+    try {
+      // In a real implementation, you would have an assets table
+      // For now, we'll just return null to indicate using built-in assets
+      return null;
+    } catch (error) {
+      console.error("Error getting infographic assets:", error);
+      return null;
+    }
+  }
+
+  // Track user interaction with infographics (for future analytics)
+  async trackInfoGraphicView(userId, infographicId) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // For web development, we'll just log it
+      console.log(`User ${userId} viewed infographic ${infographicId}`);
+      return true;
+    }
+
+    try {
+      // In a real implementation, you would log this to an analytics table
+      // For now, we'll just log it
+      console.log(`User ${userId} viewed infographic ${infographicId}`);
+      return true;
+    } catch (error) {
+      console.error("Error tracking infographic view:", error);
+      return false;
+    }
+  }
+
+  // Create tables for parent dashboard
+  async createParentTables() {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      return;
+    }
+    
+    const statements = `
+      -- Create table for infographic assets if needed in the future
+      CREATE TABLE IF NOT EXISTS infographic_assets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        content TEXT,
+        image_path TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      
+      -- Create table for tracking user interactions with infographics
+      CREATE TABLE IF NOT EXISTS infographic_views (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        infographic_id INTEGER NOT NULL,
+        viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+    `;
+
+    try {
+      // Execute the SQL to create tables
+      await this.db.execute({ statements });
+      
+      // Check if profile_data column exists in users table
+      const result = await this.db.query('PRAGMA table_info(users);');
+      const columns = result.values || [];
+      
+      // If profile_data column doesn't exist, add it
+      if (!columns.some(column => column.name === 'profile_data')) {
+        await this.db.execute({
+          statements: 'ALTER TABLE users ADD COLUMN profile_data TEXT;'
+        });
+      }
+      
+      console.log("Parent tables created successfully");
+    } catch (error) {
+      console.error("Error creating parent tables:", error);
+    }
+  }
+
+  // Child Dashboard specific methods
+  
+  // Get child achievements
+  async getChildAchievements(childId) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      return JSON.parse(localStorage.getItem('childAchievements') || '{}');
+    }
+
+    try {
+      const statement = `
+        SELECT * FROM achievements 
+        WHERE child_id = ?
+      `;
+      const result = await this.db.query(statement, [childId]);
+      
+      // Convert to expected format
+      const achievements = {
+        stars: 0,
+        diamonds: 0,
+        regularBrushing: 0,
+        cleanedAreas: 0,
+        healthySnacks: 0
+      };
+      
+      if (result.values && result.values.length > 0) {
+        result.values.forEach(row => {
+          if (achievements.hasOwnProperty(row.type)) {
+            achievements[row.type] = row.count;
+          }
+        });
+      }
+      
+      return achievements;
+    } catch (error) {
+      console.error("Error getting child achievements:", error);
+      // Fallback to localStorage
+      return JSON.parse(localStorage.getItem('childAchievements') || '{}');
+    }
+  }
+
+  // Get child profile
+  async getChildProfile(childId) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      return JSON.parse(localStorage.getItem('childProfile') || '{}');
+    }
+
+    try {
+      const statement = `
+        SELECT * FROM children 
+        WHERE id = ?
+      `;
+      const result = await this.db.query(statement, [childId]);
+      
+      if (result.values && result.values.length > 0) {
+        return {
+          id: result.values[0].id,
+          fullName: result.values[0].name,
+          age: result.values[0].age,
+          gender: result.values[0].gender,
+          avatarUrl: result.values[0].avatar_url
+        };
+      }
+      
+      return {};
+    } catch (error) {
+      console.error("Error getting child profile:", error);
+      // Fallback to localStorage
+      return JSON.parse(localStorage.getItem('childProfile') || '{}');
+    }
+  }
+  
+  // Save game scores
+  async saveGameScore(childId, gameType, score) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      localStorage.setItem(`${gameType}Score`, score.toString());
+      
+      // Update achievements
+      await this.updateAchievement(childId, gameType, score);
+      return true;
+    }
+
+    try {
+      const statement = `
+        SELECT * FROM game_scores
+        WHERE child_id = ? AND game_type = ?
+      `;
+      const result = await this.db.query(statement, [childId, gameType]);
+      
+      if (result.values && result.values.length > 0) {
+        // Update existing score
+        await this.db.run(`
+          UPDATE game_scores
+          SET score = ?, updated_at = CURRENT_TIMESTAMP
+          WHERE child_id = ? AND game_type = ?
+        `, [score, childId, gameType]);
+      } else {
+        // Insert new score
+        await this.db.run(`
+          INSERT INTO game_scores (child_id, game_type, score)
+          VALUES (?, ?, ?)
+        `, [childId, gameType, score]);
+      }
+      
+      // Update achievements
+      await this.updateAchievement(childId, gameType, score);
+      return true;
+    } catch (error) {
+      console.error("Error saving game score:", error);
+      return false;
+    }
+  }
+
+  // Update child alarms
+  async saveChildAlarms(childId, alarms) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      localStorage.setItem('brushAlarms', JSON.stringify(alarms));
+      return true;
+    }
+
+    try {
+      // Convert time to HH:MM format
+      const morningTime = `${alarms.morning.hour.toString().padStart(2, '0')}:${alarms.morning.minute.toString().padStart(2, '0')}`;
+      const eveningTime = `${alarms.evening.hour.toString().padStart(2, '0')}:${alarms.evening.minute.toString().padStart(2, '0')}`;
+      
+      // Check if reminders exist
+      const statement = `
+        SELECT * FROM reminders
+        WHERE user_id = ? AND (type = 'brushMorning' OR type = 'brushEvening')
+      `;
+      const result = await this.db.query(statement, [childId]);
+      
+      const existingReminders = result.values || [];
+      
+      // Handle morning reminder
+      const morningReminder = existingReminders.find(r => r.type === 'brushMorning');
+      if (morningReminder) {
+        // Update existing
+        await this.updateReminder(
+          morningReminder.id,
+          'brushMorning',
+          morningTime,
+          'یادآوری مسواک صبح',
+          alarms.morning.enabled
+        );
+      } else {
+        // Create new
+        await this.createReminder(
+          childId,
+          'brushMorning',
+          morningTime,
+          'یادآوری مسواک صبح',
+          alarms.morning.enabled
+        );
+      }
+      
+      // Handle evening reminder
+      const eveningReminder = existingReminders.find(r => r.type === 'brushEvening');
+      if (eveningReminder) {
+        // Update existing
+        await this.updateReminder(
+          eveningReminder.id,
+          'brushEvening',
+          eveningTime,
+          'یادآوری مسواک شب',
+          alarms.evening.enabled
+        );
+      } else {
+        // Create new
+        await this.createReminder(
+          childId,
+          'brushEvening',
+          eveningTime,
+          'یادآوری مسواک شب',
+          alarms.evening.enabled
+        );
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error saving child alarms:", error);
+      return false;
+    }
+  }
+  
+  // Create tables for child dashboard
+  async createChildTables() {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      return;
+    }
+    
+    const statements = `
+      CREATE TABLE IF NOT EXISTS game_scores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        child_id INTEGER NOT NULL,
+        game_type TEXT NOT NULL,
+        score INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (child_id) REFERENCES children(id)
+      );
+      
+      CREATE TABLE IF NOT EXISTS video_progress (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        child_id INTEGER NOT NULL,
+        video_id TEXT NOT NULL,
+        progress REAL DEFAULT 0,
+        completed BOOLEAN DEFAULT 0,
+        last_watched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (child_id) REFERENCES children(id)
+      );
+    `;
+
+    try {
+      await this.db.execute({ statements });
+      console.log("Child tables created successfully");
+    } catch (error) {
+      console.error("Error creating child tables:", error);
+    }
+  }
+
+  // UTILITY FUNCTIONS
+  // Helper method to format date as YYYY-MM-DD
+  formatDate(date) {
+    const d = new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  // Close the database connection
+  async close() {
+    if (Capacitor.isNativePlatform() && this.db) {
+      try {
+        console.log("Closing database connection");
+        await this.db.close();
+        await this.sqlite.closeConnection(this.dbName, false);
+        this.initialized = false;
+        this.db = null;
+        console.log("Database connection closed successfully");
+      } catch (error) {
+        console.error("Error closing database connection:", error);
+      }
+    }
+  }
+}
+
+// Export as singleton
+export default new DatabaseService();

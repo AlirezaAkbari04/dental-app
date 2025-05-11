@@ -36,7 +36,6 @@ const Login = () => {
       const success = await login(credentials);
       
       if (success) {
-        // Navigate to role selection or dashboard
         navigate('/role-selection');
       } else {
         setError('خطا در ورود. لطفاً دوباره تلاش کنید');
@@ -48,6 +47,7 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+  
 
   return (
     <div className="auth-container" dir="rtl">
