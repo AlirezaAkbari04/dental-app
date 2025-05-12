@@ -239,6 +239,25 @@ class DatabaseService {
         details TEXT,
         FOREIGN KEY (student_id) REFERENCES students(id)
       );
+
+      CREATE TABLE IF NOT EXISTS survey_responses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        parent_id TEXT NOT NULL,
+        child_name TEXT,
+        timestamp TEXT NOT NULL,
+        consent TEXT,
+        respondent TEXT,
+        grade TEXT,
+        brushing_frequency TEXT,
+        snack_frequency TEXT,
+        toothpaste_usage TEXT,
+        brushing_help TEXT,
+        brushing_helper TEXT,
+        brushing_check TEXT,
+        brushing_checker TEXT,
+        snack_limit TEXT,
+        snack_limiter TEXT
+      )
     `;
 
     try {
@@ -808,6 +827,98 @@ class DatabaseService {
       return false;
     }
   }
+
+  // SURVEY OPERATIONS
+  async saveSurveyResponse(parentId, surveyData) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      const surveyResponses = JSON.parse(localStorage.getItem('surveyResponses') || '[]');
+      surveyResponses.push({
+        id: surveyResponses.length + 1,
+        parent_id: parentId,
+        child_name: surveyData.childName || '',
+        timestamp: surveyData.timestamp,
+        consent: surveyData.consent || '',
+        respondent: surveyData.respondent || '',
+        grade: surveyData.grade || '',
+        brushing_frequency: surveyData.brushingFrequency || '',
+        snack_frequency: surveyData.snackFrequency || '',
+        toothpaste_usage: surveyData.toothpasteUsage || '',
+        brushing_help: surveyData.brushingHelp || '',
+        brushing_helper: surveyData.brushingHelper || '',
+        brushing_check: surveyData.brushingCheck || '',
+        brushing_checker: surveyData.brushingChecker || '',
+        snack_limit: surveyData.snackLimit || '',
+        snack_limiter: surveyData.snackLimiter || ''
+      });
+      localStorage.setItem('surveyResponses', JSON.stringify(surveyResponses));
+      return true;
+    }
+    
+    try {
+      const stmt = await this.db.prepare(`
+        INSERT INTO survey_responses (
+          parent_id, child_name, timestamp, consent, respondent, grade, 
+          brushing_frequency, snack_frequency, toothpaste_usage, 
+          brushing_help, brushing_helper, brushing_check, 
+          brushing_checker, snack_limit, snack_limiter
+        ) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      
+      await stmt.run(
+        parentId,
+        surveyData.childName || '',
+        surveyData.timestamp,
+        surveyData.consent || '',
+        surveyData.respondent || '',
+        surveyData.grade || '',
+        surveyData.brushingFrequency || '',
+        surveyData.snackFrequency || '',
+        surveyData.toothpasteUsage || '',
+        surveyData.brushingHelp || '',
+        surveyData.brushingHelper || '',
+        surveyData.brushingCheck || '',
+        surveyData.brushingChecker || '',
+        surveyData.snackLimit || '',
+        surveyData.snackLimiter || ''
+      );
+      
+      await stmt.finalize();
+      return true;
+    } catch (error) {
+      console.error('Error saving survey response:', error);
+      throw error;
+    }
+  }
+
+  async getSurveyResponses(parentId) {
+    await this.ensureInitialized();
+    
+    if (!Capacitor.isNativePlatform() || !this.db) {
+      // Fallback for web development
+      const surveyResponses = JSON.parse(localStorage.getItem('surveyResponses') || '[]');
+      return surveyResponses.filter(response => 
+        response.parent_id === parentId || response.parent_id === parseInt(parentId)
+      );
+    }
+    
+    try {
+      const statement = `
+        SELECT * FROM survey_responses 
+        WHERE parent_id = ? 
+        ORDER BY timestamp DESC
+      `;
+      const result = await this.db.query(statement, [parentId]);
+      return result.values || [];
+    } catch (error) {
+      console.error('Error retrieving survey responses:', error);
+      return [];
+    }
+  }
+  
   // ACHIEVEMENT OPERATIONS
   async updateAchievement(childId, type, incrementBy = 1) {
     await this.ensureInitialized();

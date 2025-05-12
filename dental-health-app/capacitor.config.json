@@ -14,5 +14,17 @@
   },
   "server": {
     "androidScheme": "https"
-  }
+  },
+  "android": {
+    "webContentsCopyToAssets": [
+      "assets/videos",
+      "assets/audios"
+    ]
+  },
+  "copy": [
+    {
+      "src": "assets/videos/How_to_Brush_Your_Teeth_Animation.mp4",
+      "dest": "assets/videos/How_to_Brush_Your_Teeth_Animation.mp4"
+    }
+  ]
 }

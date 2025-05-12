@@ -535,7 +535,7 @@ const BrushReminder = () => {
         )}
       </div>
       
-
+      {/* MODIFIED: Changed to show only one video with the name "ویدیوی مسواک" */}
       <div className="educational-video">
         <h3>آموزش مسواک زدن</h3>
         <div className="videos-container">
@@ -551,22 +551,7 @@ const BrushReminder = () => {
                 Your browser does not support the video tag.
               </video>
             </div>
-            <p>ویدیوی آموزشی ۱: روش صحیح مسواک زدن</p>
-          </div>
-          
-          <div className="video-item">
-            <div className="video-wrapper">
-              <video 
-                controls 
-                preload="metadata"
-                className="video-player"
-                poster="/assets/images/video-thumbnail-2.jpg"
-              >
-                <source src="/assets/videos/How_to_Brush_Your_Teeth_Animation.mp4" type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-            </div>
-            <p>ویدیوی آموزشی ۲: نخ دندان کشیدن</p>
+            <p>ویدیوی مسواک</p>
           </div>
         </div>
       </div>
@@ -1059,9 +1044,6 @@ const BrushReminder = () => {
         }
         
         .hourglass-frame:before {
-          top: 65px;
-          left: 24px;
-          transform: rotate(45deg);.hourglass-frame:before {
           top: 65px;
           left: 24px;
           transform: rotate(45deg);

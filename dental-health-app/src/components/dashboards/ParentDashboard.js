@@ -5,6 +5,7 @@ import logoImage from '../logo.svg';
 import BrushingReport from './parent/BrushingReport';
 import ReminderSettings from './parent/ReminderSettings';
 import InfoGraphics from './parent/InfoGraphics';
+import Questionnaire from './parent/Questionnaire'; // Import the Questionnaire component
 import { useUser } from '../../contexts/UserContext';  
 import DatabaseService from '../../services/DatabaseService';
 import MigrationService from '../../services/MigrationService';
@@ -117,6 +118,8 @@ const ParentDashboard = () => {
         return <ReminderSettings childName={childName} />;
       case 'infographics':
         return <InfoGraphics />;
+      case 'questionnaire':
+        return <Questionnaire childName={childName} />;  // Add the Questionnaire component
       default:
         return <BrushingReport childName={childName} />;
     }
@@ -168,6 +171,13 @@ const ParentDashboard = () => {
             >
               <span className="nav-icon">📚</span>
               <span className="nav-text">اینفوگرافی</span>
+            </li>
+            <li 
+              className={`nav-item ${activeTab === 'questionnaire' ? 'active' : ''}`}
+              onClick={() => handleTabChange('questionnaire')}
+            >
+              <span className="nav-icon">📝</span>
+              <span className="nav-text">پرسشنامه</span>
             </li>
           </ul>
         </nav>
