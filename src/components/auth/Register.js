@@ -21,9 +21,10 @@ function Register() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    const sanitizedValue = value; 
     setFormData(prevState => ({
       ...prevState,
-      [name]: value
+      [name]: sanitizedValue
     }));
     setError('');
   };

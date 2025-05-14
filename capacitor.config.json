@@ -10,21 +10,36 @@
         "biometricTitle": "Biometric login",
         "biometricSubTitle": "Login using your biometric"
       }
+    },
+    "SplashScreen": {
+      "launchShowDuration": 0
     }
   },
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "allowNavigation": ["*"],
+    "cleartext": true
   },
   "android": {
     "webContentsCopyToAssets": [
       "assets/videos",
-      "assets/audios"
+      "assets/audios",
+      "assets/images",
+      "*.svg"
     ]
   },
   "copy": [
     {
       "src": "assets/videos/How_to_Brush_Your_Teeth_Animation.mp4",
       "dest": "assets/videos/How_to_Brush_Your_Teeth_Animation.mp4"
+    },
+    {
+      "src": "src/*.svg",
+      "dest": "assets/"
+    },
+    {
+      "src": "src/logo.svg",
+      "dest": "assets/logo.svg"
     }
   ]
 }

@@ -1,13 +1,26 @@
-// src/services/MigrationService.js
+// src/services/MigrationService.js - Improved Version
 import DatabaseService from './DatabaseService';
 
 class MigrationService {
-  async migrateLocalStorageToDatabase() {
+  // Add debugging
+  static debug = true;
+  
+  static log(message, data) {
+    if (this.debug) {
+      console.log(`[MigrationService] ${message}`, data || '');
+    }
+  }
+
+  static logError(message, error) {
+    console.error(`[MigrationService ERROR] ${message}`, error);
+  }
+
+  static async migrateLocalStorageToDatabase() {
     try {
       // 1. Check if migration has been run already
       const migrationCompleted = localStorage.getItem('dbMigrationCompleted');
       if (migrationCompleted === 'true') {
-        console.log('Migration already completed');
+        this.log('Migration already completed');
         return true;
       }
       
@@ -31,7 +44,7 @@ class MigrationService {
             userAuthData.role || 'parent'
           );
           
-          console.log(`Migrated user ${userAuthData.username} to database with ID ${userId}`);
+          this.log(`Migrated user ${userAuthData.username} to database with ID ${userId}`);
         } else {
           userId = existingUser.id;
         }
@@ -51,7 +64,7 @@ class MigrationService {
               null, // gender
               null  // avatarUrl
             );
-            console.log(`Created child ${childName} with ID ${childId}`);
+            this.log(`Created child ${childName} with ID ${childId}`);
           } else {
             childId = children[0].id;
           }
@@ -119,10 +132,10 @@ class MigrationService {
       
       // 8. Mark migration as completed
       localStorage.setItem('dbMigrationCompleted', 'true');
-      console.log('Database migration completed successfully');
+      this.log('Database migration completed successfully');
       return true;
     } catch (error) {
-      console.error('Error during database migration:', error);
+      this.logError('Error during database migration:', error);
       return false;
     }
   }
@@ -132,7 +145,7 @@ class MigrationService {
       // Check if caretaker migration has been run already
       const caretakerMigrationCompleted = localStorage.getItem('dbCaretakerMigrationCompleted');
       if (caretakerMigrationCompleted === 'true') {
-        console.log('Caretaker migration already completed');
+        this.log('Caretaker migration already completed');
         return true;
       }
 
@@ -156,7 +169,7 @@ class MigrationService {
             'teacher'
           );
 
-          console.log(`Migrated caretaker ${userAuthData.username} to database with ID ${userId}`);
+          this.log(`Migrated caretaker ${userAuthData.username} to database with ID ${userId}`);
         } else {
           userId = existingUser.id;
         }
@@ -174,7 +187,7 @@ class MigrationService {
               school.activityDays || []
             );
 
-            console.log(`Migrated school ${school.name} with ID ${schoolId}`);
+            this.log(`Migrated school ${school.name} with ID ${schoolId}`);
 
             // Migrate students
             if (school.students && Array.isArray(school.students)) {
@@ -187,7 +200,7 @@ class MigrationService {
                   student.grade
                 );
 
-                console.log(`Migrated student ${student.name} with ID ${studentId}`);
+                this.log(`Migrated student ${student.name} with ID ${studentId}`);
 
                 // Migrate health records
                 if (student.healthRecords && Array.isArray(student.healthRecords)) {
@@ -206,7 +219,7 @@ class MigrationService {
                     });
                   }
 
-                  console.log(`Migrated ${student.healthRecords.length} health records for student ${student.name}`);
+                  this.log(`Migrated ${student.healthRecords.length} health records for student ${student.name}`);
                 }
               }
             }
@@ -216,10 +229,10 @@ class MigrationService {
 
       // Mark migration as completed
       localStorage.setItem('dbCaretakerMigrationCompleted', 'true');
-      console.log('Caretaker database migration completed successfully');
+      this.log('Caretaker database migration completed successfully');
       return true;
     } catch (error) {
-      console.error('Error during caretaker database migration:', error);
+      this.logError('Error during caretaker database migration:', error);
       return false;
     }
   }
@@ -230,7 +243,7 @@ class MigrationService {
       // Check if parent migration has been run already
       const parentMigrationCompleted = localStorage.getItem('dbParentMigrationCompleted');
       if (parentMigrationCompleted === 'true') {
-        console.log('Parent migration already completed');
+        this.log('Parent migration already completed');
         return true;
       }
 
@@ -254,7 +267,7 @@ class MigrationService {
             'parent'
           );
 
-          console.log(`Migrated parent ${userAuthData.username} to database with ID ${userId}`);
+          this.log(`Migrated parent ${userAuthData.username} to database with ID ${userId}`);
         } else {
           userId = existingUser.id;
         }
@@ -273,7 +286,7 @@ class MigrationService {
               childProfile.gender || null,
               childProfile.avatarUrl || null
             );
-            console.log(`Created child with ID ${childId}`);
+            this.log(`Created child with ID ${childId}`);
           } else {
             childId = children[0].id;
           }
@@ -347,10 +360,10 @@ class MigrationService {
 
       // Mark migration as completed
       localStorage.setItem('dbParentMigrationCompleted', 'true');
-      console.log('Parent database migration completed successfully');
+      this.log('Parent database migration completed successfully');
       return true;
     } catch (error) {
-      console.error('Error during parent database migration:', error);
+      this.logError('Error during parent database migration:', error);
       return false;
     }
   }
@@ -361,7 +374,7 @@ class MigrationService {
       // Check if migration already completed
       const childMigrationCompleted = localStorage.getItem('dbChildMigrationCompleted');
       if (childMigrationCompleted === 'true') {
-        console.log('Child migration already completed');
+        this.log('Child migration already completed');
         return true;
       }
       
@@ -374,98 +387,101 @@ class MigrationService {
       const userAuthData = JSON.parse(localStorage.getItem('userAuth') || '{}');
       
       if (userAuthData.username && userAuthData.role === 'child') {
-        // Begin transaction
-        await DatabaseService.db.execute({ statements: 'BEGIN TRANSACTION;' });
+        let userId = null;
         
-        try {
-          let userId = null;
-          
-          // Check if user exists
-          const existingUser = await DatabaseService.getUserByUsername(userAuthData.username);
-          
-          if (!existingUser) {
-            // Create user
-            userId = await DatabaseService.createUser(
-              userAuthData.username, 
-              'child'
-            );
-          } else {
-            userId = existingUser.id;
+        // Check if user exists
+        const existingUser = await DatabaseService.getUserByUsername(userAuthData.username);
+        
+        if (!existingUser) {
+          // Create user
+          userId = await DatabaseService.createUser(
+            userAuthData.username, 
+            'child'
+          );
+          this.log(`Created child user with ID ${userId}`);
+        } else {
+          userId = existingUser.id;
+          this.log(`Found existing child user with ID ${userId}`);
+        }
+        
+        if (userId) {
+          // Migrate child profile
+          const childProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
+          if (Object.keys(childProfile).length > 0) {
+            await DatabaseService.updateUserProfile(userId, childProfile);
+            this.log('Migrated child profile data');
           }
           
-          if (userId) {
-            // Migrate child profile
-            const childProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
-            if (Object.keys(childProfile).length > 0) {
-              await DatabaseService.updateUserProfile(userId, childProfile);
+          // Migrate achievements
+          const achievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
+          
+          for (const [type, count] of Object.entries(achievements)) {
+            if (type !== 'lastUpdated' && typeof count === 'number') {
+              await DatabaseService.updateAchievement(userId, type, count);
+              this.log(`Migrated achievement ${type} with count ${count}`);
             }
-            
-            // Migrate achievements
-            const achievements = JSON.parse(localStorage.getItem('childAchievements') || '{}');
-            
-            for (const [type, count] of Object.entries(achievements)) {
-              if (type !== 'lastUpdated' && typeof count === 'number') {
-                await DatabaseService.updateAchievement(userId, type, count);
-              }
-            }
-            
-            // Migrate brush alarms
-            const alarms = JSON.parse(localStorage.getItem('brushAlarms') || '{}');
-            
-            if (Object.keys(alarms).length > 0) {
-              // Morning alarm
-              if (alarms.morning) {
-                const morningTime = `${alarms.morning.hour.toString().padStart(2, '0')}:${alarms.morning.minute.toString().padStart(2, '0')}`;
-                
-                await DatabaseService.createReminder(
-                  userId,
-                  'brushMorning',
-                  morningTime,
-                  'یادآوری مسواک صبح',
-                  alarms.morning.enabled !== false
-                );
-              }
+          }
+          
+          // Migrate brush alarms
+          const alarms = JSON.parse(localStorage.getItem('brushAlarms') || '{}');
+          
+          if (Object.keys(alarms).length > 0) {
+            // Morning alarm
+            if (alarms.morning) {
+              const morningTime = `${alarms.morning.hour.toString().padStart(2, '0')}:${alarms.morning.minute.toString().padStart(2, '0')}`;
               
-              // Evening alarm
-              if (alarms.evening) {
-                const eveningTime = `${alarms.evening.hour.toString().padStart(2, '0')}:${alarms.evening.minute.toString().padStart(2, '0')}`;
-                
-                await DatabaseService.createReminder(
-                  userId,
-                  'brushEvening',
-                  eveningTime,
-                  'یادآوری مسواک شب',
-                  alarms.evening.enabled !== false
-                );
-              }
+              await DatabaseService.createReminder(
+                userId,
+                'brushMorning',
+                morningTime,
+                'یادآوری مسواک صبح',
+                alarms.morning.enabled !== false
+              );
+              this.log(`Migrated morning alarm: ${morningTime}`);
             }
             
-            // Migrate game scores
-            const healthySnackScore = localStorage.getItem('healthySnackScore');
-            if (healthySnackScore) {
-              await DatabaseService.saveGameScore(userId, 'healthySnacks', parseInt(healthySnackScore, 10));
+            // Evening alarm
+            if (alarms.evening) {
+              const eveningTime = `${alarms.evening.hour.toString().padStart(2, '0')}:${alarms.evening.minute.toString().padStart(2, '0')}`;
+              
+              await DatabaseService.createReminder(
+                userId,
+                'brushEvening',
+                eveningTime,
+                'یادآوری مسواک شب',
+                alarms.evening.enabled !== false
+              );
+              this.log(`Migrated evening alarm: ${eveningTime}`);
             }
           }
           
-          // Commit transaction
-          await DatabaseService.db.execute({ statements: 'COMMIT;' });
-          
-          // Mark migration as completed
-          localStorage.setItem('dbChildMigrationCompleted', 'true');
-          console.log('Child database migration completed successfully');
-          return true;
-        } catch (error) {
-          // Rollback transaction on error
-          await DatabaseService.db.execute({ statements: 'ROLLBACK;' });
-          throw error;
+          // Migrate game scores
+          const healthySnackScore = localStorage.getItem('healthySnackScore');
+          if (healthySnackScore) {
+            await DatabaseService.saveGameScore(userId, 'healthySnacks', parseInt(healthySnackScore, 10));
+            this.log(`Migrated healthy snack score: ${healthySnackScore}`);
+          }
         }
       }
       
+      // Mark migration as completed
+      localStorage.setItem('dbChildMigrationCompleted', 'true');
+      this.log('Child database migration completed successfully');
       return true;
     } catch (error) {
-      console.error('Error during child database migration:', error);
+      this.logError('Error during child database migration:', error);
       return false;
     }
+  }
+
+  // Force reset all migration flags - useful for debugging
+  static resetMigrationFlags() {
+    localStorage.removeItem('dbMigrationCompleted');
+    localStorage.removeItem('dbCaretakerMigrationCompleted');
+    localStorage.removeItem('dbParentMigrationCompleted');
+    localStorage.removeItem('dbChildMigrationCompleted');
+    this.log('All migration flags have been reset');
+    return true;
   }
 }
 

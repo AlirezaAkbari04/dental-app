@@ -277,18 +277,60 @@ const ChildGames = () => {
           ? `آفرین! ${item.name} یک میان‌وعده سالم است.` 
           : `درست است! ${item.name} برای دندان‌های شما خوب نیست.`
       );
-      setAnimationClass('correct-answer-animation');
+      
+      // Fix for animation feedback - Add DOM manipulation to force animation
+      setAnimationClass('');
+      setTimeout(() => {
+        setAnimationClass('correct-answer-animation');
+      }, 10);
+      
       setFeedbackImage('✅');
+      
+      // Force element redraw for animation - Fixed for lint errors
+      const foodContainer = document.querySelector('.food-container');
+      if (foodContainer) {
+        foodContainer.classList.remove('correct-answer-animation');
+        // Force reflow
+        void foodContainer.getBoundingClientRect();
+        foodContainer.classList.add('correct-answer-animation');
+      }
+      
+      // Force pulsing effect on the correct zone
+      const targetZone = targetType === 'healthy' 
+        ? document.querySelector('.healthy-zone') 
+        : document.querySelector('.unhealthy-zone');
+        
+      if (targetZone) {
+        targetZone.classList.remove('pulsing');
+        // Force reflow
+        void targetZone.getBoundingClientRect();
+        targetZone.classList.add('pulsing');
+      }
     } else {
-      // Wrong answer
+      // Wrong answer - same fix for animation
       setIsCorrect(false);
       setFeedbackMessage(
         targetType === 'healthy' 
           ? `اشتباه! ${item.name} یک میان‌وعده ناسالم است.` 
           : `اشتباه! ${item.name} یک میان‌وعده سالم است.`
       );
-      setAnimationClass('wrong-answer-animation');
+      
+      // Fix for animation feedback - Add DOM manipulation
+      setAnimationClass('');
+      setTimeout(() => {
+        setAnimationClass('wrong-answer-animation');
+      }, 10);
+      
       setFeedbackImage('❌');
+      
+      // Force element redraw for animation - Fixed for lint errors
+      const foodContainer = document.querySelector('.food-container');
+      if (foodContainer) {
+        foodContainer.classList.remove('wrong-answer-animation');
+        // Force reflow
+        void foodContainer.getBoundingClientRect();
+        foodContainer.classList.add('wrong-answer-animation');
+      }
     }
     
     setShowFeedback(true);

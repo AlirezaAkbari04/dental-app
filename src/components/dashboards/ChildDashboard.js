@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/ChildDashboard.css';
-import logoImage from '../logo.svg';
+import logoImage from '../../logo.svg'; // Fixed logo path
 import ChildHome from './child/ChildHome';
 import BrushReminder from './child/BrushReminder';
 import ChildGames from './child/ChildGames';
@@ -15,7 +15,8 @@ const ChildDashboard = () => {
   const [showMessage, setShowMessage] = useState(false);
   const [childName, setChildName] = useState('');
   
-  const { currentUser } = useUser();
+  // Added logout function from useUser
+  const { currentUser, logout } = useUser();
   
   useEffect(() => {
     const initApp = async () => {
@@ -73,15 +74,22 @@ const ChildDashboard = () => {
       localStorage.removeItem('userAuth');
       localStorage.removeItem('userRole');
       
-      // Navigate to login page
-      navigate('/login');
+      // Use the useUser hook's logout function if available
+      if (typeof logout === 'function') {
+        await logout();
+      }
+      
+      // Navigate directly to login page, not to parent dashboard
+      navigate('/login', { replace: true });
     } catch (error) {
       console.error('Error during logout:', error);
       
       // Still logout even if error
       localStorage.removeItem('userAuth');
       localStorage.removeItem('userRole');
-      navigate('/login');
+      
+      // Force navigation to login
+      navigate('/login', { replace: true });
     }
   };
   
