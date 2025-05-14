@@ -1,7 +1,7 @@
 {
   "appId": "com.dentalhealth.app",
   "appName": "لبخند شاد دندان سالم",
-  "webDir": "C:/Users/Asus/Desktop/yekta/dental-health-app/dental-health-app/build",
+  "webDir": "build",
   "plugins": {
     "CapacitorSQLite": {
       "androidIsEncryption": false,

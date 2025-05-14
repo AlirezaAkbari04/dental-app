@@ -8,13 +8,25 @@ const InfoGraphics = () => {
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
 
+  // تابع کمکی برای تعیین مسیر فایل‌ها بر اساس پلتفرم
+  const getAssetPath = (path) => {
+    // مسیر ساده برای همه پلتفرم‌ها استفاده می‌شود
+    return path;
+  };
+
+  // پردازش مسیرهای فایل در محتوای HTML
+  const processContent = (content) => {
+    // پردازش خاصی نیاز نیست، مسیرها به همان شکل باقی می‌مانند
+    return content;
+  };
+
   // List of available infographics
   const infographics = [
     {
       id: 1,
       title: 'اهمیت دندان شیری',
       description: 'چرا دندان‌های شیری مهم هستند و چگونه از آنها مراقبت کنیم؟',
-      imageUrl: '/infographics/baby-teeth.jpg',
+      imageUrl: getAssetPath('/infographics/baby-teeth.jpg'),
       content: `
         <h2>اهمیت دندان‌های شیری</h2>
         <p>دندان‌های شیری نقش مهمی در رشد و سلامت کودک دارند. این دندان‌ها فضا را برای دندان‌های دائمی حفظ می‌کنند و به رشد صحیح فک و صورت کمک می‌کنند.</p>
@@ -23,15 +35,34 @@ const InfoGraphics = () => {
           <div class="audio-placeholder">
             <span class="placeholder-icon">🔊</span>
             <span class="placeholder-text">فایل صوتی: توضیحات تکمیلی درباره اهمیت دندان‌های شیری</span>
+            <button class="play-audio-button" onclick="playBabyTeethAudio()">پخش صدا</button>
           </div>
         </div>
+        
+        <script>
+          function playBabyTeethAudio() {
+            // کد جاوااسکریپت برای پخش صدا
+            const audioElement = document.createElement('audio');
+            audioElement.controls = true;
+            audioElement.className = 'baby-teeth-audio';
+            const source = document.createElement('source');
+            source.src = '${Capacitor.isNativePlatform() ? 'file:///android_asset/assets/audio/baby-teeth-audio.mp3' : '/assets/audio/baby-teeth-audio.mp3'}';
+            source.type = 'audio/mp3';
+            audioElement.appendChild(source);
+            
+            const container = document.querySelector('.audio-container');
+            container.innerHTML = '';
+            container.appendChild(audioElement);
+            audioElement.play();
+          }
+        </script>
       `
     },
     {
       id: 2,
       title: 'فلوراید',
       description: 'فواید فلوراید برای سلامت دندان‌ها و چگونگی استفاده صحیح از آن',
-      imageUrl: '/infographics/fluoride.jpg',
+      imageUrl: getAssetPath('/infographics/fluoride.jpg'),
       content: `
         <h2>فلوراید</h2>
         <div class="fluoride-brochure-container">
@@ -46,19 +77,123 @@ const InfoGraphics = () => {
             class="fluoride-brochure-image"
           />
         </div>
+        
+        <div class="audio-container">
+          <div class="audio-placeholder">
+            <span class="placeholder-icon">🔊</span>
+            <span class="placeholder-text">فایل صوتی: اطلاعات تکمیلی درباره فلوراید و فواید آن</span>
+            <button class="play-audio-button" onclick="playFluorideAudio()">پخش صدا</button>
+          </div>
+        </div>
+        
+        <script>
+          function playFluorideAudio() {
+            // کد جاوااسکریپت برای پخش صدا
+            const audioElement = document.createElement('audio');
+            audioElement.controls = true;
+            audioElement.className = 'fluoride-audio';
+            const source = document.createElement('source');
+            source.src = '${Capacitor.isNativePlatform() ? 'file:///android_asset/assets/audio/fluoride-audio.mp3' : '/assets/audio/fluoride-audio.mp3'}';
+            source.type = 'audio/mp3';
+            audioElement.appendChild(source);
+            
+            const container = document.querySelector('.audio-container');
+            container.innerHTML = '';
+            container.appendChild(audioElement);
+            audioElement.play();
+          }
+        </script>
       `
     },
     {
       id: 3,
       title: 'راهنمای جامع بهداشت دهان و دندان',
       description: 'فایل PDF آموزشی کامل برای والدین و کودکان',
-      imageUrl: '/infographics/dental-guide.jpg',
+      imageUrl: getAssetPath('/infographics/dental-guide.jpg'),
       type: 'pdf',
       pdfPath: 'dental-guide.pdf',
       content: `
         <h2>راهنمای جامع بهداشت دهان و دندان</h2>
         <p>این راهنما شامل اطلاعات کاملی در مورد نحوه مراقبت از دندان‌ها، 
         تکنیک‌های صحیح مسواک زدن، استفاده از نخ دندان و سایر نکات مهم بهداشتی است.</p>
+      `
+    },
+    {
+      id: 4,
+      title: 'فیشورسیلنت (شیارپوش)',
+      description: 'آشنایی با شیارپوش دندان و مزایای آن برای پیشگیری از پوسیدگی',
+      imageUrl: getAssetPath('/infographics/fissure-sealant.jpg'),
+      content: `
+        <h2>فیشورسیلنت (شیارپوش)</h2>
+        <p>شیارپوش یا فیشورسیلنت لایه‌ای محافظ است که روی شیارهای دندان‌های آسیاب قرار می‌گیرد تا از پوسیدگی جلوگیری کند. این روش ساده و بدون درد برای کودکان بسیار مؤثر است.</p>
+        
+        <div class="important-note">
+          <p>بهتر است از شیارپوش (فیشورسیلنت) برای محافظت از دندان‌های آسیاب اول دائمی استفاده شود. این روش پیشگیرانه، با بستن شیارهای عمیق دندان‌های آسیاب اول دائمی توسط دندانپزشک، از ورود خرده‌های مواد غذایی و میکروارگانیسم‌ها به داخل این شیارها جلوگیری می‌کند. استفاده از شیارپوش به‌شدت توصیه می‌شود.</p>
+        </div>
+        
+        <div class="video-container">
+          <div class="video-placeholder">
+            <span class="placeholder-icon">🎬</span>
+            <span class="placeholder-text">ویدیوی آموزشی فیشورسیلنت</span>
+            <p class="placeholder-description">برای مشاهده ویدیو، لطفاً روی دکمه پخش کلیک کنید.</p>
+            <button class="play-video-button" onclick="playFissureSealantVideo()">پخش ویدیو</button>
+          </div>
+        </div>
+        
+        <script>
+          function playFissureSealantVideo() {
+            // کد جاوااسکریپت برای پخش ویدیو
+            const videoElement = document.createElement('video');
+            videoElement.controls = true;
+            videoElement.className = 'fissure-sealant-video';
+            const source = document.createElement('source');
+            source.src = '${Capacitor.isNativePlatform() ? 'file:///android_asset/assets/videos/fissure-sealant-video.mp4' : '/assets/videos/fissure-sealant-video.mp4'}';
+            source.type = 'video/mp4';
+            videoElement.appendChild(source);
+            
+            const container = document.querySelector('.video-container');
+            container.innerHTML = '';
+            container.appendChild(videoElement);
+            videoElement.play();
+          }
+        </script>
+      `
+    },
+    {
+      id: 5,
+      title: 'آموزش مسواک زدن برای کودکان',
+      description: 'راهنمای والدین برای مسواک زدن صحیح دندان‌های کودکان',
+      imageUrl: getAssetPath('/infographics/toothbrushing-kids.jpg'),
+      content: `
+        <h2>آموزش مسواک زدن برای کودکان</h2>
+        <p>در این بخش، نحوه صحیح مسواک زدن دندان‌های کودکان توسط والدین آموزش داده می‌شود. این تکنیک‌ها به شما کمک می‌کند تا به عنوان والدین، دندان‌های فرزند خود را به درستی و بدون آسیب تمیز کنید.</p>
+        
+        <div class="video-container">
+          <div class="video-placeholder">
+            <span class="placeholder-icon">🎬</span>
+            <span class="placeholder-text">ویدیوی آموزشی مسواک زدن برای کودکان توسط والدین</span>
+            <p class="placeholder-description">برای مشاهده ویدیو، لطفاً روی دکمه پخش کلیک کنید.</p>
+            <button class="play-video-button" onclick="playToothbrushingVideo()">پخش ویدیو</button>
+          </div>
+        </div>
+        
+        <script>
+          function playToothbrushingVideo() {
+            // کد جاوااسکریپت برای پخش ویدیو
+            const videoElement = document.createElement('video');
+            videoElement.controls = true;
+            videoElement.className = 'toothbrushing-video';
+            const source = document.createElement('source');
+            source.src = '${Capacitor.isNativePlatform() ? 'file:///android_asset/assets/videos/toothbrushing-kids-video.mp4' : '/assets/videos/toothbrushing-kids-video.mp4'}';
+            source.type = 'video/mp4';
+            videoElement.appendChild(source);
+            
+            const container = document.querySelector('.video-container');
+            container.innerHTML = '';
+            container.appendChild(videoElement);
+            videoElement.play();
+          }
+        </script>
       `
     }
   ];
@@ -122,7 +257,7 @@ const InfoGraphics = () => {
   if (showPdfViewer && selectedInfoGraphic && selectedInfoGraphic.type === 'pdf') {
     // For Capacitor/Android, we use the asset path structure
     const pdfPath = Capacitor.isNativePlatform()
-      ? `file:///android_asset/public/assets/pdfs/${selectedInfoGraphic.pdfPath}`
+      ? `file:///android_asset/assets/pdfs/${selectedInfoGraphic.pdfPath}`
       : `assets/pdfs/${selectedInfoGraphic.pdfPath}`;
 
     return (
@@ -176,7 +311,7 @@ const InfoGraphics = () => {
               <div className="side-by-side-images">
                 <div className="tooth-image">
                   <img 
-                    src="/assets/images/tooth-anatomy-english.png" 
+                    src={getAssetPath('/assets/images/tooth-anatomy-english.png')}
                     alt="" 
                     className="anatomy-image"
                   />
@@ -184,7 +319,7 @@ const InfoGraphics = () => {
                 
                 <div className="tooth-image">
                   <img 
-                    src="/assets/images/tooth-anatomy-persian.png" 
+                    src={getAssetPath('/assets/images/tooth-anatomy-persian.png')}
                     alt="" 
                     className="anatomy-image"
                   />
@@ -194,7 +329,7 @@ const InfoGraphics = () => {
             
             <div 
               className="infographic-text"
-              dangerouslySetInnerHTML={{ __html: selectedInfoGraphic.content }}
+              dangerouslySetInnerHTML={{ __html: processContent(selectedInfoGraphic.content) }}
             />
             
             {/* PDF preview icon for PDF type */}
@@ -244,10 +379,26 @@ const InfoGraphics = () => {
           <li>می‌توانید این اینفوگرافی‌ها را چاپ کرده و در محیطی که کودک مسواک می‌زند نصب کنید.</li>
           <li>با اشتراک‌گذاری این اطلاعات با دیگر والدین، به ارتقای سطح آگاهی درباره بهداشت دهان و دندان کمک کنید.</li>
           <li>فایل‌های PDF را می‌توانید برای مطالعه بیشتر مشاهده کنید.</li>
+          <li>ویدیوهای آموزشی را می‌توانید همراه با کودک خود تماشا کنید و به او کمک کنید تا مهارت‌های بهداشت دهان و دندان را بیاموزد.</li>
         </ul>
       </div>
       
       <style jsx>{`
+        .important-note {
+          background-color: #fffde7;
+          border-right: 4px solid #fbc02d;
+          padding: 15px;
+          margin: 20px 0;
+          border-radius: 4px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .important-note p {
+          margin: 0;
+          line-height: 1.5;
+          color: #5d4037;
+        }
+
         .loading-indicator {
           text-align: center;
           padding: 2rem;
@@ -385,6 +536,96 @@ const InfoGraphics = () => {
         
         .back-button:hover {
           background-color: #ddd;
+        }
+        
+        /* استایل‌های برای ویدیو و صوت */
+        .video-container {
+          margin: 20px 0;
+          background-color: #f5f5f5;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .fissure-sealant-video, .toothbrushing-video {
+          width: 100%;
+          max-width: 400px;
+          display: block;
+          margin: 0 auto;
+        }
+        
+        /* تنظیم ابعاد ویدیو مسواک زدن به صورت 16:9 عمودی */
+        .toothbrushing-video {
+          aspect-ratio: 9/16;
+        }
+        
+        /* حفظ نسبت مربعی برای ویدیو فیشورسیلنت */
+        .fissure-sealant-video {
+          aspect-ratio: 1/1;
+        }
+        
+        .audio-container {
+          margin: 20px 0;
+          padding: 15px;
+          background-color: #f5f5f5;
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+        }
+        
+        .baby-teeth-audio, .fluoride-audio {
+          width: 100%;
+          margin-bottom: 10px;
+        }
+        
+        .audio-caption {
+          font-size: 0.9rem;
+          color: #555;
+          text-align: center;
+        }
+        
+        .play-video-button, .play-audio-button {
+          background-color: #2196f3;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 1rem;
+          margin-top: 15px;
+          display: block;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        
+        .play-video-button:hover, .play-audio-button:hover {
+          background-color: #0b7dda;
+        }
+        
+        .video-placeholder, .audio-placeholder {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 30px;
+          text-align: center;
+        }
+        
+        .placeholder-icon {
+          font-size: 3rem;
+          margin-bottom: 15px;
+        }
+        
+        .placeholder-text {
+          font-size: 1.2rem;
+          font-weight: bold;
+          margin-bottom: 10px;
+        }
+        
+        .placeholder-description {
+          font-size: 0.9rem;
+          color: #666;
+          margin-bottom: 15px;
         }
       `}</style>
     </div>

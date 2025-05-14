@@ -5,7 +5,6 @@ import logoImage from '../logo.svg';
 import ChildHome from './child/ChildHome';
 import BrushReminder from './child/BrushReminder';
 import ChildGames from './child/ChildGames';
-import ChildVideos from './child/ChildVideos';
 import { useUser } from '../../contexts/UserContext';
 import DatabaseService from '../../services/DatabaseService';
 import MigrationService from '../../services/MigrationService';
@@ -94,8 +93,6 @@ const ChildDashboard = () => {
         return <BrushReminder />;
       case 'games':
         return <ChildGames />;
-      case 'videos':
-        return <ChildVideos />;
       default:
         return <ChildHome childName={childName} />;
     }
@@ -144,13 +141,6 @@ const ChildDashboard = () => {
           >
             <span className="nav-icon">🎮</span>
             <span className="nav-text">بازی</span>
-          </li>
-          <li 
-            className={`nav-item ${activeTab === 'videos' ? 'active' : ''}`}
-            onClick={() => handleTabChange('videos')}
-          >
-            <span className="nav-icon">🎬</span>
-            <span className="nav-text">ویدیوها</span>
           </li>
         </ul>
       </nav>
