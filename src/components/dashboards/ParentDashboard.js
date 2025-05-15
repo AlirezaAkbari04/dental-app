@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/ParentDashboard.css';
-import logoImage from '../../logo.svg';
 import BrushingReport from './parent/BrushingReport';
 import ReminderSettings from './parent/ReminderSettings';
 import InfoGraphics from './parent/InfoGraphics';
@@ -130,9 +129,13 @@ const ParentDashboard = () => {
       <header className="dashboard-header">
         <div className="logo-container">
           <img 
-            src={logoImage} 
+            src="/assets/images/logo192.png" 
             alt="لبخند شاد دندان سالم" 
             className="dashboard-logo" 
+            onError={(e) => {
+              console.warn('Failed to load logo, trying alternative');
+              e.target.src = "/logo192.png";
+            }}
           />
           <span className="app-name">لبخند شاد دندان سالم</span>
         </div>

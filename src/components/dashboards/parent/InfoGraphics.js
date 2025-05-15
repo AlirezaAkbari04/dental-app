@@ -1,115 +1,259 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './ParentComponents.css';
 import DatabaseService from '../../../services/DatabaseService';
-import { Capacitor } from '@capacitor/core';
 
 const InfoGraphics = () => {
   const [selectedInfoGraphic, setSelectedInfoGraphic] = useState(null);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
+  
+  // Audio player state
+  const [audioState, setAudioState] = useState({
+    isPlaying: false,
+    currentTime: 0,
+    duration: 0,
+    loading: false,
+    error: null,
+    audioRef: null,
+    audioSource: ''
+  });
 
-  // تابع کمکی برای تعیین مسیر فایل‌ها بر اساس پلتفرم
-  const getAssetPath = (path) => {
-    // مسیر ساده برای همه پلتفرم‌ها استفاده می‌شود
-    return path;
+  // Simple direct path functions
+  const getImagePath = (filename) => `/assets/images/${filename}`;
+  const getAudioPath = (filename) => `/assets/audios/${filename}`;
+  const getVideoPath = (filename) => `/assets/videos/${filename}`;
+  const getPdfPath = (filename) => `/assets/pdfs/${filename}`;
+
+  // Format time for display (MM:SS)
+  const formatTime = (timeInSeconds) => {
+    if (isNaN(timeInSeconds) || !isFinite(timeInSeconds)) return '00:00';
+    
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.floor(timeInSeconds % 60);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+  
+  // Load and play audio file
+  const initAudio = (audioPath) => {
+    // Clean up any existing audio
+    if (audioState.audioRef) {
+      audioState.audioRef.pause();
+    }
+    
+    // Reset the audio state
+    setAudioState({
+      isPlaying: false,
+      currentTime: 0,
+      duration: 0,
+      loading: true,
+      error: null,
+      audioRef: null,
+      audioSource: audioPath
+    });
+    
+    // Create a short timeout to ensure state is updated
+    setTimeout(() => {
+      const audio = new Audio(audioPath);
+      
+      // Set up event listeners
+      audio.addEventListener('timeupdate', () => {
+        setAudioState(prev => ({
+          ...prev,
+          currentTime: audio.currentTime,
+        }));
+      });
+      
+      audio.addEventListener('loadedmetadata', () => {
+        console.log('Audio metadata loaded', {
+          duration: audio.duration,
+          src: audio.src
+        });
+        setAudioState(prev => ({
+          ...prev,
+          duration: audio.duration,
+          loading: false
+        }));
+      });
+      
+      audio.addEventListener('error', (e) => {
+        console.error('Audio error', e);
+        let errorMessage = 'خطا در بارگذاری فایل صوتی';
+        if (e.target.error) {
+          if (e.target.error.code === 2) {
+            errorMessage = 'فایل صوتی یافت نشد';
+          } else if (e.target.error.code === 3) {
+            errorMessage = 'خطا در رمزگشایی فایل صوتی';
+          } else if (e.target.error.code === 4) {
+            errorMessage = 'فرمت فایل صوتی پشتیبانی نمی‌شود';
+          }
+        }
+        
+        setAudioState(prev => ({
+          ...prev,
+          error: errorMessage,
+          loading: false
+        }));
+      });
+      
+      audio.addEventListener('ended', () => {
+        setAudioState(prev => ({
+          ...prev,
+          isPlaying: false,
+          currentTime: 0
+        }));
+      });
+      
+      setAudioState(prev => ({
+        ...prev,
+        audioRef: audio,
+        loading: true
+      }));
+      
+      // Start loading the audio
+      audio.load();
+    }, 100);
+  };
+  
+  // Play or pause current audio
+  const togglePlayPause = () => {
+    if (!audioState.audioRef) return;
+    
+    if (audioState.isPlaying) {
+      audioState.audioRef.pause();
+      setAudioState(prev => ({
+        ...prev,
+        isPlaying: false
+      }));
+    } else {
+      const playPromise = audioState.audioRef.play();
+      if (playPromise !== undefined) {
+        setAudioState(prev => ({
+          ...prev,
+          loading: true
+        }));
+        
+        playPromise.then(() => {
+          console.log('Audio started playing successfully');
+          setAudioState(prev => ({
+            ...prev,
+            isPlaying: true,
+            loading: false,
+            error: null
+          }));
+        }).catch(err => {
+          console.error('Error playing audio:', err);
+          
+          // Provide better error messages
+          let errorMessage = 'خطا در پخش صدا';
+          if (err.name === 'NotAllowedError') {
+            errorMessage = 'اجازه پخش صدا داده نشد. لطفاً با کلیک روی صفحه دوباره تلاش کنید.';
+          }
+          
+          setAudioState(prev => ({
+            ...prev,
+            error: errorMessage,
+            loading: false
+          }));
+        });
+      }
+    }
+  };
+  
+  // Handle seeking in the audio timeline
+  const handleSeek = (e) => {
+    if (!audioState.audioRef) return;
+    
+    const clickPosition = e.nativeEvent.offsetX;
+    const progressBarWidth = e.currentTarget.clientWidth;
+    const seekTime = (clickPosition / progressBarWidth) * audioState.duration;
+    
+    audioState.audioRef.currentTime = seekTime;
+    setAudioState(prev => ({
+      ...prev,
+      currentTime: seekTime
+    }));
   };
 
-  // پردازش مسیرهای فایل در محتوای HTML
+  // Helper to process content paths
   const processContent = (content) => {
-    // پردازش خاصی نیاز نیست، مسیرها به همان شکل باقی می‌مانند
-    return content;
+    // Replace hardcoded paths with direct paths
+    let processedContent = content;
+    
+    // Fix file:/// paths
+    processedContent = processedContent.replace(
+      /file:\/\/\/android_asset\/.*?\/assets\/audios\/([^'\"]+)/g, 
+      (match, filename) => `/assets/audios/${filename}`
+    );
+    
+    processedContent = processedContent.replace(
+      /file:\/\/\/android_asset\/.*?\/assets\/videos\/([^'\"]+)/g, 
+      (match, filename) => `/assets/videos/${filename}`
+    );
+    
+    processedContent = processedContent.replace(
+      /file:\/\/\/android_asset\/.*?\/assets\/images\/([^'\"]+)/g, 
+      (match, filename) => `/assets/images/${filename}`
+    );
+    
+    // Fix regular paths
+    processedContent = processedContent.replace(
+      /\/assets\/audios\/([^'\"]+)/g, 
+      (match, filename) => `/assets/audios/${filename}`
+    );
+    
+    processedContent = processedContent.replace(
+      /\/assets\/videos\/([^'\"]+)/g, 
+      (match, filename) => `/assets/videos/${filename}`
+    );
+    
+    processedContent = processedContent.replace(
+      /\/assets\/images\/([^'\"]+)/g, 
+      (match, filename) => `/assets/images/${filename}`
+    );
+    
+    return processedContent;
   };
 
-  // List of available infographics
+  // List of available infographics with fixed asset paths
   const infographics = [
     {
       id: 1,
       title: 'اهمیت دندان شیری',
       description: 'چرا دندان‌های شیری مهم هستند و چگونه از آنها مراقبت کنیم؟',
-      imageUrl: getAssetPath('/infographics/baby-teeth.jpg'),
+      imageUrl: getImagePath('infographics/baby-teeth.jpg'),
+      audioPath: 'baby-teeth-audio.mp3',
       content: `
         <h2>اهمیت دندان‌های شیری</h2>
         <p>دندان‌های شیری نقش مهمی در رشد و سلامت کودک دارند. این دندان‌ها فضا را برای دندان‌های دائمی حفظ می‌کنند و به رشد صحیح فک و صورت کمک می‌کنند.</p>
-        
-        <div class="audio-container">
-          <div class="audio-placeholder">
-            <span class="placeholder-icon">🔊</span>
-            <span class="placeholder-text">فایل صوتی: توضیحات تکمیلی درباره اهمیت دندان‌های شیری</span>
-            <button class="play-audio-button" onclick="playBabyTeethAudio()">پخش صدا</button>
-          </div>
-        </div>
-        
-        <script>
-          function playBabyTeethAudio() {
-            // کد جاوااسکریپت برای پخش صدا
-            const audioElement = document.createElement('audio');
-            audioElement.controls = true;
-            audioElement.className = 'baby-teeth-audio';
-            const source = document.createElement('source');
-            source.src = '${Capacitor.isNativePlatform() ? 'file:///android_asset/assets/audio/baby-teeth-audio.mp3' : '/assets/audio/baby-teeth-audio.mp3'}';
-            source.type = 'audio/mp3';
-            audioElement.appendChild(source);
-            
-            const container = document.querySelector('.audio-container');
-            container.innerHTML = '';
-            container.appendChild(audioElement);
-            audioElement.play();
-          }
-        </script>
       `
     },
     {
       id: 2,
       title: 'فلوراید',
       description: 'فواید فلوراید برای سلامت دندان‌ها و چگونگی استفاده صحیح از آن',
-      imageUrl: getAssetPath('/infographics/fluoride.jpg'),
+      imageUrl: getImagePath('infographics/fluoride.jpg'),
+      audioPath: 'fluoride-audio.mp3',
       content: `
         <h2>فلوراید</h2>
         <div class="fluoride-brochure-container">
           <img 
-            src="/assets/images/fluoride-brochure-1.png" 
+            src="/assets/images/fluoride-brochure-1.PNG" 
             alt="" 
             class="fluoride-brochure-image"
           />
           <img 
-            src="/assets/images/fluoride-brochure-2.png" 
+            src="/assets/images/fluoride-brochure-2.PNG" 
             alt="" 
             class="fluoride-brochure-image"
           />
         </div>
-        
-        <div class="audio-container">
-          <div class="audio-placeholder">
-            <span class="placeholder-icon">🔊</span>
-            <span class="placeholder-text">فایل صوتی: اطلاعات تکمیلی درباره فلوراید و فواید آن</span>
-            <button class="play-audio-button" onclick="playFluorideAudio()">پخش صدا</button>
-          </div>
-        </div>
-        
-        <script>
-          function playFluorideAudio() {
-            // کد جاوااسکریپت برای پخش صدا
-            const audioElement = document.createElement('audio');
-            audioElement.controls = true;
-            audioElement.className = 'fluoride-audio';
-            const source = document.createElement('source');
-            source.src = '${Capacitor.isNativePlatform() ? 'file:///android_asset/assets/audio/fluoride-audio.mp3' : '/assets/audio/fluoride-audio.mp3'}';
-            source.type = 'audio/mp3';
-            audioElement.appendChild(source);
-            
-            const container = document.querySelector('.audio-container');
-            container.innerHTML = '';
-            container.appendChild(audioElement);
-            audioElement.play();
-          }
-        </script>
       `
     },
     {
       id: 3,
       title: 'راهنمای جامع بهداشت دهان و دندان',
       description: 'فایل PDF آموزشی کامل برای والدین و کودکان',
-      imageUrl: getAssetPath('/infographics/dental-guide.jpg'),
+      imageUrl: getImagePath('infographics/dental-guide.jpg'),
       type: 'pdf',
       pdfPath: 'dental-guide.pdf',
       content: `
@@ -122,7 +266,8 @@ const InfoGraphics = () => {
       id: 4,
       title: 'فیشورسیلنت (شیارپوش)',
       description: 'آشنایی با شیارپوش دندان و مزایای آن برای پیشگیری از پوسیدگی',
-      imageUrl: getAssetPath('/infographics/fissure-sealant.jpg'),
+      imageUrl: getImagePath('infographics/fissure-sealant.jpg'),
+      videoPath: 'fissure-sealant-video.MP4',
       content: `
         <h2>فیشورسیلنت (شیارپوش)</h2>
         <p>شیارپوش یا فیشورسیلنت لایه‌ای محافظ است که روی شیارهای دندان‌های آسیاب قرار می‌گیرد تا از پوسیدگی جلوگیری کند. این روش ساده و بدون درد برای کودکان بسیار مؤثر است.</p>
@@ -130,92 +275,61 @@ const InfoGraphics = () => {
         <div class="important-note">
           <p>بهتر است از شیارپوش (فیشورسیلنت) برای محافظت از دندان‌های آسیاب اول دائمی استفاده شود. این روش پیشگیرانه، با بستن شیارهای عمیق دندان‌های آسیاب اول دائمی توسط دندانپزشک، از ورود خرده‌های مواد غذایی و میکروارگانیسم‌ها به داخل این شیارها جلوگیری می‌کند. استفاده از شیارپوش به‌شدت توصیه می‌شود.</p>
         </div>
-        
-        <div class="video-container">
-          <div class="video-placeholder">
-            <span class="placeholder-icon">🎬</span>
-            <span class="placeholder-text">ویدیوی آموزشی فیشورسیلنت</span>
-            <p class="placeholder-description">برای مشاهده ویدیو، لطفاً روی دکمه پخش کلیک کنید.</p>
-            <button class="play-video-button" onclick="playFissureSealantVideo()">پخش ویدیو</button>
-          </div>
-        </div>
-        
-        <script>
-          function playFissureSealantVideo() {
-            // کد جاوااسکریپت برای پخش ویدیو
-            const videoElement = document.createElement('video');
-            videoElement.controls = true;
-            videoElement.className = 'fissure-sealant-video';
-            const source = document.createElement('source');
-            source.src = '${Capacitor.isNativePlatform() ? 'file:///android_asset/assets/videos/fissure-sealant-video.mp4' : '/assets/videos/fissure-sealant-video.mp4'}';
-            source.type = 'video/mp4';
-            videoElement.appendChild(source);
-            
-            const container = document.querySelector('.video-container');
-            container.innerHTML = '';
-            container.appendChild(videoElement);
-            videoElement.play();
-          }
-        </script>
       `
     },
     {
       id: 5,
       title: 'آموزش مسواک زدن برای کودکان',
       description: 'راهنمای والدین برای مسواک زدن صحیح دندان‌های کودکان',
-      imageUrl: getAssetPath('/infographics/toothbrushing-kids.jpg'),
+      imageUrl: getImagePath('infographics/toothbrushing-kids.jpg'),
+      videoPath: 'toothbrushing-kids-video.mp4',
       content: `
         <h2>آموزش مسواک زدن برای کودکان</h2>
         <p>در این بخش، نحوه صحیح مسواک زدن دندان‌های کودکان توسط والدین آموزش داده می‌شود. این تکنیک‌ها به شما کمک می‌کند تا به عنوان والدین، دندان‌های فرزند خود را به درستی و بدون آسیب تمیز کنید.</p>
-        
-        <div class="video-container">
-          <div class="video-placeholder">
-            <span class="placeholder-icon">🎬</span>
-            <span class="placeholder-text">ویدیوی آموزشی مسواک زدن برای کودکان توسط والدین</span>
-            <p class="placeholder-description">برای مشاهده ویدیو، لطفاً روی دکمه پخش کلیک کنید.</p>
-            <button class="play-video-button" onclick="playToothbrushingVideo()">پخش ویدیو</button>
-          </div>
-        </div>
-        
-        <script>
-          function playToothbrushingVideo() {
-            // کد جاوااسکریپت برای پخش ویدیو
-            const videoElement = document.createElement('video');
-            videoElement.controls = true;
-            videoElement.className = 'toothbrushing-video';
-            const source = document.createElement('source');
-            source.src = '${Capacitor.isNativePlatform() ? 'file:///android_asset/assets/videos/toothbrushing-kids-video.mp4' : '/assets/videos/toothbrushing-kids-video.mp4'}';
-            source.type = 'video/mp4';
-            videoElement.appendChild(source);
-            
-            const container = document.querySelector('.video-container');
-            container.innerHTML = '';
-            container.appendChild(videoElement);
-            videoElement.play();
-          }
-        </script>
       `
     }
   ];
 
-  // useEffect for database initialization
+  // Initialize database and resources
   useEffect(() => {
-    const initDatabase = async () => {
+    const initResources = async () => {
       try {
         // Initialize database if needed
         if (!DatabaseService.initialized) {
           await DatabaseService.init();
         }
+        
         // Mark assets as loaded
         setAssetsLoaded(true);
       } catch (error) {
-        console.error('Error initializing database:', error);
-        // Still mark assets as loaded even if there's an error
+        console.error('Error initializing resources:', error);
+        // Set assets as loaded even on error to prevent loading screen from getting stuck
         setAssetsLoaded(true);
       }
     };
 
-    initDatabase();
+    initResources();
+  }, []);
+
+  // Setup audio player when infographic changes
+  useEffect(() => {
+    if (selectedInfoGraphic?.audioPath) {
+      initAudio(`/assets/audios/${selectedInfoGraphic.audioPath}`);
+    }
+  }, [selectedInfoGraphic]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioState.audioRef) {
+        audioState.audioRef.pause();
+        setAudioState(prev => ({
+          ...prev,
+          audioRef: null,
+          isPlaying: false
+        }));
+      }
+    };
   }, []);
 
   // Handle opening PDF file
@@ -238,8 +352,22 @@ const InfoGraphics = () => {
   };
 
   const handleBackToList = () => {
+    // Stop any playing audio
+    if (audioState.audioRef) {
+      audioState.audioRef.pause();
+    }
+    
     setSelectedInfoGraphic(null);
     setShowPdfViewer(false);
+    setAudioState({
+      isPlaying: false,
+      currentTime: 0,
+      duration: 0,
+      loading: false,
+      error: null,
+      audioRef: null,
+      audioSource: ''
+    });
   };
 
   // Show loading state while assets are loading
@@ -253,12 +381,9 @@ const InfoGraphics = () => {
     );
   }
 
-  // Full-screen PDF viewer 
+  // Display PDF viewer in full screen
   if (showPdfViewer && selectedInfoGraphic && selectedInfoGraphic.type === 'pdf') {
-    // For Capacitor/Android, we use the asset path structure
-    const pdfPath = Capacitor.isNativePlatform()
-      ? `file:///android_asset/assets/pdfs/${selectedInfoGraphic.pdfPath}`
-      : `assets/pdfs/${selectedInfoGraphic.pdfPath}`;
+    const pdfPath = `/assets/pdfs/${selectedInfoGraphic.pdfPath}`;
 
     return (
       <div className="pdf-viewer-fullscreen">
@@ -270,11 +395,13 @@ const InfoGraphics = () => {
         </div>
         
         <div className="pdf-viewer-container-fullscreen">
-          <iframe 
-            src={pdfPath}
-            className="pdf-viewer-iframe"
-            title="PDF Viewer"
-          ></iframe>
+          <object 
+            data={pdfPath}
+            type="application/pdf"
+            className="pdf-viewer-object"
+          >
+            <p>مرورگر شما قادر به نمایش PDF نیست. برای مشاهده <a href={pdfPath} target="_blank" rel="noopener noreferrer">اینجا کلیک کنید</a>.</p>
+          </object>
         </div>
       </div>
     );
@@ -306,31 +433,90 @@ const InfoGraphics = () => {
           </div>
           
           <div className="infographic-content">
-            {/* Only show tooth anatomy images for the Baby Teeth section (id: 1) */}
+            {/* Display tooth anatomy images for Baby Teeth section */}
             {selectedInfoGraphic.id === 1 && (
               <div className="side-by-side-images">
                 <div className="tooth-image">
                   <img 
-                    src={getAssetPath('/assets/images/tooth-anatomy-english.png')}
+                    src="/assets/images/tooth-anatomy-english.jpg" 
                     alt="" 
                     className="anatomy-image"
+                    onError={(e) => {
+                      console.warn('Failed to load tooth anatomy image, trying alternate');
+                      e.target.src = "/assets/images/tooth-anatomy-english.png";
+                    }}
                   />
                 </div>
                 
                 <div className="tooth-image">
                   <img 
-                    src={getAssetPath('/assets/images/tooth-anatomy-persian.png')}
+                    src="/assets/images/tooth-anatomy-persian.jpg" 
                     alt="" 
                     className="anatomy-image"
+                    onError={(e) => {
+                      console.warn('Failed to load tooth anatomy image, trying alternate');
+                      e.target.src = "/assets/images/tooth-anatomy-persian.png";
+                    }}
                   />
                 </div>
               </div>
             )}
             
+            {/* Display infographic content */}
             <div 
               className="infographic-text"
               dangerouslySetInnerHTML={{ __html: processContent(selectedInfoGraphic.content) }}
             />
+            
+            {/* Display audio player if infographic has audio */}
+            {selectedInfoGraphic.audioPath && (
+              <div className="integrated-audio-player">
+                <h4>صدای توضیحات</h4>
+                <div className="player-controls">
+                  <button 
+                    className={`play-pause-button ${audioState.isPlaying ? 'playing' : ''}`}
+                    onClick={togglePlayPause}
+                    disabled={audioState.loading || !audioState.audioRef}
+                  >
+                    {audioState.loading ? '⏳' : audioState.isPlaying ? '⏸️' : '▶️'}
+                  </button>
+                  <div className="time-display current-time">{formatTime(audioState.currentTime)}</div>
+                  <div 
+                    className="progress-bar-container"
+                    onClick={handleSeek}
+                  >
+                    <div 
+                      className="progress-bar" 
+                      style={{ 
+                        width: `${audioState.duration > 0 ? (audioState.currentTime / audioState.duration) * 100 : 0}%` 
+                      }}
+                    ></div>
+                  </div>
+                  <div className="time-display duration">{formatTime(audioState.duration)}</div>
+                </div>
+                {audioState.error && (
+                  <div className="audio-error">
+                    {audioState.error}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Display video player if infographic has video */}
+            {selectedInfoGraphic.videoPath && (
+              <div className="integrated-video-player">
+                <h4>ویدیوی آموزشی</h4>
+                <video 
+                  controls 
+                  preload="metadata"
+                  className={`video-player ${selectedInfoGraphic.id === 5 ? 'toothbrushing-video' : 'fissure-sealant-video'}`}
+                  poster="/assets/images/video-thumbnail-1.jpg"
+                >
+                  <source src={`/assets/videos/${selectedInfoGraphic.videoPath}`} type="video/mp4" />
+                  مرورگر شما قادر به نمایش ویدیو نیست.
+                </video>
+              </div>
+            )}
             
             {/* PDF preview icon for PDF type */}
             {selectedInfoGraphic.type === 'pdf' && (
@@ -356,6 +542,11 @@ const InfoGraphics = () => {
                   <div className="thumbnail-placeholder pdf-thumbnail">
                     <span className="placeholder-icon">📄</span>
                     <span className="placeholder-text">PDF</span>
+                  </div>
+                ) : infographic.videoPath ? (
+                  <div className="thumbnail-placeholder video-thumbnail">
+                    <span className="placeholder-icon">🎬</span>
+                    <span className="placeholder-text">ویدیو</span>
                   </div>
                 ) : (
                   <div className="thumbnail-placeholder">
@@ -405,7 +596,7 @@ const InfoGraphics = () => {
           color: #666;
         }
         
-        .pdf-thumbnail {
+        .pdf-thumbnail, .video-thumbnail {
           background-color: #f0f0f0;
           display: flex;
           flex-direction: column;
@@ -413,9 +604,13 @@ const InfoGraphics = () => {
           justify-content: center;
         }
         
-        .pdf-thumbnail .placeholder-icon {
+        .pdf-thumbnail .placeholder-icon, .video-thumbnail .placeholder-icon {
           font-size: 2rem;
           margin-bottom: 5px;
+        }
+        
+        .video-thumbnail {
+          background-color: #e8f5e9;
         }
         
         .placeholder-text {
@@ -497,7 +692,7 @@ const InfoGraphics = () => {
           overflow: hidden;
         }
         
-        .pdf-viewer-iframe {
+        .pdf-viewer-object {
           width: 100%;
           height: 100%;
           border: none;
@@ -538,20 +733,112 @@ const InfoGraphics = () => {
           background-color: #ddd;
         }
         
-        /* استایل‌های برای ویدیو و صوت */
-        .video-container {
+        /* Integrated audio player styles */
+        .integrated-audio-player {
           margin: 20px 0;
+          padding: 15px;
+          background-color: #f5f7ff;
+          border-radius: 8px;
+          box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .integrated-audio-player h4 {
+          margin-top: 0;
+          margin-bottom: 15px;
+          color: #2196f3;
+        }
+        
+        .player-controls {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 15px;
+        }
+        
+        .play-pause-button {
+          background-color: #2196f3;
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+        
+        .play-pause-button:hover {
+          background-color: #1976d2;
+        }
+        
+        .play-pause-button.playing {
+          background-color: #ff5722;
+        }
+        
+        .play-pause-button:disabled {
+          background-color: #bdbdbd;
+          cursor: not-allowed;
+        }
+        
+        .time-display {
+          font-family: monospace;
+          font-size: 14px;
+          color: #555;
+          min-width: 45px;
+          text-align: center;
+        }
+        
+        .progress-bar-container {
+          flex: 1;
+          height: 10px;
+          background-color: #e0e0e0;
+          border-radius: 5px;
+          overflow: hidden;
+          cursor: pointer;
+          position: relative;
+        }
+        
+        .progress-bar {
+          height: 100%;
+          background-color: #2196f3;
+          border-radius: 5px;
+          transition: width 0.1s linear;
+        }
+        
+        .audio-error {
+          color: #f44336;
+          padding: 10px;
+          background-color: #ffebee;
+          border-radius: 4px;
+          font-size: 14px;
+          margin: 10px 0;
+        }
+        
+        /* Integrated video player styles */
+        .integrated-video-player {
+          margin: 20px 0;
+          padding: 15px;
           background-color: #f5f5f5;
           border-radius: 8px;
-          overflow: hidden;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
-        .fissure-sealant-video, .toothbrushing-video {
+        .integrated-video-player h4 {
+          margin-top: 0;
+          margin-bottom: 15px;
+          color: #2196f3;
+        }
+        
+        .video-player {
           width: 100%;
-          max-width: 400px;
+          max-width: 550px;
           display: block;
           margin: 0 auto;
+          border-radius: 4px;
+          background-color: #000;
         }
         
         /* تنظیم ابعاد ویدیو مسواک زدن به صورت 16:9 عمودی */
@@ -564,68 +851,212 @@ const InfoGraphics = () => {
           aspect-ratio: 1/1;
         }
         
-        .audio-container {
-          margin: 20px 0;
+        /* Additional styles for thumbnails and layout */
+        .infographics-container {
           padding: 15px;
-          background-color: #f5f5f5;
-          border-radius: 8px;
+          max-width: 1200px;
+          margin: 0 auto;
+          direction: rtl;
+        }
+        
+        .infographics-header {
+          margin-bottom: 20px;
+          text-align: right;
+        }
+        
+        .infographics-description {
+          color: #666;
+          line-height: 1.5;
+        }
+        
+        .infographics-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 20px;
+          margin-bottom: 30px;
+        }
+        
+        .infographic-card {
           border: 1px solid #e0e0e0;
-        }
-        
-        .baby-teeth-audio, .fluoride-audio {
-          width: 100%;
-          margin-bottom: 10px;
-        }
-        
-        .audio-caption {
-          font-size: 0.9rem;
-          color: #555;
-          text-align: center;
-        }
-        
-        .play-video-button, .play-audio-button {
-          background-color: #2196f3;
-          color: white;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 4px;
+          border-radius: 8px;
+          overflow: hidden;
           cursor: pointer;
-          font-family: inherit;
-          font-size: 1rem;
-          margin-top: 15px;
-          display: block;
-          margin-left: auto;
-          margin-right: auto;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          background-color: white;
         }
         
-        .play-video-button:hover, .play-audio-button:hover {
-          background-color: #0b7dda;
+        .infographic-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
         
-        .video-placeholder, .audio-placeholder {
+        .infographic-thumbnail {
+          height: 160px;
+          background-color: #f5f5f5;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-bottom: 1px solid #eee;
+        }
+        
+        .thumbnail-placeholder {
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 30px;
+        }
+        
+        .infographic-info {
+          padding: 15px;
+        }
+        
+        .infographic-title {
+          margin: 0 0 10px 0;
+          font-size: 1.1rem;
+        }
+        
+        .infographic-description {
+          margin: 0;
+          color: #666;
+          font-size: 0.9rem;
+          line-height: 1.4;
+        }
+        
+        .infographic-detail {
+          background-color: white;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+          padding: 20px;
+          margin-bottom: 30px;
+        }
+        
+        .detail-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+          border-bottom: 1px solid #eee;
+          padding-bottom: 15px;
+        }
+        
+        .detail-title {
+          margin: 0;
+          font-size: 1.5rem;
+        }
+        
+        .infographic-content {
+          line-height: 1.6;
+        }
+        
+        .infographic-text {
+          margin-top: 20px;
+        }
+        
+        .infographic-text h2 {
+          color: #2196f3;
+          border-bottom: 2px solid #e0e0e0;
+          padding-bottom: 10px;
+          margin-bottom: 20px;
+        }
+        
+        .infographics-tips {
+          background-color: #e8f5e9;
+          padding: 20px;
+          border-radius: 8px;
+          margin-top: 20px;
+        }
+        
+        .infographics-tips h3 {
+          color: #2e7d32;
+          margin-top: 0;
+          margin-bottom: 15px;
+        }
+        
+        .infographics-tips ul {
+          padding-right: 20px;
+          margin: 0;
+        }
+        
+        .infographics-tips li {
+          margin-bottom: 10px;
+          line-height: 1.5;
+        }
+        
+        .infographics-tips li:last-child {
+          margin-bottom: 0;
+        }
+        
+        .side-by-side-images {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 20px;
+          justify-content: center;
+          margin: 20px 0;
+        }
+        
+        .tooth-image {
+          flex: 1;
+          min-width: 280px;
+          max-width: 400px;
           text-align: center;
         }
         
-        .placeholder-icon {
-          font-size: 3rem;
-          margin-bottom: 15px;
+        .anatomy-image {
+          max-width: 100%;
+          border-radius: 4px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         
-        .placeholder-text {
-          font-size: 1.2rem;
-          font-weight: bold;
-          margin-bottom: 10px;
+        .fluoride-brochure-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 15px;
+          justify-content: center;
+          margin: 20px 0;
         }
         
-        .placeholder-description {
-          font-size: 0.9rem;
-          color: #666;
-          margin-bottom: 15px;
+        .fluoride-brochure-image {
+          max-width: 100%;
+          height: auto;
+          border-radius: 4px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+          .detail-header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          
+          .detail-actions {
+            margin-top: 15px;
+            width: 100%;
+          }
+          
+          .view-button, .back-button {
+            flex: 1;
+            text-align: center;
+          }
+          
+          .side-by-side-images {
+            flex-direction: column;
+            align-items: center;
+          }
+          
+          .tooth-image {
+            max-width: 100%;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .infographics-list {
+            grid-template-columns: 1fr;
+          }
+          
+          .infographic-detail {
+            padding: 15px;
+          }
         }
       `}</style>
     </div>

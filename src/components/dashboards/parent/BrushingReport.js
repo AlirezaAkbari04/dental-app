@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useUser } from '../../../contexts/UserContext';
 import DatabaseService from '../../../services/DatabaseService';
 
+// Replace these sections at the beginning of the component
 const BrushingReport = ({ childName = "کودک" }) => {
   const { currentUser } = useUser();
 
-  // Add childId state
-  const [childId, setChildId] = useState(null);
+  // Remove childId state
+  // const [childId, setChildId] = useState(null);
 
   // Existing states
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -24,77 +25,40 @@ const BrushingReport = ({ childName = "کودک" }) => {
     console.log(`[BrushingReport] ${message}`, data || '');
   };
 
-  // Initialize database when the component loads
+  // Initialize database and load data on component mount - simplified
   useEffect(() => {
-    const initDatabase = async () => {
+    const initApp = async () => {
       try {
         // Initialize database if needed
         if (!DatabaseService.initialized) {
           await DatabaseService.init();
         }
-      } catch (error) {
-        console.error('Error initializing database:', error);
-      }
-    };
 
-    initDatabase();
-  }, []);
-
-  // Fetch child data when the component mounts
-  useEffect(() => {
-    const fetchChildData = async () => {
-      if (!currentUser?.id) return;
-
-      try {
-        // Get children for the current parent
-        const children = await DatabaseService.getChildrenByParentId(currentUser.id);
-
-        if (children.length === 0) {
-          // Create a default child if none exists
-          const newChildId = await DatabaseService.createChild(
-            currentUser.id,
-            childName,
-            null, // age
-            null, // gender
-            null // avatarUrl
-          );
-
-          setChildId(newChildId);
-        } else {
-          // Use the first child
-          setChildId(children[0].id);
+        // Load existing data from localStorage (this will be our primary source now)
+        const storedData = localStorage.getItem('parentBrushingRecord');
+        if (storedData) {
+          try {
+            const parsedData = JSON.parse(storedData);
+            setBrushingData(parsedData);
+            logDebug("Loaded brushing data from localStorage", parsedData);
+          } catch (e) {
+            logDebug("Error parsing localStorage data", e);
+            setBrushingData({});
+          }
         }
       } catch (error) {
-        console.error("Error fetching child data:", error);
+        console.error('Error initializing app:', error);
       }
     };
 
-    fetchChildData();
-  }, [currentUser, childName]);
-
-  // Load brushing data for the current month
-  useEffect(() => {
-    const loadBrushingData = async () => {
-      if (!childId) return;
-
-      try {
-        const year = currentMonth.getFullYear();
-        const month = currentMonth.getMonth() + 1;
-
-        const data = await DatabaseService.getBrushingRecordsForCalendar(childId, year, month);
-        setBrushingData(data);
-      } catch (error) {
-        console.error("Error loading brushing data:", error);
-      }
-    };
-
-    loadBrushingData();
-  }, [childId, currentMonth]);
+    initApp();
+  }, []);
 
   // Save brushing data to localStorage whenever it changes
   useEffect(() => {
     try {
       localStorage.setItem('parentBrushingRecord', JSON.stringify(brushingData));
+      logDebug("Saved brushing data to localStorage");
     } catch (e) {
       console.error("Error saving to localStorage:", e);
     }
@@ -221,58 +185,88 @@ const BrushingReport = ({ childName = "کودک" }) => {
     setShowAddModal(true);
   };
   
-  const handleSaveRecord = () => {
-    logDebug("Save button clicked");
+  // Replace the handleSaveRecord function
+const handleSaveRecord = () => {
+  logDebug("Save button clicked");
+  
+  if (!selectedDate) {
+    logDebug("Missing selected date");
+    alert("خطا: تاریخ انتخاب نشده است");
+    return;
+  }
+
+  if (!currentRecord.morning.brushed && !currentRecord.evening.brushed) {
+    logDebug("No brushing data selected");
+    alert("لطفاً حداقل یکی از گزینه‌های مسواک صبح یا شب را انتخاب کنید");
+    return;
+  }
+
+  const dateKey = formatDateKey(selectedDate);
+  
+  try {
+    // Update local state
+    const updatedBrushingData = {
+      ...brushingData,
+      [dateKey]: { ...currentRecord }
+    };
+
+    setBrushingData(updatedBrushingData);
     
-    if (!selectedDate || !childId) {
-      logDebug("Missing required data", { selectedDate, childId });
-      alert("خطا: اطلاعات ناقص است");
-      return;
+    // Also sync with database if possible
+    if (currentUser?.id) {
+      // Try to save morning record if brushed
+      if (currentRecord.morning.brushed) {
+        DatabaseService.executeWithFallback(
+          async () => {
+            await DatabaseService.createBrushingRecord(
+              currentUser.id,
+              dateKey,
+              'morning',
+              currentRecord.morning.time || '0',
+              true
+            );
+            return true;
+          },
+          async () => {
+            // Already saved to localStorage in the state update above
+            return true;
+          }
+        ).catch(err => {
+          logDebug("Error saving morning record to database", err);
+        });
+      }
+
+      // Try to save evening record if brushed
+      if (currentRecord.evening.brushed) {
+        DatabaseService.executeWithFallback(
+          async () => {
+            await DatabaseService.createBrushingRecord(
+              currentUser.id,
+              dateKey,
+              'evening',
+              currentRecord.evening.time || '0',
+              true
+            );
+            return true;
+          },
+          async () => {
+            // Already saved to localStorage in the state update above
+            return true;
+          }
+        ).catch(err => {
+          logDebug("Error saving evening record to database", err);
+        });
+      }
     }
-  
-    const dateKey = formatDateKey(selectedDate);
-    
-    if (!currentRecord.morning.brushed || !currentRecord.evening.brushed) {
-      alert("خطا: اطلاعات ناقص است"); // Prompt if any brushing record is missing
-      return;
-    }
-  
-    try {
-      const updatedBrushingData = {
-        ...brushingData,
-        [dateKey]: { ...currentRecord }
-      };
-  
-      setBrushingData(updatedBrushingData);
-      localStorage.setItem('parentBrushingRecord', JSON.stringify(updatedBrushingData));
-  
-      DatabaseService.createBrushingRecord(
-        childId,
-        dateKey,
-        'morning',
-        currentRecord.morning.time || '0',
-        currentRecord.morning.brushed
-      ).catch(err => {
-        logDebug("Error saving morning record", err);
-      });
-  
-      DatabaseService.createBrushingRecord(
-        childId,
-        dateKey,
-        'evening',
-        currentRecord.evening.time || '0',
-        currentRecord.evening.brushed
-      ).catch(err => {
-        logDebug("Error saving evening record", err);
-      });
-  
-      setShowAddModal(false);
-  
-    } catch (error) {
-      logDebug("Error in save process", error);
-      alert("خطا در ذخیره‌سازی اطلاعات");
-    }
-  };
+
+    setShowAddModal(false);
+    logDebug("Data saved successfully", { dateKey, record: currentRecord });
+
+  } catch (error) {
+    logDebug("Error in save process", error);
+    alert("خطا در ذخیره‌سازی اطلاعات");
+  }
+};
   
   // Handle record changes in the modal
   const handleRecordChange = (time, field, value) => {
