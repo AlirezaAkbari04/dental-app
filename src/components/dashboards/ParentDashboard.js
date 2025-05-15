@@ -129,12 +129,12 @@ const ParentDashboard = () => {
       <header className="dashboard-header">
         <div className="logo-container">
           <img 
-            src="/assets/images/logo192.png" 
+            src="/assets/images/logo.png" 
             alt="لبخند شاد دندان سالم" 
             className="dashboard-logo" 
             onError={(e) => {
               console.warn('Failed to load logo, trying alternative');
-              e.target.src = "/logo192.png";
+              e.target.src = "/logo.png";
             }}
           />
           <span className="app-name">لبخند شاد دندان سالم</span>

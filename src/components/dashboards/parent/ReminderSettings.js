@@ -1,27 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ParentComponents.css';
-import { useUser } from '../../../contexts/UserContext';
-import DatabaseService from '../../../services/DatabaseService';
 
 const ReminderSettings = ({ childName }) => {
-  const { currentUser } = useUser();
-
+  // Simplified reminders state without IDs
   const [reminders, setReminders] = useState({
     brushMorning: {
-      id: null,
       enabled: true,
       time: '07:30',
       message: 'یادآوری مسواک صبح',
     },
     brushEvening: {
-      id: null,
       enabled: true,
       time: '20:00',
       message: 'یادآوری مسواک شب',
-    },
+    }
   });
 
-  // اضافه کردن وضعیت برای انتخاب صدای زنگ هشدار
+  // Alarm sound settings
   const [selectedAlarm, setSelectedAlarm] = useState('default');
   const [alarmOptions, setAlarmOptions] = useState([
     { id: 'default', name: 'آهنگ پیش‌فرض یادآوری', src: '/assets/audios/parent_alarm.mp3' },
@@ -33,56 +28,26 @@ const ReminderSettings = ({ childName }) => {
   const [currentPlayingAlarm, setCurrentPlayingAlarm] = useState(null);
   const audioRef = useRef(null);
 
-  // بارگذاری یادآوری‌ها از پایگاه داده
+  // Load settings from localStorage on component mount
   useEffect(() => {
-    const loadReminders = async () => {
-      if (!currentUser?.id) return;
-
-      try {
-        if (!DatabaseService.initialized) {
-          await DatabaseService.init();
-        }
-
-        const dbReminders = await DatabaseService.getRemindersByUserId(currentUser.id);
-
-        if (dbReminders && dbReminders.length > 0) {
-          const updatedReminders = { ...reminders };
-
-          for (const reminder of dbReminders) {
-            if (reminder.type === 'brushMorning') {
-              updatedReminders.brushMorning = {
-                id: reminder.id,
-                enabled: reminder.enabled === 1,
-                time: reminder.time,
-                message: reminder.message,
-              };
-            } else if (reminder.type === 'brushEvening') {
-              updatedReminders.brushEvening = {
-                id: reminder.id,
-                enabled: reminder.enabled === 1,
-                time: reminder.time,
-                message: reminder.message,
-              };
-            }
-          }
-
-          setReminders(updatedReminders);
-        }
-        
-        // بارگذاری تنظیمات صدای زنگ از پایگاه داده
-        const alarmSetting = await DatabaseService.getUserSetting(currentUser.id, 'selectedAlarm');
-        if (alarmSetting) {
-          setSelectedAlarm(alarmSetting.value);
-        }
-      } catch (error) {
-        console.error('Error loading reminders from database:', error);
+    try {
+      // Load reminders
+      const savedReminders = localStorage.getItem('brushReminders');
+      if (savedReminders) {
+        setReminders(JSON.parse(savedReminders));
       }
-    };
+      
+      // Load alarm setting
+      const savedAlarm = localStorage.getItem('selectedAlarm');
+      if (savedAlarm) {
+        setSelectedAlarm(savedAlarm);
+      }
+    } catch (error) {
+      console.error('Error loading settings from localStorage:', error);
+    }
+  }, []);
 
-    loadReminders();
-  }, [currentUser]);
-
-  // به‌روزرسانی منبع صدا هنگام تغییر انتخاب زنگ هشدار
+  // Update audio source when alarm selection changes
   useEffect(() => {
     if (audioRef.current) {
       const selectedOption = alarmOptions.find(option => option.id === selectedAlarm);
@@ -93,11 +58,10 @@ const ReminderSettings = ({ childName }) => {
     }
   }, [selectedAlarm, alarmOptions]);
 
+  // Cleanup audio on unmount
   useEffect(() => {
     const audioElement = audioRef.current;
-  
     return () => {
-      // پاکسازی صدا هنگام جدا شدن کامپوننت
       if (audioElement) {
         audioElement.pause();
         audioElement.currentTime = 0;
@@ -105,7 +69,7 @@ const ReminderSettings = ({ childName }) => {
     };
   }, []);
   
-  // کنترل فعال/غیرفعال کردن یادآوری
+  // Toggle reminder enabled/disabled
   const handleToggleReminder = (type, checked) => {
     setReminders(prev => ({
       ...prev,
@@ -116,7 +80,7 @@ const ReminderSettings = ({ childName }) => {
     }));
   };
   
-  // کنترل تغییر زمان
+  // Handle time change
   const handleTimeChange = (type, value) => {
     setReminders(prev => ({
       ...prev,
@@ -127,7 +91,7 @@ const ReminderSettings = ({ childName }) => {
     }));
   };
   
-  // کنترل تغییر متن پیام
+  // Handle message change
   const handleMessageChange = (type, value) => {
     setReminders(prev => ({
       ...prev,
@@ -138,7 +102,7 @@ const ReminderSettings = ({ childName }) => {
     }));
   };
   
-  // تغییر انتخاب صدای زنگ هشدار
+  // Change selected alarm
   const handleAlarmChange = (alarmId) => {
     setSelectedAlarm(alarmId);
     setIsPlayingAudio(false);
@@ -148,94 +112,30 @@ const ReminderSettings = ({ childName }) => {
     }
   };
   
-  // به‌روزرسانی تابع ذخیره برای استفاده از پایگاه داده
-  const handleSaveReminders = async () => {
-    if (!currentUser?.id) return;
-
+  // Simplified save function - just saves to localStorage
+  const handleSaveReminders = () => {
     try {
-      // تنظیم پایگاه داده در صورت نیاز
-      if (!DatabaseService.initialized) {
-        await DatabaseService.init();
-      }
-
-      // به‌روزرسانی یا ایجاد یادآوری صبح
-      if (reminders.brushMorning.id) {
-        // به‌روزرسانی موجود
-        await DatabaseService.updateReminder(
-          reminders.brushMorning.id,
-          'brushMorning',
-          reminders.brushMorning.time,
-          reminders.brushMorning.message,
-          reminders.brushMorning.enabled
-        );
-      } else {
-        // ایجاد جدید
-        const newId = await DatabaseService.createReminder(
-          currentUser.id,
-          'brushMorning',
-          reminders.brushMorning.time,
-          reminders.brushMorning.message,
-          reminders.brushMorning.enabled
-        );
-
-        // به‌روزرسانی وضعیت با شناسه جدید
-        setReminders((prev) => ({
-          ...prev,
-          brushMorning: {
-            ...prev.brushMorning,
-            id: newId,
-          },
-        }));
-      }
-
-      // به‌روزرسانی یا ایجاد یادآوری شب
-      if (reminders.brushEvening.id) {
-        // به‌روزرسانی موجود
-        await DatabaseService.updateReminder(
-          reminders.brushEvening.id,
-          'brushEvening',
-          reminders.brushEvening.time,
-          reminders.brushEvening.message,
-          reminders.brushEvening.enabled
-        );
-      } else {
-        // ایجاد جدید
-        const newId = await DatabaseService.createReminder(
-          currentUser.id,
-          'brushEvening',
-          reminders.brushEvening.time,
-          reminders.brushEvening.message,
-          reminders.brushEvening.enabled
-        );
-
-        // به‌روزرسانی وضعیت با شناسه جدید
-        setReminders((prev) => ({
-          ...prev,
-          brushEvening: {
-            ...prev.brushEvening,
-            id: newId,
-          },
-        }));
-      }
-
-      // ذخیره‌سازی تنظیمات آهنگ هشدار
-      await DatabaseService.saveUserSetting(currentUser.id, 'selectedAlarm', selectedAlarm);
-
-      // نمایش پیام موفقیت
+      // Save reminders
+      localStorage.setItem('brushReminders', JSON.stringify(reminders));
+      
+      // Save alarm setting
+      localStorage.setItem('selectedAlarm', selectedAlarm);
+      
+      // Show success message
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
       }, 3000);
     } catch (error) {
-      console.error('Error saving reminders to database:', error);
+      console.error('Error saving settings to localStorage:', error);
       alert('خطا در ذخیره‌سازی تنظیمات. لطفاً دوباره تلاش کنید.');
     }
   };
 
-  // کنترل آزمایش صدای هشدار
+  // Test playing the alarm sound
   const handleTestAlarm = (alarmId) => {
     if (isPlayingAudio) {
-      // توقف صدا اگر در حال پخش است
+      // Stop audio if playing
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -243,14 +143,14 @@ const ReminderSettings = ({ childName }) => {
         setCurrentPlayingAlarm(null);
       }
     } else {
-      // پخش صدا
+      // Play audio
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
         audioRef.current.play()
           .then(() => {
             setIsPlayingAudio(true);
             setCurrentPlayingAlarm(alarmId);
-            // تنظیم زمان‌سنج برای توقف صدا پس از 5 ثانیه
+            // Set timer to stop after 5 seconds
             setTimeout(() => {
               if (audioRef.current) {
                 audioRef.current.pause();
@@ -268,12 +168,12 @@ const ReminderSettings = ({ childName }) => {
     }
   };
   
-  // کنترل آزمایش یادآوری (برای اهداف نمایشی)
+  // Test reminder (for demonstration)
   const handleTestReminder = (type) => {
-    // نمایش پیام اعلان
+    // Show notification message
     alert(`آزمایش اعلان برنامه: ${reminders[type].message}`);
     
-    // پخش صدای هشدار
+    // Play alarm sound
     handleTestAlarm(selectedAlarm);
   };
   
@@ -459,7 +359,7 @@ const ReminderSettings = ({ childName }) => {
         </ul>
       </div>
       
-      {/* المان صوتی برای پخش صدای هشدار */}
+      {/* Audio element for playing alarm sounds */}
       <audio ref={audioRef} preload="auto" src={alarmOptions.find(option => option.id === selectedAlarm)?.src || alarmOptions[0].src} />
       
       <style jsx>{`
@@ -581,6 +481,263 @@ const ReminderSettings = ({ childName }) => {
         
         .test-button.playing:hover {
           background-color: #d32f2f;
+        }
+        
+        .settings-header {
+          margin-bottom: 20px;
+        }
+        
+        .settings-header h2 {
+          color: #333;
+          margin-bottom: 10px;
+        }
+        
+        .settings-description {
+          color: #666;
+          font-size: 0.9rem;
+        }
+        
+        .reminders-section {
+          margin-bottom: 30px;
+        }
+        
+        .reminders-section h3 {
+          color: #4a6bff;
+          margin-bottom: 15px;
+        }
+        
+        .reminder-card {
+          background-color: white;
+          border-radius: 12px;
+          padding: 20px;
+          margin-bottom: 15px;
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .reminder-header {
+          display: flex;
+          align-items: center;
+          margin-bottom: 15px;
+        }
+        
+        .reminder-header h4 {
+          margin: 0 10px 0 0;
+          font-size: 1.1rem;
+          color: #333;
+        }
+        
+        .reminder-details {
+          margin-bottom: 20px;
+        }
+        
+        .reminder-field {
+          display: flex;
+          flex-direction: column;
+          margin-bottom: 15px;
+        }
+        
+        .reminder-field label {
+          font-size: 0.9rem;
+          color: #666;
+          margin-bottom: 5px;
+        }
+        
+        .reminder-field input {
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          font-family: inherit;
+        }
+        
+        .reminder-field input:disabled {
+          background-color: #f5f5f5;
+          color: #999;
+        }
+        
+        .reminder-actions {
+          display: flex;
+          justify-content: flex-end;
+        }
+        
+        .test-button {
+          background-color: #4a6bff;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 8px 15px;
+          cursor: pointer;
+          transition: background-color 0.3s;
+        }
+        
+        .test-button:hover {
+          background-color: #3a5aee;
+        }
+        
+        .test-button:disabled {
+          background-color: #bbb;
+          cursor: not-allowed;
+        }
+        
+        .settings-actions {
+          margin-top: 20px;
+          margin-bottom: 20px;
+          display: flex;
+          justify-content: center;
+        }
+        
+        .save-button {
+          background-color: #4caf50;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 12px 25px;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: background-color 0.3s;
+        }
+        
+        .save-button:hover {
+          background-color: #3e9e41;
+        }
+        
+        .success-message {
+          background-color: #e8f5e9;
+          color: #2e7d32;
+          padding: 15px;
+          text-align: center;
+          border-radius: 6px;
+          margin: 20px 0;
+          font-weight: bold;
+          animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        .reminder-info, .reminder-tips {
+          margin-top: 30px;
+        }
+        
+        .info-box {
+          background-color: #e3f2fd;
+          padding: 15px;
+          border-radius: 8px;
+        }
+        
+        .info-box h3 {
+          color: #1976d2;
+          margin-top: 0;
+          margin-bottom: 10px;
+          font-size: 1.1rem;
+        }
+        
+        .info-box p {
+          margin: 0;
+          color: #333;
+          font-size: 0.9rem;
+          line-height: 1.5;
+        }
+        
+        .reminder-tips h3 {
+          color: #4a6bff;
+          margin-bottom: 15px;
+        }
+        
+        .reminder-tips ul {
+          padding-right: 20px;
+          margin: 0;
+        }
+        
+        .reminder-tips li {
+          margin-bottom: 10px;
+          color: #444;
+          line-height: 1.5;
+        }
+        
+        /* Switch styles */
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 50px;
+          height: 24px;
+        }
+        
+        .switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+        
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          transition: .4s;
+        }
+        
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 16px;
+          width: 16px;
+          left: 4px;
+          bottom: 4px;
+          background-color: white;
+          transition: .4s;
+        }
+        
+        input:checked + .slider {
+          background-color: #4a6bff;
+        }
+        
+        input:focus + .slider {
+          box-shadow: 0 0 1px #4a6bff;
+        }
+        
+        input:checked + .slider:before {
+          transform: translateX(26px);
+        }
+        
+        .slider.round {
+          border-radius: 24px;
+        }
+        
+        .slider.round:before {
+          border-radius: 50%;
+        }
+        
+        @media (max-width: 768px) {
+          .reminder-header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          
+          .reminder-header h4 {
+            margin: 10px 0 0 0;
+          }
+          
+          .alarm-option {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          
+          .alarm-option-radio {
+            margin-right: 0;
+            margin-bottom: 10px;
+          }
+          
+          .preview-button {
+            margin-top: 10px;
+            margin-left: 0;
+            width: 100%;
+            justify-content: center;
+          }
         }
       `}</style>
     </div>

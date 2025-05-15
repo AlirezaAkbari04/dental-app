@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../../styles/CaretakerDashboard.css'; // Changed from '../styles/CaretakerDashboard.css'
-import logoImage from '../../logo.svg';
+import '../../styles/CaretakerDashboard.css';
 import MySchools from './caretaker/MySchools';
 import StudentsList from './caretaker/StudentsList';
 import HealthReports from './caretaker/HealthReports';
 import UrgentReferrals from './caretaker/UrgentReferrals';
-import EducationalContent from './caretaker/EducationalContent'; // Import new component
-import DatabaseService from '../../services/DatabaseService'; // Add this import
-import MigrationService from '../../services/MigrationService'; // Add this import
+import EducationalContent from './caretaker/EducationalContent';
+import DatabaseService from '../../services/DatabaseService';
+import MigrationService from '../../services/MigrationService';
 
 const CaretakerDashboard = () => {
   const navigate = useNavigate();
@@ -74,9 +73,13 @@ const CaretakerDashboard = () => {
       <header className="dashboard-header">
         <div className="logo-container">
           <img 
-            src={logoImage} 
+            src="/assets/images/logo.png" 
             alt="لبخند شاد دندان سالم" 
-            className="dashboard-logo" 
+            className="dashboard-logo"
+            onError={(e) => {
+              console.warn('Failed to load logo, trying alternative');
+              e.target.src = "/logo.png";
+            }}
           />
           <span className="app-name">لبخند شاد دندان سالم</span>
         </div>

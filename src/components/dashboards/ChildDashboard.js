@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/ChildDashboard.css';
-import logoImage from '../../logo.svg'; // Fixed logo path
 import ChildHome from './child/ChildHome';
 import BrushReminder from './child/BrushReminder';
 import ChildGames from './child/ChildGames';
@@ -111,9 +110,13 @@ const ChildDashboard = () => {
       <header className="dashboard-header">
         <div className="logo-container">
           <img 
-            src={logoImage} 
+            src="/assets/images/logo.png" 
             alt="لبخند شاد دندان سالم" 
-            className="dashboard-logo" 
+            className="dashboard-logo"
+            onError={(e) => {
+              console.warn('Failed to load logo, trying alternative');
+              e.target.src = "/logo.png";
+            }}
           />
           {showMessage && (
             <div className="logo-message">
