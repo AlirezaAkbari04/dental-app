@@ -162,6 +162,8 @@ const ParentProfile = () => {
             onChange={handleChange}
             placeholder="نسبت خانوادگی با کودک"
             className={errors.relationship ? 'input-error' : ''}
+            pattern="[\u0600-\u06FF\s]+" 
+            title="لطفاً فقط حروف فارسی وارد کنید"
           />
           {errors.relationship && <div className="error-message">{errors.relationship}</div>}
         </div>
@@ -199,6 +201,8 @@ const ParentProfile = () => {
             onChange={handleChange}
             placeholder="شغل پدر"
             className={errors.fatherJob ? 'input-error' : ''}
+            pattern="[\u0600-\u06FF\s]+" // Allow Persian alphabets and spaces
+            title="لطفاً فقط حروف فارسی وارد کنید"
           />
           {errors.fatherJob && <div className="error-message">{errors.fatherJob}</div>}
         </div>
@@ -234,6 +238,8 @@ const ParentProfile = () => {
             onChange={handleChange}
             placeholder="شغل مادر"
             className={errors.motherJob ? 'input-error' : ''}
+            pattern="[\u0600-\u06FF\s]+" 
+            title="لطفاً فقط حروف فارسی وارد کنید"
           />
           {errors.motherJob && <div className="error-message">{errors.motherJob}</div>}
         </div>

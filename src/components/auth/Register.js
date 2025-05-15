@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import '../../styles/Auth.css';
 import { useUser } from '../../contexts/UserContext';
-import logoImage from '../../logo.svg';
 
 function Register() {
   const navigate = useNavigate();
@@ -96,7 +95,15 @@ function Register() {
     <div className="auth-container" dir="rtl">
       <div className="auth-form-container">
         <div className="logo-container">
-          <img src={logoImage} alt="لبخند شاد دندان سالم" className="app-logo" />
+          <img 
+            src="/assets/images/logo.png" 
+            alt="لبخند شاد دندان سالم" 
+            className="app-logo" 
+            onError={(e) => {
+              console.warn('Failed to load logo, trying alternative');
+              e.target.src = "/logo.png";
+            }}
+          />
           <h1 className="app-title">ثبت‌نام در برنامه سلامت دندان</h1>
         </div>
         
