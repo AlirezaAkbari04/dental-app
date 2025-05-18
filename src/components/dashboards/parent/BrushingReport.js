@@ -672,7 +672,8 @@ const handleSaveRecord = () => {
         </div>
       )}
       
-      <style jsx>{`
+
+<style jsx>{`
         .parent-brushing-dashboard {
           font-family: 'Tahoma', 'Arial', sans-serif;
           direction: rtl;
@@ -790,15 +791,18 @@ const handleSaveRecord = () => {
         
         .brushing-indicators {
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
+          justify-content: center;
           align-items: center;
           margin-top: 10px;
+          gap: 3px;
         }
         
         .morning-indicator, .evening-indicator {
-          margin: 2px 0;
-          font-size: 20px;
+          margin: 0;
+          font-size: 18px;
         }
+        
         
         .calendar-legend {
           display: flex;

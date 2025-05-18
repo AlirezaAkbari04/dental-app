@@ -583,3 +583,22 @@ textarea.form-control {
     overflow-x: auto;
   }
 }
+/* Updated logo size */
+.dashboard-logo {
+  width: 80px; /* Increased from 50px to 80px */
+  height: auto;
+  border-radius: 50%;
+}
+
+/* Updated spacing to accommodate larger logo */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-name {
+  font-size: 1.4rem; /* Slightly increased from 1.2rem */
+  font-weight: 500;
+  color: var(--primary-color);
+}

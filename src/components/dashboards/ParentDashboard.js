@@ -148,7 +148,7 @@ const ParentDashboard = () => {
       <div className="dashboard-container">
         <nav className="dashboard-sidebar">
           <div className="user-profile">
-            <div className="profile-icon">👪</div>
+            <div className="profile-icon">👨‍👩‍👧</div>
             <div className="profile-name">{parentName}</div>
             <div className="child-name">والد {childName}</div>
           </div>
