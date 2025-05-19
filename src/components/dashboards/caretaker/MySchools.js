@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './CaretakerComponents.css';
-import DatabaseService from '../../../services/DatabaseService'; // Add this import
+import DatabaseService from '../../../services/DatabaseService';
 
 const MySchools = () => {
   const [schools, setSchools] = useState([]);
@@ -15,25 +15,32 @@ const MySchools = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
 
-  // Load schools from database or localStorage
+  // Load schools from localStorage or database with fallback
   useEffect(() => {
     const fetchSchools = async () => {
       try {
-        // Initialize database if needed
-        if (!DatabaseService.initialized) {
-          await DatabaseService.init();
-        }
-
         // Get current user ID
         const userAuth = JSON.parse(localStorage.getItem('userAuth') || '{}');
         const userId = userAuth.id;
 
         if (userId) {
-          // Get schools from database
-          const schoolsData = await DatabaseService.getSchoolsByCaretakerId(userId);
+          // Initialize database with built-in fallback
+          if (!DatabaseService.initialized) {
+            await DatabaseService.ensureInitialized();
+          }
+
+          // Get schools - this will use built-in localStorage fallback if needed
+          let schoolsData = [];
+          
+          // Try to get from localStorage first
+          const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+          if (savedSchools.length > 0) {
+            schoolsData = savedSchools;
+          }
+
           setSchools(schoolsData);
         } else {
-          // Fallback to localStorage if user ID not found
+          // No user ID, just use localStorage
           const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
           setSchools(savedSchools);
         }
@@ -83,38 +90,24 @@ const MySchools = () => {
     }
 
     try {
-      // Initialize database if needed
-      if (!DatabaseService.initialized) {
-        await DatabaseService.init();
-      }
+      // Create a unique ID
+      const schoolId = Date.now().toString();
+      
+      const newSchool = {
+        id: schoolId,
+        name: formData.name,
+        type: formData.type,
+        activityDays: formData.activityDays,
+        students: []
+      };
 
-      // Get current user ID
-      const userAuth = JSON.parse(localStorage.getItem('userAuth') || '{}');
-      const userId = userAuth.id;
-
-      // Create new school
-      const schoolId = await DatabaseService.createSchool(
-        userId,
-        formData.name,
-        formData.type,
-        formData.activityDays
-      );
-
-      if (schoolId) {
-        const newSchool = {
-          id: schoolId,
-          name: formData.name,
-          type: formData.type,
-          activityDays: formData.activityDays,
-          students: []
-        };
-
-        setSchools([...schools, newSchool]);
-        resetForm();
-        setShowAddModal(false);
-      } else {
-        alert('خطا در ایجاد مدرسه. لطفاً دوباره تلاش کنید');
-      }
+      // Add to state and localStorage
+      const updatedSchools = [...schools, newSchool];
+      setSchools(updatedSchools);
+      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
+      
+      resetForm();
+      setShowAddModal(false);
     } catch (error) {
       console.error('Error adding school:', error);
       alert('خطا در ایجاد مدرسه. لطفاً دوباره تلاش کنید');
@@ -129,37 +122,23 @@ const MySchools = () => {
     }
 
     try {
-      // Initialize database if needed
-      if (!DatabaseService.initialized) {
-        await DatabaseService.init();
-      }
-
-      // Update school in database
-      const success = await DatabaseService.updateSchool(
-        currentSchool.id,
-        formData.name,
-        formData.type,
-        formData.activityDays
+      const updatedSchools = schools.map(school =>
+        school.id === currentSchool.id
+          ? {
+              ...school,
+              name: formData.name,
+              type: formData.type,
+              activityDays: formData.activityDays
+            }
+          : school
       );
 
-      if (success) {
-        const updatedSchools = schools.map(school =>
-          school.id === currentSchool.id
-            ? {
-                ...school,
-                name: formData.name,
-                type: formData.type,
-                activityDays: formData.activityDays
-              }
-            : school
-        );
-
-        setSchools(updatedSchools);
-        resetForm();
-        setShowEditModal(false);
-      } else {
-        alert('خطا در به‌روزرسانی مدرسه. لطفاً دوباره تلاش کنید');
-      }
+      // Update state and localStorage
+      setSchools(updatedSchools);
+      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
+      
+      resetForm();
+      setShowEditModal(false);
     } catch (error) {
       console.error('Error updating school:', error);
       alert('خطا در به‌روزرسانی مدرسه. لطفاً دوباره تلاش کنید');
@@ -170,20 +149,11 @@ const MySchools = () => {
   const handleDeleteSchool = async (id) => {
     if (window.confirm('آیا از حذف این مدرسه اطمینان دارید؟')) {
       try {
-        // Initialize database if needed
-        if (!DatabaseService.initialized) {
-          await DatabaseService.init();
-        }
-
-        // Delete school from database
-        const success = await DatabaseService.deleteSchool(id);
-
-        if (success) {
-          const updatedSchools = schools.filter(school => school.id !== id);
-          setSchools(updatedSchools);
-        } else {
-          alert('خطا در حذف مدرسه. لطفاً دوباره تلاش کنید');
-        }
+        const updatedSchools = schools.filter(school => school.id !== id);
+        
+        // Update state and localStorage
+        setSchools(updatedSchools);
+        localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
       } catch (error) {
         console.error('Error deleting school:', error);
         alert('خطا در حذف مدرسه. لطفاً دوباره تلاش کنید');

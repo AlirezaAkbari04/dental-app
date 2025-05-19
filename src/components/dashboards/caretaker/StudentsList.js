@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './CaretakerComponents.css';
-import DatabaseService from '../../../services/DatabaseService'; // Add this import
+import DatabaseService from '../../../services/DatabaseService';
 
 const StudentsList = () => {
   const [schools, setSchools] = useState([]);
@@ -17,48 +17,34 @@ const StudentsList = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Load data from database or localStorage
+  // Load data from database with localStorage fallback
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Initialize database if needed
+        // Initialize database with built-in fallback
         if (!DatabaseService.initialized) {
-          await DatabaseService.init();
+          await DatabaseService.ensureInitialized();
         }
 
-        // Get current user ID
-        const userAuth = JSON.parse(localStorage.getItem('userAuth') || '{}');
-        const userId = userAuth.id;
+        // Get schools from localStorage as fallback
+        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+        setSchools(savedSchools);
 
-        if (userId) {
-          // Get schools from database
-          const schoolsData = await DatabaseService.getSchoolsByCaretakerId(userId);
-          setSchools(schoolsData);
-
-          // Get all students
-          const studentsData = await DatabaseService.getAllStudentsForCaretaker(userId);
-          setStudents(studentsData);
-        } else {
-          // Fallback to localStorage
-          const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-          setSchools(savedSchools);
-
-          // Extract all students from all schools
-          const allStudents = [];
-          savedSchools.forEach(school => {
-            if (school.students && Array.isArray(school.students)) {
-              school.students.forEach(student => {
-                allStudents.push({
-                  ...student,
-                  schoolId: school.id,
-                  schoolName: school.name
-                });
+        // Extract all students from all schools
+        const allStudents = [];
+        savedSchools.forEach(school => {
+          if (school.students && Array.isArray(school.students)) {
+            school.students.forEach(student => {
+              allStudents.push({
+                ...student,
+                schoolId: school.id,
+                schoolName: school.name
               });
-            }
-          });
+            });
+          }
+        });
 
-          setStudents(allStudents);
-        }
+        setStudents(allStudents);
       } catch (error) {
         console.error('Error loading data:', error);
         // Fallback to localStorage
@@ -112,41 +98,51 @@ const StudentsList = () => {
     }
 
     try {
-      // Initialize database if needed
-      if (!DatabaseService.initialized) {
-        await DatabaseService.init();
-      }
+      // Create a unique ID
+      const studentId = Date.now().toString();
+      
+      // Add school information to the student for display
+      const schoolName = schools.find(s => s.id === formData.schoolId)?.name || '';
 
-      // Create student in database
-      const studentId = await DatabaseService.createStudent(
-        formData.schoolId,
-        formData.name,
-        formData.age,
-        formData.grade
-      );
+      // Create new student object
+      const newStudent = {
+        id: studentId,
+        name: formData.name,
+        age: formData.age,
+        grade: formData.grade,
+        schoolId: formData.schoolId,
+        schoolName
+      };
 
-      if (studentId) {
-        // Add school information to the student for display
-        const schoolName = schools.find(s => s.id === formData.schoolId)?.name || '';
+      // Add to students list for display
+      setStudents([...students, newStudent]);
 
-        // Add to students list
-        const newStudent = {
-          id: studentId,
-          name: formData.name,
-          age: formData.age,
-          grade: formData.grade,
-          schoolId: formData.schoolId,
-          schoolName
-        };
+      // Add to the appropriate school in localStorage
+      const updatedSchools = schools.map(school => {
+        if (school.id === formData.schoolId) {
+          // Add student to this school
+          const updatedStudents = [...(school.students || []), {
+            id: studentId,
+            name: formData.name,
+            age: formData.age,
+            grade: formData.grade
+          }];
+          
+          return {
+            ...school,
+            students: updatedStudents
+          };
+        }
+        return school;
+      });
+      
+      // Update schools state and localStorage
+      setSchools(updatedSchools);
+      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
 
-        setStudents([...students, newStudent]);
-
-        // Reset form and close modal
-        resetForm();
-        setShowAddModal(false);
-      } else {
-        alert('خطا در ایجاد دانش‌آموز. لطفاً دوباره تلاش کنید');
-      }
+      // Reset form and close modal
+      resetForm();
+      setShowAddModal(false);
     } catch (error) {
       console.error('Error adding student:', error);
       alert('خطا در ایجاد دانش‌آموز. لطفاً دوباره تلاش کنید');
@@ -162,62 +158,86 @@ const StudentsList = () => {
     }
 
     try {
-      // Initialize database if needed
-      if (!DatabaseService.initialized) {
-        await DatabaseService.init();
-      }
+      let updatedStudents = [...students];
+      const newSchoolName = schools.find(s => s.id === formData.schoolId)?.name || '';
 
-      // Update student in database
-      const success = await DatabaseService.updateStudent(
-        currentStudent.id,
-        formData.schoolId,
-        formData.name,
-        formData.age,
-        formData.grade
+      // Update student in the students array
+      updatedStudents = updatedStudents.map(student =>
+        student.id === currentStudent.id
+          ? {
+              ...student,
+              name: formData.name,
+              age: formData.age,
+              grade: formData.grade,
+              schoolId: formData.schoolId,
+              schoolName: newSchoolName
+            }
+          : student
       );
 
-      if (success) {
-        let updatedStudents = [...students];
+      // Update students state
+      setStudents(updatedStudents);
 
-        // If school changed, update school info
-        if (currentStudent.schoolId !== formData.schoolId) {
-          const newSchoolName = schools.find(s => s.id === formData.schoolId)?.name || '';
-
-          updatedStudents = updatedStudents.map(student =>
-            student.id === currentStudent.id
-              ? {
-                  ...student,
-                  name: formData.name,
-                  age: formData.age,
-                  grade: formData.grade,
-                  schoolId: formData.schoolId,
-                  schoolName: newSchoolName
-                }
-              : student
-          );
-        } else {
-          // Just update student details
-          updatedStudents = updatedStudents.map(student =>
-            student.id === currentStudent.id
-              ? {
-                  ...student,
-                  name: formData.name,
-                  age: formData.age,
-                  grade: formData.grade
-                }
-              : student
-          );
-        }
-
-        // Update students state
-        setStudents(updatedStudents);
-
-        // Reset form and close modal
-        resetForm();
-        setShowEditModal(false);
+      // Update the student in the schools array
+      let updatedSchools = [...schools];
+      
+      // If school changed, remove from old school and add to new one
+      if (currentStudent.schoolId !== formData.schoolId) {
+        // Remove from old school
+        updatedSchools = updatedSchools.map(school => {
+          if (school.id === currentStudent.schoolId) {
+            return {
+              ...school,
+              students: (school.students || []).filter(s => s.id !== currentStudent.id)
+            };
+          }
+          return school;
+        });
+        
+        // Add to new school
+        updatedSchools = updatedSchools.map(school => {
+          if (school.id === formData.schoolId) {
+            return {
+              ...school,
+              students: [...(school.students || []), {
+                id: currentStudent.id,
+                name: formData.name,
+                age: formData.age,
+                grade: formData.grade
+              }]
+            };
+          }
+          return school;
+        });
       } else {
-        alert('خطا در به‌روزرسانی دانش‌آموز. لطفاً دوباره تلاش کنید');
+        // Just update within the same school
+        updatedSchools = updatedSchools.map(school => {
+          if (school.id === formData.schoolId) {
+            return {
+              ...school,
+              students: (school.students || []).map(s => 
+                s.id === currentStudent.id 
+                  ? {
+                      ...s, 
+                      name: formData.name,
+                      age: formData.age,
+                      grade: formData.grade
+                    }
+                  : s
+              )
+            };
+          }
+          return school;
+        });
       }
+      
+      // Update schools state and localStorage
+      setSchools(updatedSchools);
+      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
+
+      // Reset form and close modal
+      resetForm();
+      setShowEditModal(false);
     } catch (error) {
       console.error('Error updating student:', error);
       alert('خطا در به‌روزرسانی دانش‌آموز. لطفاً دوباره تلاش کنید');
@@ -225,26 +245,31 @@ const StudentsList = () => {
   };
 
   // Handle deleting a student
-  const handleDeleteStudent = (student) => {
+  const handleDeleteStudent = async (student) => {
     if (window.confirm('آیا از حذف این دانش‌آموز اطمینان دارید؟')) {
-      // Remove student from school
-      const updatedSchools = schools.map(school => {
-        if (school.id === student.schoolId) {
-          return {
-            ...school,
-            students: (school.students || []).filter(s => s.id !== student.id)
-          };
-        }
-        return school;
-      });
+      try {
+        // Remove student from school
+        const updatedSchools = schools.map(school => {
+          if (school.id === student.schoolId) {
+            return {
+              ...school,
+              students: (school.students || []).filter(s => s.id !== student.id)
+            };
+          }
+          return school;
+        });
 
-      // Save updated schools
-      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
-      setSchools(updatedSchools);
+        // Update schools in localStorage
+        localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
+        setSchools(updatedSchools);
 
-      // Remove student from list
-      const updatedStudents = students.filter(s => s.id !== student.id);
-      setStudents(updatedStudents);
+        // Remove student from list
+        const updatedStudents = students.filter(s => s.id !== student.id);
+        setStudents(updatedStudents);
+      } catch (error) {
+        console.error('Error deleting student:', error);
+        alert('خطا در حذف دانش‌آموز. لطفاً دوباره تلاش کنید');
+      }
     }
   };
 

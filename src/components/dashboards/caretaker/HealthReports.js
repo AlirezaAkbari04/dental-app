@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './CaretakerComponents.css';
-import DatabaseService from '../../../services/DatabaseService'; // Add this import
+import DatabaseService from '../../../services/DatabaseService';
 
 const HealthReports = () => {
   const [schools, setSchools] = useState([]);
@@ -29,60 +29,36 @@ const HealthReports = () => {
     referralNotes: ''
   });
 
-  // Load data from database or localStorage
+  // Load data from localStorage with fallback mechanism
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Initialize database if needed
+        // Initialize database with built-in fallback
         if (!DatabaseService.initialized) {
-          await DatabaseService.init();
+          await DatabaseService.ensureInitialized();
         }
 
-        // Get current user ID
-        const userAuth = JSON.parse(localStorage.getItem('userAuth') || '{}');
-        const userId = userAuth.id;
+        // Get schools from localStorage
+        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+        setSchools(savedSchools);
 
-        if (userId) {
-          // Get schools from database
-          const schoolsData = await DatabaseService.getSchoolsByCaretakerId(userId);
-          setSchools(schoolsData);
-
-          // Get all students with school info
-          const studentsData = await DatabaseService.getAllStudentsForCaretaker(userId);
-
-          // For each student, get their health records
-          const studentsWithHealthRecords = await Promise.all(
-            studentsData.map(async student => {
-              const healthRecords = await DatabaseService.getHealthRecordsByStudentId(student.id);
-              return {
+        // Extract all students from all schools
+        const studentsWithHealthRecords = [];
+        savedSchools.forEach(school => {
+          if (school.students && Array.isArray(school.students)) {
+            school.students.forEach(student => {
+              // Add school info and ensure healthRecords exists
+              studentsWithHealthRecords.push({
                 ...student,
-                healthRecords
-              };
-            })
-          );
-
-          setStudents(studentsWithHealthRecords);
-        } else {
-          // Fallback to localStorage
-          const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-          setSchools(savedSchools);
-
-          // Extract all students from all schools
-          const allStudents = [];
-          savedSchools.forEach(school => {
-            if (school.students && Array.isArray(school.students)) {
-              school.students.forEach(student => {
-                allStudents.push({
-                  ...student,
-                  schoolId: school.id,
-                  schoolName: school.name
-                });
+                schoolId: school.id,
+                schoolName: school.name,
+                healthRecords: student.healthRecords || []
               });
-            }
-          });
+            });
+          }
+        });
 
-          setStudents(allStudents);
-        }
+        setStudents(studentsWithHealthRecords);
       } catch (error) {
         console.error('Error loading data:', error);
         // Fallback to localStorage
@@ -90,20 +66,22 @@ const HealthReports = () => {
         setSchools(savedSchools);
 
         // Extract all students from all schools
-        const allStudents = [];
+        const studentsWithHealthRecords = [];
         savedSchools.forEach(school => {
           if (school.students && Array.isArray(school.students)) {
             school.students.forEach(student => {
-              allStudents.push({
+              // Add school info and ensure healthRecords exists
+              studentsWithHealthRecords.push({
                 ...student,
                 schoolId: school.id,
-                schoolName: school.name
+                schoolName: school.name,
+                healthRecords: student.healthRecords || []
               });
             });
           }
         });
 
-        setStudents(allStudents);
+        setStudents(studentsWithHealthRecords);
       }
     };
 
@@ -221,13 +199,12 @@ const HealthReports = () => {
     }
 
     try {
-      // Initialize database if needed
-      if (!DatabaseService.initialized) {
-        await DatabaseService.init();
-      }
-
+      // Create a unique ID
+      const recordId = Date.now().toString();
+      
       // Create the health record object
       const healthRecord = {
+        id: recordId,
         date: formData.date,
         hasBrushed: formData.hasBrushed,
         hasCavity: formData.hasCavity,
@@ -240,32 +217,45 @@ const HealthReports = () => {
         resolved: false
       };
 
-      // Save to database
-      const recordId = await DatabaseService.createHealthRecord(currentStudent.id, healthRecord);
+      // Update students state with the new health record
+      const updatedStudents = students.map(student => {
+        if (student.id === currentStudent.id) {
+          return {
+            ...student,
+            healthRecords: [healthRecord, ...(student.healthRecords || [])]
+          };
+        }
+        return student;
+      });
 
-      if (recordId) {
-        // Add ID to the record
-        healthRecord.id = recordId;
+      setStudents(updatedStudents);
 
-        // Update students state with the new health record
-        const updatedStudents = students.map(student => {
-          if (student.id === currentStudent.id) {
-            return {
-              ...student,
-              healthRecords: [healthRecord, ...(student.healthRecords || [])]
-            };
-          }
-          return student;
-        });
+      // Update the health records in the schools array in localStorage
+      const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      const updatedSchools = savedSchools.map(school => {
+        if (school.id === currentStudent.schoolId) {
+          return {
+            ...school,
+            students: (school.students || []).map(student => {
+              if (student.id === currentStudent.id) {
+                return {
+                  ...student,
+                  healthRecords: [healthRecord, ...(student.healthRecords || [])]
+                };
+              }
+              return student;
+            })
+          };
+        }
+        return school;
+      });
 
-        setStudents(updatedStudents);
+      // Save updated schools to localStorage
+      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
 
-        // Close the modal
-        setShowReportModal(false);
-        setCurrentStudent(null);
-      } else {
-        alert('خطا در ثبت گزارش سلامت. لطفاً دوباره تلاش کنید');
-      }
+      // Close the modal
+      setShowReportModal(false);
+      setCurrentStudent(null);
     } catch (error) {
       console.error('Error saving health report:', error);
       alert('خطا در ثبت گزارش سلامت. لطفاً دوباره تلاش کنید');

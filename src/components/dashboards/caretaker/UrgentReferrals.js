@@ -10,72 +10,54 @@ const UrgentReferrals = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [currentReferral, setCurrentReferral] = useState(null);
 
-  // Load data from database or localStorage
+  // Load data from localStorage with fallback mechanism
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Initialize database if needed
+        // Initialize database with built-in fallback
         if (!DatabaseService.initialized) {
-          await DatabaseService.init();
+          await DatabaseService.ensureInitialized();
         }
 
-        // Get current user ID
-        const userAuth = JSON.parse(localStorage.getItem('userAuth') || '{}');
-        const userId = userAuth.id;
+        // Get schools from localStorage
+        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+        setSchools(savedSchools);
 
-        if (userId) {
-          // Get schools from database
-          const schoolsData = await DatabaseService.getSchoolsByCaretakerId(userId);
-          setSchools(schoolsData);
+        // Extract all students with referrals from all schools
+        const allReferrals = [];
+        savedSchools.forEach(school => {
+          if (school.students && Array.isArray(school.students)) {
+            school.students.forEach(student => {
+              if (student.healthRecords && Array.isArray(student.healthRecords)) {
+                // Filter health records that need referral
+                const referralRecords = student.healthRecords.filter(record => record.needsReferral);
 
-          // Get all referrals
-          const referralsData = await DatabaseService.getHealthReferralsForCaretaker(userId);
-
-          // Sort by date (most recent first)
-          referralsData.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-          setReferrals(referralsData);
-        } else {
-          // Fallback to localStorage
-          const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-          setSchools(savedSchools);
-
-          // Extract all students with referrals from all schools
-          const allReferrals = [];
-          savedSchools.forEach(school => {
-            if (school.students && Array.isArray(school.students)) {
-              school.students.forEach(student => {
-                if (student.healthRecords && Array.isArray(student.healthRecords)) {
-                  // Filter health records that need referral
-                  const referralRecords = student.healthRecords.filter(record => record.needsReferral);
-
-                  if (referralRecords.length > 0) {
-                    referralRecords.forEach(record => {
-                      allReferrals.push({
-                        id: record.id,
-                        studentId: student.id,
-                        studentName: student.name,
-                        studentAge: student.age,
-                        studentGrade: student.grade,
-                        schoolId: school.id,
-                        schoolName: school.name,
-                        date: record.date,
-                        warningFlags: record.warningFlags,
-                        referralNotes: record.referralNotes || '',
-                        resolved: record.resolved || false
-                      });
+                if (referralRecords.length > 0) {
+                  referralRecords.forEach(record => {
+                    allReferrals.push({
+                      id: record.id,
+                      studentId: student.id,
+                      studentName: student.name,
+                      studentAge: student.age,
+                      studentGrade: student.grade,
+                      schoolId: school.id,
+                      schoolName: school.name,
+                      date: record.date,
+                      warningFlags: record.warningFlags,
+                      referralNotes: record.referralNotes || '',
+                      resolved: record.resolved || false
                     });
-                  }
+                  });
                 }
-              });
-            }
-          });
+              }
+            });
+          }
+        });
 
-          // Sort by date (most recent first)
-          allReferrals.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Sort by date (most recent first)
+        allReferrals.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-          setReferrals(allReferrals);
-        }
+        setReferrals(allReferrals);
       } catch (error) {
         console.error('Error loading data:', error);
         // Fallback to localStorage
@@ -154,41 +136,57 @@ const UrgentReferrals = () => {
   // Handle marking a referral as resolved
   const handleToggleResolved = async (referral) => {
     try {
-      // Initialize database if needed
-      if (!DatabaseService.initialized) {
-        await DatabaseService.init();
-      }
-
-      // Update in database
-      const success = await DatabaseService.updateHealthRecordResolved(
-        referral.id,
-        !referral.resolved
-      );
-
-      if (success) {
-        // Update referral in the list
-        const updatedReferrals = referrals.map(r => {
-          if (r.id === referral.id) {
-            return {
-              ...r,
-              resolved: !r.resolved
-            };
-          }
-          return r;
-        });
-
-        setReferrals(updatedReferrals);
-
-        // If current referral details are shown, update it
-        if (currentReferral && currentReferral.id === referral.id) {
-          setCurrentReferral({
-            ...currentReferral,
-            resolved: !referral.resolved
-          });
+      // Update referral in state
+      const updatedReferrals = referrals.map(r => {
+        if (r.id === referral.id) {
+          return {
+            ...r,
+            resolved: !r.resolved
+          };
         }
-      } else {
-        alert('خطا در به‌روزرسانی وضعیت ارجاع. لطفاً دوباره تلاش کنید');
+        return r;
+      });
+
+      setReferrals(updatedReferrals);
+
+      // If current referral details are shown, update it
+      if (currentReferral && currentReferral.id === referral.id) {
+        setCurrentReferral({
+          ...currentReferral,
+          resolved: !referral.resolved
+        });
       }
+
+      // Update the health record in localStorage
+      const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      const updatedSchools = savedSchools.map(school => {
+        if (school.id === referral.schoolId) {
+          return {
+            ...school,
+            students: school.students.map(student => {
+              if (student.id === referral.studentId) {
+                return {
+                  ...student,
+                  healthRecords: (student.healthRecords || []).map(record => {
+                    if (record.id === referral.id) {
+                      return {
+                        ...record,
+                        resolved: !referral.resolved
+                      };
+                    }
+                    return record;
+                  })
+                };
+              }
+              return student;
+            })
+          };
+        }
+        return school;
+      });
+
+      // Save to localStorage
+      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
     } catch (error) {
       console.error('Error updating referral status:', error);
       alert('خطا در به‌روزرسانی وضعیت ارجاع. لطفاً دوباره تلاش کنید');
