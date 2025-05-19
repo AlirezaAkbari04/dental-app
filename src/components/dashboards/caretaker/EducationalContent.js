@@ -112,6 +112,13 @@ const EducationalContent = () => {
     }
   ]);
 
+  // Helper function to get platform-aware paths
+  const getPdfPath = (filename) => {
+    return Capacitor.isNativePlatform()
+      ? `file:///android_asset/assets/pdfs/${filename}`
+      : `/assets/pdfs/${filename}`;
+  };
+
   const handleSelectContent = (content) => {
     setSelectedContent(content);
     if (content.type === 'pdf') {
@@ -134,12 +141,9 @@ const EducationalContent = () => {
     setShowPdfViewer(false);
   };
 
-  // Full-screen PDF viewer 
+  // Full-screen PDF viewer - FIXED for Android compatibility
   if (showPdfViewer && selectedContent && selectedContent.type === 'pdf') {
-    // For Capacitor/Android, we use the asset path structure
-    const pdfPath = Capacitor.isNativePlatform()
-      ? `file:///android_asset/public/assets/pdfs/${selectedContent.pdfPath}`
-      : `assets/pdfs/${selectedContent.pdfPath}`;
+    const pdfPath = getPdfPath(selectedContent.pdfPath);
 
     return (
       <div className="pdf-viewer-fullscreen">
@@ -155,6 +159,7 @@ const EducationalContent = () => {
             src={pdfPath}
             className="pdf-viewer-iframe"
             title="PDF Viewer"
+            style={{ width: '100%', height: '100%', border: 'none' }}
           ></iframe>
         </div>
       </div>
@@ -221,6 +226,56 @@ const EducationalContent = () => {
           ))}
         </div>
       )}
+
+      {/* Add any missing CSS that might not be in your CSS file */}
+      <style jsx>{`
+        .pdf-viewer-fullscreen {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #fff;
+          z-index: 1000;
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .pdf-viewer-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 20px;
+          background-color: #f5f5f5;
+          border-bottom: 1px solid #ddd;
+          direction: rtl;
+        }
+        
+        .pdf-viewer-header h3 {
+          margin: 0;
+        }
+        
+        .close-button {
+          background-color: #e74c3c;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-family: inherit;
+        }
+        
+        .pdf-viewer-container-fullscreen {
+          flex: 1;
+          overflow: hidden;
+        }
+        
+        .pdf-viewer-iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+      `}</style>
     </div>
   );
 };

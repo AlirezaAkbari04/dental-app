@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ParentComponents.css';
 import DatabaseService from '../../../services/DatabaseService';
+import { Capacitor } from '@capacitor/core';
 
 const InfoGraphics = () => {
   const [selectedInfoGraphic, setSelectedInfoGraphic] = useState(null);
@@ -18,11 +19,22 @@ const InfoGraphics = () => {
     audioSource: ''
   });
 
-  // Simple direct path functions
-  const getImagePath = (filename) => `/assets/images/${filename}`;
-  const getAudioPath = (filename) => `/assets/audios/${filename}`;
-  const getVideoPath = (filename) => `/assets/videos/${filename}`;
-  const getPdfPath = (filename) => `/assets/pdfs/${filename}`;
+  // Platform-aware path functions
+  const getImagePath = (filename) => Capacitor.isNativePlatform() 
+    ? `file:///android_asset/assets/images/${filename}`
+    : `/assets/images/${filename}`;
+  
+  const getAudioPath = (filename) => Capacitor.isNativePlatform() 
+    ? `file:///android_asset/assets/audios/${filename}`
+    : `/assets/audios/${filename}`;
+  
+  const getVideoPath = (filename) => Capacitor.isNativePlatform() 
+    ? `file:///android_asset/assets/videos/${filename}`
+    : `/assets/videos/${filename}`;
+  
+  const getPdfPath = (filename) => Capacitor.isNativePlatform() 
+    ? `file:///android_asset/assets/pdfs/${filename}`
+    : `/assets/pdfs/${filename}`;
 
   // Format time for display (MM:SS)
   const formatTime = (timeInSeconds) => {
@@ -174,42 +186,53 @@ const InfoGraphics = () => {
     }));
   };
 
-  // Helper to process content paths
+  // Helper to process content paths - Updated for platform awareness
   const processContent = (content) => {
-    // Replace hardcoded paths with direct paths
     let processedContent = content;
     
-    // Fix file:/// paths
-    processedContent = processedContent.replace(
-      /file:\/\/\/android_asset\/.*?\/assets\/audios\/([^'\"]+)/g, 
-      (match, filename) => `/assets/audios/${filename}`
-    );
-    
-    processedContent = processedContent.replace(
-      /file:\/\/\/android_asset\/.*?\/assets\/videos\/([^'\"]+)/g, 
-      (match, filename) => `/assets/videos/${filename}`
-    );
-    
-    processedContent = processedContent.replace(
-      /file:\/\/\/android_asset\/.*?\/assets\/images\/([^'\"]+)/g, 
-      (match, filename) => `/assets/images/${filename}`
-    );
-    
-    // Fix regular paths
-    processedContent = processedContent.replace(
-      /\/assets\/audios\/([^'\"]+)/g, 
-      (match, filename) => `/assets/audios/${filename}`
-    );
-    
-    processedContent = processedContent.replace(
-      /\/assets\/videos\/([^'\"]+)/g, 
-      (match, filename) => `/assets/videos/${filename}`
-    );
-    
-    processedContent = processedContent.replace(
-      /\/assets\/images\/([^'\"]+)/g, 
-      (match, filename) => `/assets/images/${filename}`
-    );
+    if (Capacitor.isNativePlatform()) {
+      // Fix paths for Android
+      processedContent = processedContent.replace(
+        /\/assets\/audios\/([^'\"]+)/g, 
+        (match, filename) => `file:///android_asset/assets/audios/${filename}`
+      );
+      
+      processedContent = processedContent.replace(
+        /\/assets\/videos\/([^'\"]+)/g, 
+        (match, filename) => `file:///android_asset/assets/videos/${filename}`
+      );
+      
+      processedContent = processedContent.replace(
+        /\/assets\/images\/([^'\"]+)/g, 
+        (match, filename) => `file:///android_asset/assets/images/${filename}`
+      );
+      
+      processedContent = processedContent.replace(
+        /\/assets\/pdfs\/([^'\"]+)/g, 
+        (match, filename) => `file:///android_asset/assets/pdfs/${filename}`
+      );
+    } else {
+      // Fix regular paths for web
+      processedContent = processedContent.replace(
+        /file:\/\/\/android_asset\/.*?\/assets\/audios\/([^'\"]+)/g, 
+        (match, filename) => `/assets/audios/${filename}`
+      );
+      
+      processedContent = processedContent.replace(
+        /file:\/\/\/android_asset\/.*?\/assets\/videos\/([^'\"]+)/g, 
+        (match, filename) => `/assets/videos/${filename}`
+      );
+      
+      processedContent = processedContent.replace(
+        /file:\/\/\/android_asset\/.*?\/assets\/images\/([^'\"]+)/g, 
+        (match, filename) => `/assets/images/${filename}`
+      );
+      
+      processedContent = processedContent.replace(
+        /file:\/\/\/android_asset\/.*?\/assets\/pdfs\/([^'\"]+)/g, 
+        (match, filename) => `/assets/pdfs/${filename}`
+      );
+    }
     
     return processedContent;
   };
@@ -314,7 +337,12 @@ const InfoGraphics = () => {
   // Setup audio player when infographic changes
   useEffect(() => {
     if (selectedInfoGraphic?.audioPath) {
-      initAudio(`/assets/audios/${selectedInfoGraphic.audioPath}`);
+      // Update to use platform-aware path
+      const audioPath = Capacitor.isNativePlatform() 
+        ? `file:///android_asset/assets/audios/${selectedInfoGraphic.audioPath}`
+        : `/assets/audios/${selectedInfoGraphic.audioPath}`;
+      
+      initAudio(audioPath);
     }
   }, [selectedInfoGraphic]);
 
@@ -381,9 +409,11 @@ const InfoGraphics = () => {
     );
   }
 
-  // Display PDF viewer in full screen
+  // Display PDF viewer in full screen - FIXED for Android compatibility
   if (showPdfViewer && selectedInfoGraphic && selectedInfoGraphic.type === 'pdf') {
-    const pdfPath = `/assets/pdfs/${selectedInfoGraphic.pdfPath}`;
+    const pdfPath = Capacitor.isNativePlatform()
+      ? `file:///android_asset/assets/pdfs/${selectedInfoGraphic.pdfPath}`
+      : `/assets/pdfs/${selectedInfoGraphic.pdfPath}`;
 
     return (
       <div className="pdf-viewer-fullscreen">
@@ -395,13 +425,15 @@ const InfoGraphics = () => {
         </div>
         
         <div className="pdf-viewer-container-fullscreen">
-          <object 
-            data={pdfPath}
-            type="application/pdf"
-            className="pdf-viewer-object"
+          {/* Changed from object to iframe for better Android compatibility */}
+          <iframe 
+            src={pdfPath}
+            className="pdf-viewer-iframe"
+            title="PDF Viewer"
+            style={{ width: '100%', height: '100%', border: 'none' }}
           >
             <p>مرورگر شما قادر به نمایش PDF نیست. برای مشاهده <a href={pdfPath} target="_blank" rel="noopener noreferrer">اینجا کلیک کنید</a>.</p>
-          </object>
+          </iframe>
         </div>
       </div>
     );
@@ -438,24 +470,24 @@ const InfoGraphics = () => {
               <div className="side-by-side-images">
                 <div className="tooth-image">
                   <img 
-                    src="/assets/images/tooth-anatomy-english.jpg" 
+                    src={getImagePath('tooth-anatomy-english.jpg')}
                     alt="" 
                     className="anatomy-image"
                     onError={(e) => {
                       console.warn('Failed to load tooth anatomy image, trying alternate');
-                      e.target.src = "/assets/images/tooth-anatomy-english.png";
+                      e.target.src = getImagePath('tooth-anatomy-english.png');
                     }}
                   />
                 </div>
                 
                 <div className="tooth-image">
                   <img 
-                    src="/assets/images/tooth-anatomy-persian.jpg" 
+                    src={getImagePath('tooth-anatomy-persian.jpg')}
                     alt="" 
                     className="anatomy-image"
                     onError={(e) => {
                       console.warn('Failed to load tooth anatomy image, trying alternate');
-                      e.target.src = "/assets/images/tooth-anatomy-persian.png";
+                      e.target.src = getImagePath('tooth-anatomy-persian.png');
                     }}
                   />
                 </div>
@@ -510,9 +542,9 @@ const InfoGraphics = () => {
                   controls 
                   preload="metadata"
                   className={`video-player ${selectedInfoGraphic.id === 5 ? 'toothbrushing-video' : 'fissure-sealant-video'}`}
-                  poster="/assets/images/video-thumbnail-1.jpg"
+                  poster={getImagePath('video-thumbnail-1.jpg')}
                 >
-                  <source src={`/assets/videos/${selectedInfoGraphic.videoPath}`} type="video/mp4" />
+                  <source src={getVideoPath(selectedInfoGraphic.videoPath)} type="video/mp4" />
                   مرورگر شما قادر به نمایش ویدیو نیست.
                 </video>
               </div>
@@ -692,7 +724,7 @@ const InfoGraphics = () => {
           overflow: hidden;
         }
         
-        .pdf-viewer-object {
+        .pdf-viewer-iframe {
           width: 100%;
           height: 100%;
           border: none;

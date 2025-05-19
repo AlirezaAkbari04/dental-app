@@ -25,6 +25,7 @@
       "assets/videos",
       "assets/audios",
       "assets/images",
+      "assets/pdfs",
       "*.svg"
     ]
   },
