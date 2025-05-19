@@ -50,6 +50,12 @@ const CaretakerDashboard = () => {
     navigate('/login');
   };
   
+  const navigateToFAQ = () => {
+    // ذخیره نقش کاربر برای برگشت به داشبورد مناسب
+    localStorage.setItem('userRole', 'caretaker');
+    navigate('/faq');
+  };
+  
   // Render the appropriate content based on the active tab
   const renderContent = () => {
     switch (activeTab) {
@@ -142,7 +148,13 @@ const CaretakerDashboard = () => {
       </div>
       
       <footer className="dashboard-footer">
-        <p>لبخند شاد دندان سالم &copy; {new Date().getFullYear()}</p>
+        <div className="footer-content">
+          <p>لبخند شاد دندان سالم &copy; {new Date().getFullYear()}</p>
+          <button onClick={navigateToFAQ} className="help-button">
+            <span className="help-icon">❓</span>
+            <span className="help-text">راهنما و سوالات متداول</span>
+          </button>
+        </div>
       </footer>
     </div>
   );

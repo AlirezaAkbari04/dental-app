@@ -15,6 +15,7 @@ import TeacherProfile from './components/auth/TeacherProfile';
 import ChildDashboard from './components/dashboards/ChildDashboard';
 import CaretakerDashboard from './components/dashboards/CaretakerDashboard';
 import ParentDashboard from './components/dashboards/ParentDashboard';
+import FAQ from './components/FAQ'; // Import the FAQ component
 
 function AppContent() {
   const { currentUser, isLoading } = useUser();
@@ -128,6 +129,9 @@ function AppContent() {
             </ProtectedRoute>
           } 
         />
+        
+        {/* FAQ route - accessible to all users */}
+        <Route path="/faq" element={<FAQ />} />
         
         {/* Default redirect */}
         <Route path="/" element={

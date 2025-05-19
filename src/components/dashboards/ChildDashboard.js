@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/ChildDashboard.css';
@@ -92,6 +93,12 @@ const ChildDashboard = () => {
     }
   };
   
+  const navigateToFAQ = () => {
+    // ذخیره نقش کاربر برای برگشت به داشبورد مناسب
+    localStorage.setItem('userRole', 'child');
+    navigate('/faq');
+  };
+  
   const renderContent = () => {
     switch (activeTab) {
       case 'home':
@@ -161,7 +168,13 @@ const ChildDashboard = () => {
       </main>
       
       <footer className="dashboard-footer">
-        <p>لبخند شاد دندان سالم &copy; {new Date().getFullYear()}</p>
+        <div className="footer-content">
+          <p>لبخند شاد دندان سالم &copy; {new Date().getFullYear()}</p>
+          <button onClick={navigateToFAQ} className="help-button">
+            <span className="help-icon">❓</span>
+            <span className="help-text">راهنما و سوالات متداول</span>
+          </button>
+        </div>
       </footer>
     </div>
   );
