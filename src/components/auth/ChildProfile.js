@@ -24,7 +24,6 @@ const ChildProfile = () => {
       [name]: value,
     });
 
-    // Clear error for this field when typing
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -70,38 +69,31 @@ const ChildProfile = () => {
     }
 
     try {
-      // Initialize database if needed
       if (!DatabaseService.initialized) {
         await DatabaseService.init();
       }
 
       if (currentUser?.id) {
-        // Create child profile
         const childId = await DatabaseService.createChild(
           currentUser.id,
           formData.name || 'کودک',
           formData.age,
           formData.gender,
-          null // avatarUrl
+          null
         );
 
-        // Initialize achievements
         await DatabaseService.initializeChildAchievements(childId);
 
-        // For compatibility, still save to localStorage
         localStorage.setItem('childProfile', JSON.stringify(formData));
       }
 
-      // Navigate to child dashboard
       navigate('/dashboard/child');
     } catch (error) {
       console.error('Error saving child profile:', error);
-      // Still navigate as fallback
       navigate('/dashboard/child');
     }
   };
 
-  // Generate age options (6-12 years)
   const ageOptions = [];
   for (let age = 6; age <= 12; age++) {
     ageOptions.push(
@@ -113,6 +105,18 @@ const ChildProfile = () => {
 
   return (
     <ProfileForm title="تکمیل پروفایل کودک" onSubmit={handleSubmit}>
+      <div className="logo-container">
+        <img 
+          src="/assets/images/logo.png" 
+          alt="لبخند شاد دندان سالم" 
+          className="dashboard-logo" 
+          onError={(e) => {
+            console.warn('Failed to load logo, trying alternative');
+            e.target.src = "/logo.png";
+          }}
+        />
+      </div>
+
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="age">سن</label>

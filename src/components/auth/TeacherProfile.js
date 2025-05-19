@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProfileForm from './ProfileForm';
 import '../../styles/ProfileForm.css';
-import { useUser } from '../../contexts/UserContext'; // Add this import
-import DatabaseService from '../../services/DatabaseService'; // Add this import
+import { useUser } from '../../contexts/UserContext';
+import DatabaseService from '../../services/DatabaseService';
 
 const TeacherProfile = () => {
   const navigate = useNavigate();
-  const { currentUser } = useUser(); // Add this near the top of your component
+  const { currentUser } = useUser();
+
   const [formData, setFormData] = useState({
     name: '',
     gender: '',
@@ -18,6 +19,7 @@ const TeacherProfile = () => {
     schoolsCount: '',
     schoolTypes: []
   });
+
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
@@ -26,8 +28,7 @@ const TeacherProfile = () => {
       ...formData,
       [name]: value,
     });
-    
-    // Clear error for this field when typing
+
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -38,7 +39,7 @@ const TeacherProfile = () => {
 
   const handleCheckboxChange = (e) => {
     const { value, checked } = e.target;
-    
+
     if (checked) {
       setFormData({
         ...formData,
@@ -50,8 +51,7 @@ const TeacherProfile = () => {
         schoolTypes: formData.schoolTypes.filter(type => type !== value)
       });
     }
-    
-    // Clear error for schoolTypes when changing
+
     if (errors.schoolTypes) {
       setErrors({
         ...errors,
@@ -62,84 +62,85 @@ const TeacherProfile = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'لطفاً نام خود را وارد کنید';
     }
-    
+
     if (!formData.gender) {
       newErrors.gender = 'لطفاً جنسیت خود را انتخاب کنید';
     }
-    
+
     if (!formData.careType) {
       newErrors.careType = 'لطفاً نوع مراقبت را انتخاب کنید';
     }
-    
+
     if (!formData.daysPerWeek) {
       newErrors.daysPerWeek = 'لطفاً تعداد روزهای فعالیت در هفته را وارد کنید';
     } else if (isNaN(formData.daysPerWeek) || formData.daysPerWeek < 1 || formData.daysPerWeek > 7) {
       newErrors.daysPerWeek = 'تعداد روزها باید بین 1 تا 7 باشد';
     }
-    
+
     if (!formData.isRegular) {
       newErrors.isRegular = 'لطفاً منظم یا نامنظم بودن فعالیت را مشخص کنید';
     }
-    
+
     if (!formData.daysPerSchool) {
       newErrors.daysPerSchool = 'لطفاً تعداد روزهای حضور در هر مدرسه را وارد کنید';
     } else if (isNaN(formData.daysPerSchool) || formData.daysPerSchool < 1 || formData.daysPerSchool > 7) {
       newErrors.daysPerSchool = 'تعداد روزها باید بین 1 تا 7 باشد';
     }
-    
+
     if (!formData.schoolsCount) {
       newErrors.schoolsCount = 'لطفاً تعداد مدارس تحت پوشش را وارد کنید';
     } else if (isNaN(formData.schoolsCount) || formData.schoolsCount < 1) {
       newErrors.schoolsCount = 'تعداد مدارس باید حداقل 1 باشد';
     }
-    
+
     if (formData.schoolTypes.length === 0) {
       newErrors.schoolTypes = 'لطفاً نوع مدارس تحت پوشش را انتخاب کنید';
     }
-    
+
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const newErrors = validateForm();
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
+
     try {
-      // Initialize database if needed
       if (!DatabaseService.initialized) {
         await DatabaseService.init();
       }
 
-      // Update teacher profile in database
-      // (Note: You would need to extend DatabaseService to support this)
-
-      // For compatibility, still save to localStorage
       localStorage.setItem('teacherProfile', JSON.stringify(formData));
-
-      // Navigate to teacher dashboard
       navigate('/dashboard/caretaker');
     } catch (error) {
       console.error('Error saving teacher profile:', error);
-      // Still navigate as fallback
       navigate('/dashboard/caretaker');
     }
   };
 
   return (
-    <ProfileForm 
-      title="تکمیل پروفایل معلم بهداشت" 
-      onSubmit={handleSubmit}
-    >
+    <ProfileForm title="تکمیل پروفایل معلم بهداشت" onSubmit={handleSubmit}>
+      <div className="logo-container">
+        <img
+          src="/assets/images/logo.png"
+          alt="لبخند شاد دندان سالم"
+          className="dashboard-logo"
+          onError={(e) => {
+            console.warn('Failed to load logo, trying alternative');
+            e.target.src = "/logo.png";
+          }}
+        />
+      </div>
+
       <div className="form-group">
         <label htmlFor="name">نام</label>
         <input
@@ -153,7 +154,7 @@ const TeacherProfile = () => {
         />
         {errors.name && <div className="error-message">{errors.name}</div>}
       </div>
-      
+
       <div className="form-group">
         <label htmlFor="gender">جنسیت</label>
         <div className="radio-group">
@@ -180,7 +181,7 @@ const TeacherProfile = () => {
         </div>
         {errors.gender && <div className="error-message">{errors.gender}</div>}
       </div>
-      
+
       <div className="form-group">
         <label htmlFor="careType">نوع مراقبت</label>
         <div className="radio-group">
@@ -207,7 +208,7 @@ const TeacherProfile = () => {
         </div>
         {errors.careType && <div className="error-message">{errors.careType}</div>}
       </div>
-      
+
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="daysPerWeek">تعداد روزهای فعالیت در هفته</label>
@@ -224,7 +225,7 @@ const TeacherProfile = () => {
           />
           {errors.daysPerWeek && <div className="error-message">{errors.daysPerWeek}</div>}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="isRegular">منظم یا نامنظم بودن فعالیت</label>
           <div className="radio-group">
@@ -252,7 +253,7 @@ const TeacherProfile = () => {
           {errors.isRegular && <div className="error-message">{errors.isRegular}</div>}
         </div>
       </div>
-      
+
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="daysPerSchool">تعداد روزهای حضور در هر مدرسه</label>
@@ -269,7 +270,7 @@ const TeacherProfile = () => {
           />
           {errors.daysPerSchool && <div className="error-message">{errors.daysPerSchool}</div>}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="schoolsCount">تعداد مدارس تحت پوشش</label>
           <input
@@ -285,7 +286,7 @@ const TeacherProfile = () => {
           {errors.schoolsCount && <div className="error-message">{errors.schoolsCount}</div>}
         </div>
       </div>
-      
+
       <div className="form-group">
         <label>نوع مدارس تحت پوشش</label>
         <div className="checkbox-group">
