@@ -99,18 +99,6 @@ const ParentProfile = () => {
 
   return (
     <ProfileForm title="تکمیل پروفایل والدین" onSubmit={handleSubmit}>
-      <div className="logo-container">
-        <img
-          src="/assets/images/logo.png"
-          alt="لبخند شاد دندان سالم"
-          className="dashboard-logo"
-          onError={(e) => {
-            console.warn('Failed to load logo, trying alternative');
-            e.target.src = '/logo.png';
-          }}
-        />
-      </div>
-
       <div className="form-group">
         <label htmlFor="parentType">نوع والد</label>
         <div className="radio-group">

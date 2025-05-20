@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/ProfileForm.css';
-import logoImage from '../logo.svg';
 
 const ProfileForm = ({ title, children, onSubmit }) => {
   const navigate = useNavigate();
@@ -14,10 +13,16 @@ const ProfileForm = ({ title, children, onSubmit }) => {
     <div className="profile-container" dir="rtl">
       <div className="profile-form-container">
         <div className="logo-container">
-          <img src={logoImage} alt="لبخند شاد دندان سالم" className="app-logo" />
-          <h1 className="app-title">لبخند شاد دندان سالم</h1>
-        </div>
-        
+          <img
+            src="/assets/images/logo.png"
+            alt="لبخند شاد دندان سالم"
+            className="dashboard-logo"
+            onError={(e) => {
+              console.warn('Failed to load logo, trying alternative');
+              e.target.src = "/logo.png";
+            }}
+          />
+        </div>       
         <div className="profile-header">
           <h2>{title}</h2>
           <p className="profile-subtitle">لطفاً اطلاعات خود را تکمیل کنید</p>

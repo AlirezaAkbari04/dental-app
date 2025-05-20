@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './CaretakerComponents.css';
-import DatabaseService from '../../../services/DatabaseService';
 
 const MySchools = () => {
   const [schools, setSchools] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentSchool, setCurrentSchool] = useState(null);
@@ -12,167 +13,73 @@ const MySchools = () => {
     type: 'boys',
     activityDays: []
   });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
 
-  // Load schools from localStorage or database with fallback
+  // Load schools from localStorage on component mount
   useEffect(() => {
-    const fetchSchools = async () => {
-      try {
-        // Get current user ID
-        const userAuth = JSON.parse(localStorage.getItem('userAuth') || '{}');
-        const userId = userAuth.id;
-
-        if (userId) {
-          // Initialize database with built-in fallback
-          if (!DatabaseService.initialized) {
-            await DatabaseService.ensureInitialized();
-          }
-
-          // Get schools - this will use built-in localStorage fallback if needed
-          let schoolsData = [];
-          
-          // Try to get from localStorage first
-          const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-          if (savedSchools.length > 0) {
-            schoolsData = savedSchools;
-          }
-
-          setSchools(schoolsData);
-        } else {
-          // No user ID, just use localStorage
-          const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-          setSchools(savedSchools);
-        }
-      } catch (error) {
-        console.error('Error loading schools:', error);
-        // Fallback to localStorage
-        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-        setSchools(savedSchools);
-      }
-    };
-
-    fetchSchools();
+    const savedSchools = localStorage.getItem('schools');
+    if (savedSchools) {
+      setSchools(JSON.parse(savedSchools));
+    }
   }, []);
 
-  // Save schools to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('caretakerSchools', JSON.stringify(schools));
-  }, [schools]);
-
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
-
-  // Handle checkbox changes for activity days
-  const handleDayChange = (day) => {
-    const updatedDays = formData.activityDays.includes(day)
-      ? formData.activityDays.filter(d => d !== day)
-      : [...formData.activityDays, day];
-
-    setFormData({
-      ...formData,
-      activityDays: updatedDays
-    });
-  };
-
   // Handle adding a new school
-  const handleAddSchool = async () => {
-    // Simple validation
-    if (!formData.name) {
-      alert('لطفاً نام مدرسه را وارد کنید');
+  const handleAddSchool = () => {
+    if (!formData.name || formData.activityDays.length === 0) {
+      alert('لطفاً تمام فیلدها را پر کنید');
       return;
     }
 
-    try {
-      // Create a unique ID
-      const schoolId = Date.now().toString();
-      
-      const newSchool = {
-        id: schoolId,
-        name: formData.name,
-        type: formData.type,
-        activityDays: formData.activityDays,
-        students: []
-      };
+    const newSchool = {
+      ...formData,
+      localId: Date.now().toString(), // Use timestamp as unique ID
+      students: [] // Initialize empty students array
+    };
 
-      // Add to state and localStorage
-      const updatedSchools = [...schools, newSchool];
-      setSchools(updatedSchools);
-      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
-      
-      resetForm();
-      setShowAddModal(false);
-    } catch (error) {
-      console.error('Error adding school:', error);
-      alert('خطا در ایجاد مدرسه. لطفاً دوباره تلاش کنید');
-    }
+    const updatedSchools = [...schools, newSchool];
+    setSchools(updatedSchools);
+    localStorage.setItem('schools', JSON.stringify(updatedSchools));
+    setShowAddModal(false);
+    resetForm();
   };
 
   // Handle updating a school
-  const handleUpdateSchool = async () => {
-    if (!formData.name) {
-      alert('لطفاً نام مدرسه را وارد کنید');
+  const handleUpdateSchool = () => {
+    if (!formData.name || formData.activityDays.length === 0) {
+      alert('لطفاً تمام فیلدها را پر کنید');
       return;
     }
 
-    try {
-      const updatedSchools = schools.map(school =>
-        school.id === currentSchool.id
-          ? {
-              ...school,
-              name: formData.name,
-              type: formData.type,
-              activityDays: formData.activityDays
-            }
-          : school
-      );
+    const updatedSchools = schools.map(school => 
+      school.localId === currentSchool.localId ? { ...formData, localId: school.localId, students: school.students } : school
+    );
 
-      // Update state and localStorage
-      setSchools(updatedSchools);
-      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
-      
-      resetForm();
-      setShowEditModal(false);
-    } catch (error) {
-      console.error('Error updating school:', error);
-      alert('خطا در به‌روزرسانی مدرسه. لطفاً دوباره تلاش کنید');
-    }
+    setSchools(updatedSchools);
+    localStorage.setItem('schools', JSON.stringify(updatedSchools));
+    setShowEditModal(false);
+    resetForm();
   };
 
   // Handle deleting a school
-  const handleDeleteSchool = async (id) => {
+  const handleDeleteSchool = (localId) => {
     if (window.confirm('آیا از حذف این مدرسه اطمینان دارید؟')) {
-      try {
-        const updatedSchools = schools.filter(school => school.id !== id);
-        
-        // Update state and localStorage
-        setSchools(updatedSchools);
-        localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
-      } catch (error) {
-        console.error('Error deleting school:', error);
-        alert('خطا در حذف مدرسه. لطفاً دوباره تلاش کنید');
-      }
+      const updatedSchools = schools.filter(school => school.localId !== localId);
+      setSchools(updatedSchools);
+      localStorage.setItem('schools', JSON.stringify(updatedSchools));
     }
   };
 
-  // Open the edit modal with school data
+  // Open edit modal with school data
   const openEditModal = (school) => {
     setCurrentSchool(school);
     setFormData({
       name: school.name,
       type: school.type,
-      activityDays: school.activityDays || []
+      activityDays: school.activityDays
     });
     setShowEditModal(true);
   };
 
-  // Reset the form data
+  // Reset form data
   const resetForm = () => {
     setFormData({
       name: '',
@@ -257,7 +164,7 @@ const MySchools = () => {
             </thead>
             <tbody>
               {filteredSchools.map(school => (
-                <tr key={school.id}>
+                <tr key={school.localId}>
                   <td>{school.name}</td>
                   <td>
                     {school.type === 'boys' ? 'پسرانه' : 'دخترانه'}
@@ -268,7 +175,7 @@ const MySchools = () => {
                     <span className="action-link edit-link" onClick={() => openEditModal(school)}>
                       ویرایش
                     </span>
-                    <span className="action-link delete-link" onClick={() => handleDeleteSchool(school.id)}>
+                    <span className="action-link delete-link" onClick={() => handleDeleteSchool(school.localId)}>
                       حذف
                     </span>
                   </td>
@@ -300,7 +207,7 @@ const MySchools = () => {
                     name="name"
                     className="form-control"
                     value={formData.name}
-                    onChange={handleInputChange}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
@@ -310,7 +217,7 @@ const MySchools = () => {
                     name="type"
                     className="form-control"
                     value={formData.type}
-                    onChange={handleInputChange}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                   >
                     <option value="boys">پسرانه</option>
                     <option value="girls">دخترانه</option>
@@ -326,7 +233,12 @@ const MySchools = () => {
                       <input
                         type="checkbox"
                         checked={formData.activityDays.includes(day.value)}
-                        onChange={() => handleDayChange(day.value)}
+                        onChange={() => {
+                          const updatedDays = formData.activityDays.includes(day.value)
+                            ? formData.activityDays.filter(d => d !== day.value)
+                            : [...formData.activityDays, day.value];
+                          setFormData({ ...formData, activityDays: updatedDays });
+                        }}
                       />
                       {day.label}
                     </label>
@@ -368,7 +280,7 @@ const MySchools = () => {
                     name="name"
                     className="form-control"
                     value={formData.name}
-                    onChange={handleInputChange}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
@@ -378,7 +290,7 @@ const MySchools = () => {
                     name="type"
                     className="form-control"
                     value={formData.type}
-                    onChange={handleInputChange}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                   >
                     <option value="boys">پسرانه</option>
                     <option value="girls">دخترانه</option>
@@ -394,7 +306,12 @@ const MySchools = () => {
                       <input
                         type="checkbox"
                         checked={formData.activityDays.includes(day.value)}
-                        onChange={() => handleDayChange(day.value)}
+                        onChange={() => {
+                          const updatedDays = formData.activityDays.includes(day.value)
+                            ? formData.activityDays.filter(d => d !== day.value)
+                            : [...formData.activityDays, day.value];
+                          setFormData({ ...formData, activityDays: updatedDays });
+                        }}
                       />
                       {day.label}
                     </label>
