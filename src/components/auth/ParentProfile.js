@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProfileForm from './ProfileForm';
 import '../../styles/ProfileForm.css';
-import { useUser } from '../../contexts/UserContext'; // Add this import
-import DatabaseService from '../../services/DatabaseService'; // Add this import
+import { useUser } from '../../contexts/UserContext';
+import DatabaseService from '../../services/DatabaseService';
 
 const ParentProfile = () => {
   const navigate = useNavigate();
-  const { currentUser } = useUser(); // Add this near the top of your component
+  const { currentUser } = useUser();
+
   const [formData, setFormData] = useState({
     parentType: '',
     relationship: '',
@@ -19,6 +20,7 @@ const ParentProfile = () => {
     economicStatus: '',
     oralHealthStatus: '',
   });
+
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
@@ -27,8 +29,7 @@ const ParentProfile = () => {
       ...formData,
       [name]: value,
     });
-    
-    // Clear error for this field when typing
+
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -39,7 +40,6 @@ const ParentProfile = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
     const requiredFields = [
       'parentType',
       'fatherEducation',
@@ -48,56 +48,45 @@ const ParentProfile = () => {
       'motherJob',
       'appUser',
       'economicStatus',
-      'oralHealthStatus'
+      'oralHealthStatus',
     ];
-    
-    // Add relationship field as required only if parentType is 'other'
+
     if (formData.parentType === 'other' && !formData.relationship) {
       newErrors.relationship = 'این فیلد الزامی است';
     }
-    
-    // Check for empty required fields
-    requiredFields.forEach(field => {
+
+    requiredFields.forEach((field) => {
       if (!formData[field]) {
         newErrors[field] = 'این فیلد الزامی است';
       }
     });
-    
+
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const newErrors = validateForm();
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
+
     try {
-      // Initialize database if needed
       if (!DatabaseService.initialized) {
         await DatabaseService.init();
       }
 
-      // Update parent profile in database
-      // (Note: You would need to extend DatabaseService to support this)
-
-      // For compatibility, still save to localStorage
       localStorage.setItem('parentProfile', JSON.stringify(formData));
-
-      // Navigate to parent dashboard
       navigate('/dashboard/parent');
     } catch (error) {
       console.error('Error saving parent profile:', error);
-      // Still navigate as fallback
       navigate('/dashboard/parent');
     }
   };
 
-  // Education options
   const educationOptions = [
     { value: 'elementary', label: 'ابتدایی' },
     { value: 'middle', label: 'سیکل' },
@@ -109,10 +98,19 @@ const ParentProfile = () => {
   ];
 
   return (
-    <ProfileForm 
-      title="تکمیل پروفایل والدین" 
-      onSubmit={handleSubmit}
-    >
+    <ProfileForm title="تکمیل پروفایل والدین" onSubmit={handleSubmit}>
+      <div className="logo-container">
+        <img
+          src="/assets/images/logo.png"
+          alt="لبخند شاد دندان سالم"
+          className="dashboard-logo"
+          onError={(e) => {
+            console.warn('Failed to load logo, trying alternative');
+            e.target.src = '/logo.png';
+          }}
+        />
+      </div>
+
       <div className="form-group">
         <label htmlFor="parentType">نوع والد</label>
         <div className="radio-group">
@@ -149,8 +147,7 @@ const ParentProfile = () => {
         </div>
         {errors.parentType && <div className="error-message">{errors.parentType}</div>}
       </div>
-      
-      {/* Show relationship field only when "other" is selected */}
+
       {formData.parentType === 'other' && (
         <div className="form-group">
           <label htmlFor="relationship">نسبت خانوادگی</label>
@@ -162,15 +159,15 @@ const ParentProfile = () => {
             onChange={handleChange}
             placeholder="نسبت خانوادگی با کودک"
             className={errors.relationship ? 'input-error' : ''}
-            pattern="[\u0600-\u06FF\s]+" 
+            pattern="[\u0600-\u06FF\s]+"
             title="لطفاً فقط حروف فارسی وارد کنید"
           />
           {errors.relationship && <div className="error-message">{errors.relationship}</div>}
         </div>
       )}
-      
+
       <h3 className="section-title">اطلاعات تحصیلی و شغلی والدین</h3>
-      
+
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="fatherEducation">سطح تحصیلات پدر</label>
@@ -182,7 +179,7 @@ const ParentProfile = () => {
             className={errors.fatherEducation ? 'input-error' : ''}
           >
             <option value="">انتخاب کنید</option>
-            {educationOptions.map(option => (
+            {educationOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -190,7 +187,7 @@ const ParentProfile = () => {
           </select>
           {errors.fatherEducation && <div className="error-message">{errors.fatherEducation}</div>}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="fatherJob">شغل پدر</label>
           <input
@@ -201,13 +198,13 @@ const ParentProfile = () => {
             onChange={handleChange}
             placeholder="شغل پدر"
             className={errors.fatherJob ? 'input-error' : ''}
-            pattern="[\u0600-\u06FF\s]+" // Allow Persian alphabets and spaces
+            pattern="[\u0600-\u06FF\s]+"
             title="لطفاً فقط حروف فارسی وارد کنید"
           />
           {errors.fatherJob && <div className="error-message">{errors.fatherJob}</div>}
         </div>
       </div>
-      
+
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="motherEducation">سطح تحصیلات مادر</label>
@@ -219,7 +216,7 @@ const ParentProfile = () => {
             className={errors.motherEducation ? 'input-error' : ''}
           >
             <option value="">انتخاب کنید</option>
-            {educationOptions.map(option => (
+            {educationOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -227,7 +224,7 @@ const ParentProfile = () => {
           </select>
           {errors.motherEducation && <div className="error-message">{errors.motherEducation}</div>}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="motherJob">شغل مادر</label>
           <input
@@ -238,15 +235,15 @@ const ParentProfile = () => {
             onChange={handleChange}
             placeholder="شغل مادر"
             className={errors.motherJob ? 'input-error' : ''}
-            pattern="[\u0600-\u06FF\s]+" 
+            pattern="[\u0600-\u06FF\s]+"
             title="لطفاً فقط حروف فارسی وارد کنید"
           />
           {errors.motherJob && <div className="error-message">{errors.motherJob}</div>}
         </div>
       </div>
-      
+
       <h3 className="section-title">سوالات تکمیلی</h3>
-      
+
       <div className="form-group">
         <label>چه کسی اپلیکیشن را استفاده می‌کند؟</label>
         <div className="radio-group">
@@ -283,9 +280,9 @@ const ParentProfile = () => {
         </div>
         {errors.appUser && <div className="error-message">{errors.appUser}</div>}
       </div>
-      
+
       <div className="form-group">
-        <label>از نظر اقتصادی خود را چگونه ارزیابی میکنید؟</label>
+        <label>از نظر اقتصادی خود را چگونه ارزیابی می‌کنید؟</label>
         <div className="radio-group">
           <label className="radio-option">
             <input
@@ -320,9 +317,9 @@ const ParentProfile = () => {
         </div>
         {errors.economicStatus && <div className="error-message">{errors.economicStatus}</div>}
       </div>
-      
+
       <div className="form-group">
-        <label>سلامت دهان و دندان خود را چگونه ارزیابی میکنید؟</label>
+        <label>سلامت دهان و دندان خود را چگونه ارزیابی می‌کنید؟</label>
         <div className="radio-group">
           <label className="radio-option">
             <input
