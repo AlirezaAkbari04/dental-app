@@ -42,12 +42,17 @@ const CaretakerDashboard = () => {
   };
   
   const handleLogout = () => {
-    // Clear auth data
+    // Clear all relevant localStorage items
     localStorage.removeItem('userAuth');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('teacherProfile');
     
-    // Navigate to login page
-    navigate('/login');
+    // Force clear any cached state
+    setTeacherName('');
+    setActiveTab('schools');
+    
+    // Navigate to login page and replace the history stack
+    navigate('/login', { replace: true });
   };
   
   const navigateToFAQ = () => {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import './CaretakerComponents.css';
-import DatabaseService from '../../../services/DatabaseService';
 
 const UrgentReferrals = () => {
   const [schools, setSchools] = useState([]);
@@ -10,17 +9,11 @@ const UrgentReferrals = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [currentReferral, setCurrentReferral] = useState(null);
 
-  // Load data from localStorage with fallback mechanism
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = () => {
       try {
-        // Initialize database with built-in fallback
-        if (!DatabaseService.initialized) {
-          await DatabaseService.ensureInitialized();
-        }
-
         // Get schools from localStorage
-        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+        const savedSchools = JSON.parse(localStorage.getItem('schools') || '[]');
         setSchools(savedSchools);
 
         // Extract all students with referrals from all schools
@@ -35,12 +28,12 @@ const UrgentReferrals = () => {
                 if (referralRecords.length > 0) {
                   referralRecords.forEach(record => {
                     allReferrals.push({
-                      id: record.id,
-                      studentId: student.id,
+                      localId: record.localId || `ref_${Date.now()}`,
+                      studentLocalId: student.localId,
                       studentName: student.name,
                       studentAge: student.age,
                       studentGrade: student.grade,
-                      schoolId: school.id,
+                      schoolId: school.localId,
                       schoolName: school.name,
                       date: record.date,
                       warningFlags: record.warningFlags,
@@ -56,53 +49,13 @@ const UrgentReferrals = () => {
 
         // Sort by date (most recent first)
         allReferrals.sort((a, b) => new Date(b.date) - new Date(a.date));
-
         setReferrals(allReferrals);
       } catch (error) {
         console.error('Error loading data:', error);
-        // Fallback to localStorage
-        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-        setSchools(savedSchools);
-
-        // Extract all students with referrals from all schools
-        const allReferrals = [];
-        savedSchools.forEach(school => {
-          if (school.students && Array.isArray(school.students)) {
-            school.students.forEach(student => {
-              if (student.healthRecords && Array.isArray(student.healthRecords)) {
-                // Filter health records that need referral
-                const referralRecords = student.healthRecords.filter(record => record.needsReferral);
-
-                if (referralRecords.length > 0) {
-                  referralRecords.forEach(record => {
-                    allReferrals.push({
-                      id: record.id,
-                      studentId: student.id,
-                      studentName: student.name,
-                      studentAge: student.age,
-                      studentGrade: student.grade,
-                      schoolId: school.id,
-                      schoolName: school.name,
-                      date: record.date,
-                      warningFlags: record.warningFlags,
-                      referralNotes: record.referralNotes || '',
-                      resolved: record.resolved || false
-                    });
-                  });
-                }
-              }
-            });
-          }
-        });
-
-        // Sort by date (most recent first)
-        allReferrals.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        setReferrals(allReferrals);
       }
     };
 
-    fetchData();
+    loadData();
   }, []);
 
   // Filter referrals based on school and date range
@@ -134,45 +87,35 @@ const UrgentReferrals = () => {
   });
 
   // Handle marking a referral as resolved
-  const handleToggleResolved = async (referral) => {
+  const handleToggleResolved = (referral) => {
     try {
       // Update referral in state
       const updatedReferrals = referrals.map(r => {
-        if (r.id === referral.id) {
-          return {
-            ...r,
-            resolved: !r.resolved
-          };
+        if (r.localId === referral.localId) {
+          return { ...r, resolved: !r.resolved };
         }
         return r;
       });
-
       setReferrals(updatedReferrals);
 
-      // If current referral details are shown, update it
-      if (currentReferral && currentReferral.id === referral.id) {
-        setCurrentReferral({
-          ...currentReferral,
-          resolved: !referral.resolved
-        });
+      // Update current referral if shown in modal
+      if (currentReferral && currentReferral.localId === referral.localId) {
+        setCurrentReferral({ ...currentReferral, resolved: !referral.resolved });
       }
 
       // Update the health record in localStorage
-      const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      const savedSchools = JSON.parse(localStorage.getItem('schools') || '[]');
       const updatedSchools = savedSchools.map(school => {
-        if (school.id === referral.schoolId) {
+        if (school.localId === referral.schoolId) {
           return {
             ...school,
             students: school.students.map(student => {
-              if (student.id === referral.studentId) {
+              if (student.localId === referral.studentLocalId) {
                 return {
                   ...student,
                   healthRecords: (student.healthRecords || []).map(record => {
-                    if (record.id === referral.id) {
-                      return {
-                        ...record,
-                        resolved: !referral.resolved
-                      };
+                    if (record.localId === referral.localId) {
+                      return { ...record, resolved: !referral.resolved };
                     }
                     return record;
                   })
@@ -185,8 +128,7 @@ const UrgentReferrals = () => {
         return school;
       });
 
-      // Save to localStorage
-      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
+      localStorage.setItem('schools', JSON.stringify(updatedSchools));
     } catch (error) {
       console.error('Error updating referral status:', error);
       alert('خطا در به‌روزرسانی وضعیت ارجاع. لطفاً دوباره تلاش کنید');
@@ -249,7 +191,7 @@ const UrgentReferrals = () => {
         >
           <option value="">همه مدارس</option>
           {schools.map(school => (
-            <option key={school.id} value={school.id}>
+            <option key={school.localId} value={school.localId}>
               {school.name}
             </option>
           ))}
@@ -287,7 +229,7 @@ const UrgentReferrals = () => {
             </thead>
             <tbody>
               {filteredReferrals.map(referral => (
-                <tr key={referral.id} className={referral.resolved ? 'resolved-row' : ''}>
+                <tr key={referral.localId} className={referral.resolved ? 'resolved-row' : ''}>
                   <td>{referral.studentName}</td>
                   <td>{referral.studentAge} سال</td>
                   <td>{referral.schoolName}</td>

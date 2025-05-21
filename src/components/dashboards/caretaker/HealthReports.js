@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import './CaretakerComponents.css';
-import DatabaseService from '../../../services/DatabaseService';
 
 const HealthReports = () => {
   const [schools, setSchools] = useState([]);
@@ -29,28 +28,22 @@ const HealthReports = () => {
     referralNotes: ''
   });
 
-  // Load data from localStorage with fallback mechanism
+  // Load data from localStorage
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = () => {
       try {
-        // Initialize database with built-in fallback
-        if (!DatabaseService.initialized) {
-          await DatabaseService.ensureInitialized();
-        }
-
         // Get schools from localStorage
-        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+        const savedSchools = JSON.parse(localStorage.getItem('schools') || '[]');
         setSchools(savedSchools);
 
-        // Extract all students from all schools
+        // Extract all students from schools with their health records
         const studentsWithHealthRecords = [];
         savedSchools.forEach(school => {
           if (school.students && Array.isArray(school.students)) {
             school.students.forEach(student => {
-              // Add school info and ensure healthRecords exists
               studentsWithHealthRecords.push({
                 ...student,
-                schoolId: school.id,
+                schoolId: school.localId,
                 schoolName: school.name,
                 healthRecords: student.healthRecords || []
               });
@@ -61,31 +54,10 @@ const HealthReports = () => {
         setStudents(studentsWithHealthRecords);
       } catch (error) {
         console.error('Error loading data:', error);
-        // Fallback to localStorage
-        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-        setSchools(savedSchools);
-
-        // Extract all students from all schools
-        const studentsWithHealthRecords = [];
-        savedSchools.forEach(school => {
-          if (school.students && Array.isArray(school.students)) {
-            school.students.forEach(student => {
-              // Add school info and ensure healthRecords exists
-              studentsWithHealthRecords.push({
-                ...student,
-                schoolId: school.id,
-                schoolName: school.name,
-                healthRecords: student.healthRecords || []
-              });
-            });
-          }
-        });
-
-        setStudents(studentsWithHealthRecords);
       }
     };
 
-    fetchData();
+    loadData();
   }, []);
 
   // Filter students based on search term and selected school
@@ -192,19 +164,17 @@ const HealthReports = () => {
   };
 
   // Save the health report
-  const saveHealthReport = async () => {
+  const saveHealthReport = () => {
     if (!formData.date) {
       alert('لطفاً تاریخ بررسی را وارد کنید');
       return;
     }
 
     try {
-      // Create a unique ID
-      const recordId = Date.now().toString();
+      const recordId = `health_${Date.now()}`; // Generate unique local ID
       
-      // Create the health record object
       const healthRecord = {
-        id: recordId,
+        localId: recordId,
         date: formData.date,
         hasBrushed: formData.hasBrushed,
         hasCavity: formData.hasCavity,
@@ -217,9 +187,9 @@ const HealthReports = () => {
         resolved: false
       };
 
-      // Update students state with the new health record
+      // Update students state
       const updatedStudents = students.map(student => {
-        if (student.id === currentStudent.id) {
+        if (student.localId === currentStudent.localId) {
           return {
             ...student,
             healthRecords: [healthRecord, ...(student.healthRecords || [])]
@@ -230,14 +200,13 @@ const HealthReports = () => {
 
       setStudents(updatedStudents);
 
-      // Update the health records in the schools array in localStorage
-      const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
-      const updatedSchools = savedSchools.map(school => {
-        if (school.id === currentStudent.schoolId) {
+      // Update schools in localStorage
+      const updatedSchools = schools.map(school => {
+        if (school.localId === currentStudent.schoolId) {
           return {
             ...school,
-            students: (school.students || []).map(student => {
-              if (student.id === currentStudent.id) {
+            students: school.students.map(student => {
+              if (student.localId === currentStudent.localId) {
                 return {
                   ...student,
                   healthRecords: [healthRecord, ...(student.healthRecords || [])]
@@ -250,10 +219,8 @@ const HealthReports = () => {
         return school;
       });
 
-      // Save updated schools to localStorage
-      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
-
-      // Close the modal
+      setSchools(updatedSchools);
+      localStorage.setItem('schools', JSON.stringify(updatedSchools));
       setShowReportModal(false);
       setCurrentStudent(null);
     } catch (error) {
@@ -333,7 +300,7 @@ const HealthReports = () => {
         >
           <option value="">همه مدارس</option>
           {schools.map(school => (
-            <option key={school.id} value={school.id}>
+            <option key={school.localId} value={school.localId}>
               {school.name}
             </option>
           ))}
@@ -366,7 +333,7 @@ const HealthReports = () => {
                 const healthStatus = getLatestHealthStatus(student);
 
                 return (
-                  <tr key={student.id}>
+                  <tr key={student.localId}>
                     <td>{student.name}</td>
                     <td>{student.age} سال</td>
                     <td>{student.grade === 'preschool' ? 'پیش دبستانی' : `کلاس ${student.grade}`}</td>
