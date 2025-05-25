@@ -14,8 +14,8 @@ const UrgentReferrals = () => {
   useEffect(() => {
     const loadData = () => {
       try {
-        // Get schools from localStorage
-        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+        // FIXED: Use the same localStorage key as HealthReports component
+        const savedSchools = JSON.parse(localStorage.getItem('schools') || '[]');
         setSchools(savedSchools);
 
         // Extract all students with referrals from all schools
@@ -105,8 +105,8 @@ const UrgentReferrals = () => {
         setCurrentReferral({ ...currentReferral, resolved: !referral.resolved });
       }
 
-      // Update the health record in localStorage
-      const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
+      // FIXED: Update the health record in localStorage using the correct key
+      const savedSchools = JSON.parse(localStorage.getItem('schools') || '[]');
       const updatedSchools = savedSchools.map(school => {
         if (school.localId === referral.schoolId) {
           return {
@@ -130,7 +130,8 @@ const UrgentReferrals = () => {
         return school;
       });
 
-      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
+      // FIXED: Save to the same localStorage key as HealthReports component
+      localStorage.setItem('schools', JSON.stringify(updatedSchools));
     } catch (error) {
       console.error('Error updating referral status:', error);
       alert('خطا در به‌روزرسانی وضعیت ارجاع. لطفاً دوباره تلاش کنید');

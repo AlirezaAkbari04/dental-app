@@ -6,7 +6,6 @@ import { Capacitor } from '@capacitor/core';
 const InfoGraphics = () => {
   const [selectedInfoGraphic, setSelectedInfoGraphic] = useState(null);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
-  const [showPdfViewer, setShowPdfViewer] = useState(false);
   
   // Audio player state
   const [audioState, setAudioState] = useState({
@@ -31,10 +30,6 @@ const InfoGraphics = () => {
   const getVideoPath = (filename) => Capacitor.isNativePlatform() 
     ? `file:///android_asset/assets/videos/${filename}`
     : `/assets/videos/${filename}`;
-  
-  const getPdfPath = (filename) => Capacitor.isNativePlatform() 
-    ? `file:///android_asset/assets/pdfs/${filename}`
-    : `/assets/pdfs/${filename}`;
 
   // Format time for display (MM:SS)
   const formatTime = (timeInSeconds) => {
@@ -206,11 +201,6 @@ const InfoGraphics = () => {
         /\/assets\/images\/([^'\"]+)/g, 
         (match, filename) => `file:///android_asset/assets/images/${filename}`
       );
-      
-      processedContent = processedContent.replace(
-        /\/assets\/pdfs\/([^'\"]+)/g, 
-        (match, filename) => `file:///android_asset/assets/pdfs/${filename}`
-      );
     } else {
       // Fix regular paths for web
       processedContent = processedContent.replace(
@@ -226,11 +216,6 @@ const InfoGraphics = () => {
       processedContent = processedContent.replace(
         /file:\/\/\/android_asset\/.*?\/assets\/images\/([^'\"]+)/g, 
         (match, filename) => `/assets/images/${filename}`
-      );
-      
-      processedContent = processedContent.replace(
-        /file:\/\/\/android_asset\/.*?\/assets\/pdfs\/([^'\"]+)/g, 
-        (match, filename) => `/assets/pdfs/${filename}`
       );
     }
     
@@ -260,12 +245,12 @@ const InfoGraphics = () => {
         <h2>فلوراید</h2>
         <div class="fluoride-brochure-container">
           <img 
-            src="/assets/images/fluoride-brochure-1.PNG" 
+            src="${getImagePath('fluoride-brochure-1.PNG')}" 
             alt="" 
             class="fluoride-brochure-image"
           />
           <img 
-            src="/assets/images/fluoride-brochure-2.PNG" 
+            src="${getImagePath('fluoride-brochure-2.PNG')}" 
             alt="" 
             class="fluoride-brochure-image"
           />
@@ -275,14 +260,164 @@ const InfoGraphics = () => {
     {
       id: 3,
       title: 'راهنمای جامع بهداشت دهان و دندان',
-      description: 'فایل PDF آموزشی کامل برای والدین و کودکان',
+      description: 'مجموعه کاملی از اطلاعات و آموزش‌های مربوط به سلامت دهان و دندان برای دانش‌آموزان و والدین',
       imageUrl: getImagePath('infographics/dental-guide.jpg'),
-      type: 'pdf',
-      pdfPath: 'dental-guide.pdf',
       content: `
-        <h2>راهنمای جامع بهداشت دهان و دندان</h2>
-        <p>این راهنما شامل اطلاعات کاملی در مورد نحوه مراقبت از دندان‌ها، 
-        تکنیک‌های صحیح مسواک زدن، استفاده از نخ دندان و سایر نکات مهم بهداشتی است.</p>
+        <div class="content-container">
+          <div class="document-header">
+            <h1>سلامت دهان و دندان</h1>
+            <h2>والدین/ معلمین کودکان دبستانی</h2>
+            <div class="author-info">
+              <p><strong>تهیه کننده:</strong></p>
+              <p>دکتر افسانه پاکدامن</p>
+              <p>عضو هیئت علمی دانشکده دندانپزشکی دانشگاه علوم پزشکی تهران</p>
+            </div>
+          </div>
+
+          <section class="content-section">
+            <h3>روند ایجاد پوسیدگی</h3>
+            <ul>
+              <li>پس از مصرف غذا خصوصا غذاهای حاوی قند، ذرات باقی مانده در لابه لای سطوح و بین دندانها جمع شده توسط میکروبهای موجود در دهان مصرف و تجزیه میشوند.</li>
+              <li>این موجودات میکروسکوپی بطور معمول در دهان هر فردی وجود دارند و در صورتی که غذاهای حاوی قند به آنها نرسد برای دندانها مضر نمی باشند.</li>
+              <li>این موجودات ریز پس از مصرف قند اسید تولید می کنند که باعث تخریب دندان وایجاد پوسیدگی می شود.</li>
+            </ul>
+
+            <div class="explanation-box">
+              <p>تصور کنید که به سفر رفته اید و مسواکتان را فراموش کرده اید، بر روی دندانها لایه ای تشکیل می شود که ابتدا با چشم غیر مسلح قابل رویت نیست.</p>
+              <p><strong>بعد از چند روز چه احساسی دارید؟</strong></p>
+              <p>لایه ای روی دندانها را پوشانده است که از تجمع خرده های مواد غذایی، سلولهای متفلس شده دهان و میکربهای داخل دهان تشکیل شده است.</p>
+            </div>
+
+            <div class="definitions">
+              <div class="definition-item">
+                <strong>پلاک دندانی:</strong> لایه بیرنگ/سفید مایل به زرد که به سطوح دندانی و سایر نسوج سخت داخل دهان شامل دندانهای مصنوعی ثابت و متحرک می چسبد.
+              </div>
+              <div class="definition-item">
+                <strong>ماتریال آلبا:</strong> لایه سفید و بیرنگ که با چشم دیده می شود.
+              </div>
+              <div class="definition-item">
+                <strong>جرم:</strong> پلاک دندانی آهکی شده می باشد.
+              </div>
+            </div>
+
+            <div class="image-placeholder">
+              <img src="${getImagePath('1.jpg')}" class="content-image" />
+              <p class="image-caption">نمایش تشکیل پلاک دندانی و جرم روی دندان</p>
+            </div>
+          </section>
+
+          <section class="content-section">
+            <h3>آموزش بهداشت دهان و دندان جهت کودکان 3 تا 6 ساله</h3>
+            
+            <div class="important-notes">
+              <ul>
+                <li>لکه های سفید روی سطح بیرونی دندانها ممکن است از علائم اولیه پوسیدگی باشد.</li>
+                <li>دندانهای شیری نقش مهمی در زیبایی و تکلم کودک خردسال دارد. بنابراین با دقت و حوصله بر مسواک زدن کودک نظارت کنید.</li>
+                <li>مسواک مناسب با توجه به ابعاد دهان کودک انتخاب کنید.</li>
+                <li>هزینه اقدامات پیشگیری و رعایت اصول بهداشت دهان و دندان در مقابل هزینه درمانهای دندان پزشکی اندک می باشد. مضافا بر اینکه بدین ترتیب دندانهای شیری حفظ شده و عمل تغذیه کودک دچار مشکل نخواهد شد.</li>
+              </ul>
+            </div>
+
+            <div class="method-box">
+              <h4>روش توصیه شده جهت کودکان 3-6 ساله:</h4>
+              <p>مسواک روی دندانها طوری قرار داده میشود که هر بار 3 تا 4 دندان شسته شود. مسواک در فک بالا با حرکت جلو و عقب حرکت میکند. در فک پایین بطور مشابه این حرکت انجام میشود.</p>
+            </div>
+
+            <div class="image-placeholder">
+              <img src="${getImagePath('2.jpg')}" class="content-image" />
+              <p class="image-caption">نحوه صحیح مسواک زدن برای کودکان 3-6 ساله</p>
+            </div>
+
+            <div class="tips">
+              <ul>
+                <li>از خمیر دندان مخصوص کودکان استفاده کنید.</li>
+                <li>سلیقه کودک را از نظر طعم و رنگ خمیر دندان در نظر بگیرید.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="content-section">
+            <h3>مسواک زدن تحت نظارت</h3>
+            
+            <ul>
+              <li>در صورتی که کودک شما قادر به مسواک زدن بصورت صحیح نمیباشد انجام مسواک زدن میتواند توسط والدین/مربیان برای کودک انجام شود.</li>
+              <li>بهترین حالت برای آموزش مسواک زدن به کودکان این صورت می باشد که مربی/والدین در پشت سر کودک قرار گرفته و برای وی مسواک بزنند.</li>
+              <li>قرار گرفتن در مقابل کودک باعث اضطراب وی می گردد. استفاده از نخ دندان برای کودک لازم و عادت به انجام آن ضروری است و از آنجاییکه این عمل برای وی دشوار می باشد مربی/والدین این عمل را برای وی می توانند انجام دهند.</li>
+            </ul>
+          </section>
+
+          <section class="content-section">
+            <h3>فلوراید تراپی در کودکان</h3>
+            
+            <p>فلوراید عنصری است که باعث استحکام دندان می شود و دندان را در مقابل عوامل پوسیدگی زا مقاوم می نماید. پس انجام فلوراید تراپی در دوران دندانهای شیری و بعد از آن لازم و ضروری است.</p>
+            
+            <p>استفاده از فلوراید بصورت موضعی توصیه میشود. فلوراید تراپی موضعی توسط دندان پزشک در مطب بصورت استفاده از ژل میباشد. همچنین مصرف وارنیش حاوی فلوراید توسط دندانپزشک و استفاده از خمیر دندان حاوی فلوراید در منزل طبق توصیه دندانپزشک باید صورت گیرد.</p>
+
+            <div class="warning-box">
+              <h4>نکات مهم:</h4>
+              <ul>
+                <li>از بلع دهانشویه حاوی فلوراید خودداری شود.</li>
+                <li>در صورت قورت دادن توسط کودک نگران نباشید چون مقدار فلوراید آن اندک میباشد.</li>
+                <li>مصرف شیر در صورت بلع فلوراید مفید میباشد.</li>
+                <li>مصرف دهانشویه قبل از 6 سالگی توصیه نمی شود.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="content-section">
+            <h3>تغذیه و عادات غذایی</h3>
+            
+            <ul>
+              <li>عنصر کلسیم و فسفر که در شیر و فراورده های آن موجود است منجر به تقویت ساختمان دندان می شود و گاه پوسیدگی های جزئی را هم متوقف کرده و از روند تشدید آن جلوگیری می نماید.</li>
+              <li>مصرف مقادیر کافی لبنیات بخصوص در دوران بارداری توصیه میشود.</li>
+              <li>با توجه به موارد گفته شده و از آنجاییکه الگوی غذایی کودک از همین سنین پایین شکل می گیرد و بصورت عادت در می آید در صورت تغذیه مناسب و صحیح در دوران کودکی این روند تا سنین بالا ادامه پیدا خواهد کرد و منجر به حفظ دندانها و جلوگیری از دست دادن آنها خواهد شد.</li>
+              <li>پس کودک را به مصرف شیر و فراورده های آن تشویق کرده و از مصرف مواد قندی مثل شکلات منع کنید. مصرف مواد قندی بخصوص در دفعات کمتر و در زمان وعده های اصلی غذا باید صورت گیرد و حتی المقدور بلافاصله دهان شسته و مسواک زده شود.</li>
+            </ul>
+          </section>
+
+          <section class="content-section">
+            <h3>مراجعه منظم به دندان پزشک</h3>
+            
+            <p>کودک را هر 6 ماه یکبار به مطب دندان پزشکی برده و در صورت لزوم جهت فلوراید تراپی وی اقدام کنید.</p>
+            
+            <p>این مورد را در نظر داشته باشید پرکردگی ها و اعمال دندان پزشکی جزئی از تبدیل شدن آن به مشکل حاد و پر هزینه جلوگیری خواهد کرد.</p>
+            
+            <div class="highlight-box">
+              <p><strong>کشیدن دندانهای شیری موجب بهم ریختگی قوس فکی می شود لذا حفظ دندانهای شیری مهم است.</strong></p>
+            </div>
+
+            <div class="image-placeholder">
+              <img src="${getImagePath('3.jpg')}" class="content-image" />
+              <p class="image-caption">اهمیت حفظ دندان‌های شیری و قوس فکی</p>
+            </div>
+          </section>
+
+          <section class="content-section">
+            <h3>نحوه مسواک زدن جهت بزرگسالان</h3>
+            
+            <ol>
+              <li>مسواک اندازه مناسب با موهای نرم یا متوسط انتخاب کنید.</li>
+              <li>به اندازه یک نخود فرنگی خمیر دندان (حاوی فلوراید) بر روی آن بگذارید.</li>
+              <li>از یک سمت شروع کنید و تمام سطوح دندانها را مسواک بزنید (نحوه صحیح قرار گیری مسواک در شکل بعد نشان داده شده است).</li>
+              <li>پس از اتمام، مقدار اضافه خمیر دندان را با مقدار کمی آب از دهان خارج کنید.</li>
+              <li>بهتر است آب نمک ساده (یک لیوان آب جوشیده سرد و کمی نمک) را دهانشویه کنید.</li>
+            </ol>
+
+            <div class="image-placeholder">
+              <img src="${getImagePath('4.jpg')}" class="content-image" />
+              <p class="image-caption">نحوه صحیح مسواک زدن برای بزرگسالان</p>
+            </div>
+          </section>
+
+          <section class="content-section references">
+            <h3>منابع</h3>
+            <ul class="reference-list">
+              <li>Caries incidence of the first permanent molars according to the Caries Assessment Spectrum and Treatment (CAST) index and its determinants in children: a cohort study. Z Mahboobi, A Pakdaman, R Yazdani, L Azadbakht, AR Shamshiri, ... BMC Oral Health 21 (1), 259, 2021</li>
+              <li>Effect of an Oral Health Promotion Program Including Supervised Toothbrushing on 6 to 7-Year-Old School Children: A Randomized Controlled Trial. A Babaei, A Pakdaman, H Hessari. Frontiers in dentistry 17, 19, 2020</li>
+              <li>One-year oral health outcome of a community-based trial in schoolchildren aged 6–7 years old in Tehran, Iran. A Babaei, A Pakdaman, AR Shamshiri, P Khazaei, H Hessari. Plos one 18 (4), e0284366</li>
+            </ul>
+          </section>
+        </div>
       `
     },
     {
@@ -360,23 +495,8 @@ const InfoGraphics = () => {
     };
   }, []);
 
-  // Handle opening PDF file
-  const handleViewPDF = () => {
-    if (selectedInfoGraphic && selectedInfoGraphic.type === 'pdf') {
-      setShowPdfViewer(true);
-    }
-  };
-  
-  // Handle closing PDF viewer
-  const handleClosePdfViewer = () => {
-    setShowPdfViewer(false);
-  };
-
   const handleSelectInfoGraphic = (infographic) => {
     setSelectedInfoGraphic(infographic);
-    if (infographic.type === 'pdf') {
-      setShowPdfViewer(false);
-    }
   };
 
   const handleBackToList = () => {
@@ -386,7 +506,6 @@ const InfoGraphics = () => {
     }
     
     setSelectedInfoGraphic(null);
-    setShowPdfViewer(false);
     setAudioState({
       isPlaying: false,
       currentTime: 0,
@@ -409,36 +528,6 @@ const InfoGraphics = () => {
     );
   }
 
-  // Display PDF viewer in full screen - FIXED for Android compatibility
-  if (showPdfViewer && selectedInfoGraphic && selectedInfoGraphic.type === 'pdf') {
-    const pdfPath = Capacitor.isNativePlatform()
-      ? `file:///android_asset/assets/pdfs/${selectedInfoGraphic.pdfPath}`
-      : `/assets/pdfs/${selectedInfoGraphic.pdfPath}`;
-
-    return (
-      <div className="pdf-viewer-fullscreen">
-        <div className="pdf-viewer-header">
-          <h3>{selectedInfoGraphic.title}</h3>
-          <button className="close-button" onClick={handleClosePdfViewer}>
-            بازگشت
-          </button>
-        </div>
-        
-        <div className="pdf-viewer-container-fullscreen">
-          {/* Changed from object to iframe for better Android compatibility */}
-          <iframe 
-            src={pdfPath}
-            className="pdf-viewer-iframe"
-            title="PDF Viewer"
-            style={{ width: '100%', height: '100%', border: 'none' }}
-          >
-            <p>مرورگر شما قادر به نمایش PDF نیست. برای مشاهده <a href={pdfPath} target="_blank" rel="noopener noreferrer">اینجا کلیک کنید</a>.</p>
-          </iframe>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="infographics-container">
       <div className="infographics-header">
@@ -453,11 +542,6 @@ const InfoGraphics = () => {
           <div className="detail-header">
             <h3 className="detail-title">{selectedInfoGraphic.title}</h3>
             <div className="detail-actions">
-              {selectedInfoGraphic.type === 'pdf' && (
-                <button className="view-button" onClick={handleViewPDF}>
-                  مشاهده PDF
-                </button>
-              )}
               <button className="back-button" onClick={handleBackToList}>
                 بازگشت به لیست
               </button>
@@ -549,16 +633,6 @@ const InfoGraphics = () => {
                 </video>
               </div>
             )}
-            
-            {/* PDF preview icon for PDF type */}
-            {selectedInfoGraphic.type === 'pdf' && (
-              <div className="pdf-preview-container">
-                <div className="pdf-icon">
-                  <span className="pdf-icon-symbol">📄</span>
-                </div>
-                <p className="pdf-instructions">برای مشاهده فایل PDF کامل، روی دکمه "مشاهده PDF" کلیک کنید.</p>
-              </div>
-            )}
           </div>
         </div>
       ) : (
@@ -570,12 +644,7 @@ const InfoGraphics = () => {
               onClick={() => handleSelectInfoGraphic(infographic)}
             >
               <div className="infographic-thumbnail">
-                {infographic.type === 'pdf' ? (
-                  <div className="thumbnail-placeholder pdf-thumbnail">
-                    <span className="placeholder-icon">📄</span>
-                    <span className="placeholder-text">PDF</span>
-                  </div>
-                ) : infographic.videoPath ? (
+                {infographic.videoPath ? (
                   <div className="thumbnail-placeholder video-thumbnail">
                     <span className="placeholder-icon">🎬</span>
                     <span className="placeholder-text">ویدیو</span>
@@ -601,12 +670,176 @@ const InfoGraphics = () => {
           <li>اینفوگرافی‌ها را با کودک خود مرور کنید و مفاهیم را به زبان ساده برای او توضیح دهید.</li>
           <li>می‌توانید این اینفوگرافی‌ها را چاپ کرده و در محیطی که کودک مسواک می‌زند نصب کنید.</li>
           <li>با اشتراک‌گذاری این اطلاعات با دیگر والدین، به ارتقای سطح آگاهی درباره بهداشت دهان و دندان کمک کنید.</li>
-          <li>فایل‌های PDF را می‌توانید برای مطالعه بیشتر مشاهده کنید.</li>
           <li>ویدیوهای آموزشی را می‌توانید همراه با کودک خود تماشا کنید و به او کمک کنید تا مهارت‌های بهداشت دهان و دندان را بیاموزد.</li>
         </ul>
       </div>
       
       <style jsx>{`
+        .document-header {
+          text-align: center;
+          margin-bottom: 30px;
+          padding: 20px;
+          background-color: #f8f9fa;
+          border-radius: 8px;
+        }
+        
+        .document-header h1 {
+          color: #2c3e50;
+          margin-bottom: 10px;
+          font-size: 28px;
+        }
+        
+        .document-header h2 {
+          color: #34495e;
+          margin-bottom: 15px;
+          font-size: 20px;
+        }
+        
+        .author-info {
+          background-color: #e8f4f8;
+          padding: 15px;
+          border-radius: 6px;
+          margin-top: 15px;
+        }
+        
+        .content-section {
+          margin-bottom: 40px;
+          padding: 20px;
+          background-color: #fff;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .content-section h3 {
+          color: #2c3e50;
+          border-bottom: 2px solid #3498db;
+          padding-bottom: 10px;
+          margin-bottom: 20px;
+        }
+        
+        .explanation-box {
+          background-color: #f0f8ff;
+          padding: 20px;
+          border-radius: 8px;
+          border-left: 4px solid #3498db;
+          margin: 20px 0;
+        }
+        
+        .definitions {
+          background-color: #f9f9f9;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+        }
+        
+        .definition-item {
+          margin-bottom: 15px;
+          padding: 10px;
+          background-color: #fff;
+          border-radius: 4px;
+          border-left: 3px solid #27ae60;
+        }
+        
+        .important-notes {
+          background-color: #fff3cd;
+          padding: 20px;
+          border-radius: 8px;
+          border: 1px solid #ffeaa7;
+          margin: 20px 0;
+        }
+        
+        .method-box {
+          background-color: #e8f5e8;
+          padding: 20px;
+          border-radius: 8px;
+          border: 1px solid #27ae60;
+          margin: 20px 0;
+        }
+        
+        .tips {
+          background-color: #f0f8ff;
+          padding: 15px;
+          border-radius: 6px;
+          margin: 15px 0;
+        }
+        
+        .warning-box {
+          background-color: #ffeaea;
+          padding: 20px;
+          border-radius: 8px;
+          border: 1px solid #e74c3c;
+          margin: 20px 0;
+        }
+        
+        .warning-box h4 {
+          color: #e74c3c;
+          margin-bottom: 15px;
+        }
+        
+        .highlight-box {
+          background-color: #fff9e6;
+          padding: 20px;
+          border-radius: 8px;
+          border: 2px solid #f39c12;
+          margin: 20px 0;
+          text-align: center;
+        }
+        
+        .image-placeholder {
+          text-align: center;
+          margin: 30px 0;
+          padding: 20px;
+          background-color: #f8f9fa;
+          border-radius: 8px;
+          border: 2px dashed #dee2e6;
+        }
+        
+        .content-image {
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .image-caption {
+          margin-top: 10px;
+          font-style: italic;
+          color: #6c757d;
+          font-size: 14px;
+        }
+        
+        .references {
+          background-color: #f8f9fa;
+          border-top: 3px solid #6c757d;
+        }
+        
+        .reference-list {
+          font-size: 14px;
+          line-height: 1.6;
+        }
+        
+        .reference-list li {
+          margin-bottom: 15px;
+          padding: 10px;
+          background-color: #fff;
+          border-radius: 4px;
+        }
+        
+        .content-container {
+          direction: rtl;
+          text-align: right;
+        }
+        
+        .content-container ul, .content-container ol {
+          padding-right: 20px;
+          padding-left: 0;
+        }
+        
+        .content-container li {
+          margin-bottom: 8px;
+          line-height: 1.6;
+        }
+
         .important-note {
           background-color: #fffde7;
           border-right: 4px solid #fbc02d;
@@ -628,19 +861,6 @@ const InfoGraphics = () => {
           color: #666;
         }
         
-        .pdf-thumbnail, .video-thumbnail {
-          background-color: #f0f0f0;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-        }
-        
-        .pdf-thumbnail .placeholder-icon, .video-thumbnail .placeholder-icon {
-          font-size: 2rem;
-          margin-bottom: 5px;
-        }
-        
         .video-thumbnail {
           background-color: #e8f5e9;
         }
@@ -650,104 +870,9 @@ const InfoGraphics = () => {
           color: #666;
         }
         
-        .pdf-preview-container {
-          margin: 20px 0;
-          padding: 20px;
-          background-color: #f5f5f5;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          border: 1px dashed #ccc;
-        }
-        
-        .pdf-icon {
-          font-size: 2rem;
-          margin-left: 20px;
-          color: #e74c3c;
-          background-color: white;
-          width: 60px;
-          height: 60px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 8px;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .pdf-icon-symbol {
-          font-size: 2.5rem;
-        }
-        
-        .pdf-instructions {
-          flex: 1;
-          margin: 0;
-          color: #555;
-        }
-        
-        .pdf-viewer-fullscreen {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: #fff;
-          z-index: 1000;
-          display: flex;
-          flex-direction: column;
-        }
-        
-        .pdf-viewer-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px 20px;
-          background-color: #f5f5f5;
-          border-bottom: 1px solid #ddd;
-        }
-        
-        .pdf-viewer-header h3 {
-          margin: 0;
-        }
-        
-        .close-button {
-          background-color: #e74c3c;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-family: inherit;
-        }
-        
-        .pdf-viewer-container-fullscreen {
-          flex: 1;
-          overflow: hidden;
-        }
-        
-        .pdf-viewer-iframe {
-          width: 100%;
-          height: 100%;
-          border: none;
-        }
-        
         .detail-actions {
           display: flex;
           gap: 10px;
-        }
-        
-        .view-button {
-          background-color: #2196f3;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-family: inherit;
-          font-size: 0.9rem;
-        }
-        
-        .view-button:hover {
-          background-color: #0b7dda;
         }
         
         .back-button {
@@ -1066,7 +1191,7 @@ const InfoGraphics = () => {
             width: 100%;
           }
           
-          .view-button, .back-button {
+          .back-button {
             flex: 1;
             text-align: center;
           }
