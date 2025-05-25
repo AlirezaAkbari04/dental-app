@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import '../../styles/Auth.css';
 import logoImage from '../../logo.svg';
 import { useUser } from '../../contexts/UserContext';
-import DatabaseService from '../../services/DatabaseService';
 
 const RoleSelection = () => {
   const navigate = useNavigate();
@@ -16,25 +15,21 @@ const RoleSelection = () => {
     setError('');
     
     try {
-      console.log("Selecting role:", role);
+      console.log("Selecting role:", role, "for user:", currentUser?.username);
       
-      if (currentUser?.id) {
-        // Update localStorage first
-        localStorage.setItem('userRole', role);
+      if (!currentUser?.id) {
+        setError('لطفا ابتدا وارد شوید');
+        navigate('/login');
+        return;
+      }
+      
+      // Update user role using UserContext (which handles localStorage and state)
+      const success = await updateUserRole(role);
+      
+      if (success) {
+        console.log(`Role updated to ${role}, navigating to profile completion`);
         
-        // Then update in database
-        await DatabaseService.updateUserRole(currentUser.id, role);
-        
-        // Try to update context if available
-        if (typeof updateUserRole === 'function') {
-          try {
-            await updateUserRole(role);
-          } catch (e) {
-            console.warn("Error updating role in context:", e);
-          }
-        }
-        
-        // Redirect based on role
+        // Navigate to profile completion based on role
         switch (role) {
           case 'child':
             navigate('/profile/child');
@@ -46,19 +41,36 @@ const RoleSelection = () => {
             navigate('/profile/teacher');
             break;
           default:
+            console.error(`Unknown role: ${role}`);
             navigate('/profile/parent');
         }
       } else {
-        setError('لطفا ابتدا وارد شوید');
-        navigate('/login');
+        setError('خطا در انتخاب نقش. لطفا دوباره تلاش کنید.');
       }
     } catch (error) {
       console.error("Error updating role:", error);
-      setError('خطا در انتخاب نقش');
+      setError('خطا در انتخاب نقش. لطفا دوباره تلاش کنید.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Don't render if no user is logged in
+  if (!currentUser) {
+    return (
+      <div className="auth-container" dir="rtl">
+        <div className="auth-form-container">
+          <div className="logo-container">
+            <img src={logoImage} alt="لبخند شاد دندان سالم" className="app-logo" />
+            <h1 className="app-title">لبخند شاد دندان سالم</h1>
+          </div>
+          <div style={{ textAlign: 'center', color: 'red' }}>
+            لطفا ابتدا وارد شوید
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-container" dir="rtl">
@@ -73,7 +85,15 @@ const RoleSelection = () => {
           <p className="role-instruction">برای ادامه، نقش خود را از گزینه‌های زیر انتخاب کنید</p>
 
           {error && (
-            <div style={{ color: 'red', marginBottom: '15px', textAlign: 'center' }}>
+            <div style={{ 
+              color: '#e74c3c', 
+              marginBottom: '15px', 
+              textAlign: 'center',
+              padding: '10px',
+              backgroundColor: '#ffeaea',
+              borderRadius: '5px',
+              border: '1px solid #e74c3c'
+            }}>
               {error}
             </div>
           )}
@@ -85,73 +105,172 @@ const RoleSelection = () => {
             width: '100%',
             margin: '20px 0'
           }}>
+            
+            {/* Child Role */}
             <div
               style={{
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
-                padding: '15px',
+                padding: '20px',
                 backgroundColor: isLoading ? '#f0f0f0' : 'white',
-                borderRadius: '10px',
-                boxShadow: '0 3px 10px rgba(0, 0, 0, 0.08)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                 cursor: isLoading ? 'default' : 'pointer',
-                opacity: isLoading ? 0.7 : 1
+                opacity: isLoading ? 0.7 : 1,
+                transition: 'all 0.3s ease',
+                border: '2px solid transparent'
               }}
               onClick={() => !isLoading && handleRoleSelect('child')}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15)';
+                  e.currentTarget.style.borderColor = '#3498db';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }
+              }}
             >
-              <span style={{ fontSize: '30px', marginLeft: '15px' }}>👶</span>
+              <span style={{ fontSize: '40px', marginLeft: '20px' }}>👶</span>
               <div>
-                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>کودک</div>
-                <div style={{ fontSize: '13px', color: '#666' }}>آموزش بهداشت دهان و دندان برای کودکان</div>
+                <div style={{ 
+                  fontWeight: 'bold', 
+                  marginBottom: '8px', 
+                  fontSize: '18px',
+                  color: '#2c3e50'
+                }}>
+                  کودک
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: '#7f8c8d',
+                  lineHeight: '1.4'
+                }}>
+                  آموزش بهداشت دهان و دندان برای کودکان
+                </div>
               </div>
             </div>
 
+            {/* Teacher Role */}
             <div
               style={{
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
-                padding: '15px',
+                padding: '20px',
                 backgroundColor: isLoading ? '#f0f0f0' : 'white',
-                borderRadius: '10px',
-                boxShadow: '0 3px 10px rgba(0, 0, 0, 0.08)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                 cursor: isLoading ? 'default' : 'pointer',
-                opacity: isLoading ? 0.7 : 1
+                opacity: isLoading ? 0.7 : 1,
+                transition: 'all 0.3s ease',
+                border: '2px solid transparent'
               }}
               onClick={() => !isLoading && handleRoleSelect('teacher')}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15)';
+                  e.currentTarget.style.borderColor = '#27ae60';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }
+              }}
             >
-              <span style={{ fontSize: '30px', marginLeft: '15px' }}>👨‍⚕️</span>
+              <span style={{ fontSize: '40px', marginLeft: '20px' }}>👨‍⚕️</span>
               <div>
-                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>معلم بهداشت</div>
-                <div style={{ fontSize: '13px', color: '#666' }}>مدیریت آموزش بهداشت دهان و دندان برای کودکان</div>
+                <div style={{ 
+                  fontWeight: 'bold', 
+                  marginBottom: '8px', 
+                  fontSize: '18px',
+                  color: '#2c3e50'
+                }}>
+                  معلم بهداشت
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: '#7f8c8d',
+                  lineHeight: '1.4'
+                }}>
+                  مدیریت آموزش بهداشت دهان و دندان برای کودکان
+                </div>
               </div>
             </div>
 
+            {/* Parent Role */}
             <div
               style={{
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
-                padding: '15px',
+                padding: '20px',
                 backgroundColor: isLoading ? '#f0f0f0' : 'white',
-                borderRadius: '10px',
-                boxShadow: '0 3px 10px rgba(0, 0, 0, 0.08)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                 cursor: isLoading ? 'default' : 'pointer',
-                opacity: isLoading ? 0.7 : 1
+                opacity: isLoading ? 0.7 : 1,
+                transition: 'all 0.3s ease',
+                border: '2px solid transparent'
               }}
               onClick={() => !isLoading && handleRoleSelect('parent')}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15)';
+                  e.currentTarget.style.borderColor = '#e74c3c';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }
+              }}
             >
-              <span style={{ fontSize: '30px', marginLeft: '15px' }}>👪</span>
+              <span style={{ fontSize: '40px', marginLeft: '20px' }}>👪</span>
               <div>
-                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>والدین</div>
-                <div style={{ fontSize: '13px', color: '#666' }}>نظارت بر بهداشت دهان و دندان فرزندان</div>
+                <div style={{ 
+                  fontWeight: 'bold', 
+                  marginBottom: '8px', 
+                  fontSize: '18px',
+                  color: '#2c3e50'
+                }}>
+                  والدین
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: '#7f8c8d',
+                  lineHeight: '1.4'
+                }}>
+                  نظارت بر بهداشت دهان و دندان فرزندان
+                </div>
               </div>
             </div>
           </div>
 
           {isLoading && (
-            <div style={{ textAlign: 'center', margin: '20px 0' }}>
-              در حال پردازش...
+            <div style={{ 
+              textAlign: 'center', 
+              margin: '20px 0',
+              padding: '15px',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              color: '#6c757d'
+            }}>
+              <div style={{ marginBottom: '10px' }}>در حال پردازش...</div>
+              <div style={{ fontSize: '12px' }}>لطفا صبر کنید</div>
             </div>
           )}
         </div>

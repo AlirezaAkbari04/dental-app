@@ -5,6 +5,7 @@ import './EducationalContent.css';
 const EducationalContent = () => {
   const [selectedContent, setSelectedContent] = useState(null);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
   const [contentList] = useState([
     {
       id: 1,
@@ -112,36 +113,74 @@ const EducationalContent = () => {
     }
   ]);
 
+  // Check if PDF file exists
+  const checkPdfExists = async (pdfPath) => {
+    try {
+      // For web platform
+      if (!Capacitor.isNativePlatform()) {
+        const response = await fetch(`/assets/pdfs/${pdfPath}`, { method: 'HEAD' });
+        return response.ok;
+      }
+      
+      // For native platform - assume file exists if path is provided
+      return true;
+    } catch (error) {
+      console.error('Error checking PDF existence:', error);
+      return false;
+    }
+  };
+
   // Helper function to get platform-aware paths
   const getPdfPath = (filename) => {
-    return Capacitor.isNativePlatform()
-      ? `file:///android_asset/assets/pdfs/${filename}`
-      : `/assets/pdfs/${filename}`;
+    if (Capacitor.isNativePlatform()) {
+      // For Android, try multiple possible locations
+      return `file:///android_asset/www/assets/pdfs/${filename}`;
+    } else {
+      // For web
+      return `/assets/pdfs/${filename}`;
+    }
   };
 
   const handleSelectContent = (content) => {
     setSelectedContent(content);
+    setPdfError(null);
     if (content.type === 'pdf') {
       setShowPdfViewer(false);
     }
   };
 
-  const handleViewPDF = () => {
+  const handleViewPDF = async () => {
     if (selectedContent && selectedContent.type === 'pdf') {
+      // Check if PDF exists before trying to show it
+      const pdfExists = await checkPdfExists(selectedContent.pdfPath);
+      
+      if (!pdfExists) {
+        setPdfError('فایل PDF یافت نشد. لطفاً مطمئن شوید که فایل در مسیر صحیح قرار دارد.');
+        return;
+      }
+      
+      setPdfError(null);
       setShowPdfViewer(true);
     }
   };
   
   const handleClosePdfViewer = () => {
     setShowPdfViewer(false);
+    setPdfError(null);
   };
 
   const handleBackToList = () => {
     setSelectedContent(null);
     setShowPdfViewer(false);
+    setPdfError(null);
   };
 
-  // Full-screen PDF viewer - FIXED for Android compatibility
+  // Handle PDF load error
+  const handlePdfError = () => {
+    setPdfError('خطا در بارگذاری فایل PDF. ممکن است فایل وجود نداشته باشد یا آسیب دیده باشد.');
+  };
+
+  // Full-screen PDF viewer - FIXED for better compatibility
   if (showPdfViewer && selectedContent && selectedContent.type === 'pdf') {
     const pdfPath = getPdfPath(selectedContent.pdfPath);
 
@@ -155,12 +194,53 @@ const EducationalContent = () => {
         </div>
         
         <div className="pdf-viewer-container-fullscreen">
-          <iframe 
-            src={pdfPath}
-            className="pdf-viewer-iframe"
-            title="PDF Viewer"
-            style={{ width: '100%', height: '100%', border: 'none' }}
-          ></iframe>
+          {pdfError ? (
+            <div className="pdf-error">
+              <div className="error-icon">⚠️</div>
+              <h4>خطا در نمایش PDF</h4>
+              <p>{pdfError}</p>
+              <div className="error-suggestions">
+                <h5>راه‌حل‌های پیشنهادی:</h5>
+                <ul>
+                  <li>مطمئن شوید فایل PDF در مسیر <code>/public/assets/pdfs/{selectedContent.pdfPath}</code> قرار دارد</li>
+                  <li>نام فایل را بررسی کنید</li>
+                  <li>صفحه را مجدداً بارگذاری کنید</li>
+                </ul>
+              </div>
+              <button className="retry-button" onClick={handleViewPDF}>
+                تلاش مجدد
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Primary PDF viewer - iframe */}
+              <iframe 
+                src={pdfPath}
+                className="pdf-viewer-iframe"
+                title="PDF Viewer"
+                style={{ width: '100%', height: '100%', border: 'none' }}
+                onError={handlePdfError}
+                onLoad={() => {
+                  console.log('PDF loaded successfully');
+                  setPdfError(null);
+                }}
+              />
+              
+              {/* Fallback download option */}
+              <div className="pdf-fallback">
+                <p>اگر PDF نمایش داده نمی‌شود، می‌توانید آن را دانلود کنید:</p>
+                <a 
+                  href={pdfPath} 
+                  download={selectedContent.pdfPath}
+                  className="download-button"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  دانلود فایل PDF
+                </a>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
@@ -198,6 +278,18 @@ const EducationalContent = () => {
                 <div className="pdf-info">
                   <h4>{selectedContent.title}</h4>
                   <p>{selectedContent.description}</p>
+                  {pdfError && (
+                    <div className="error-message" style={{ 
+                      color: '#e74c3c', 
+                      margin: '10px 0',
+                      padding: '10px',
+                      backgroundColor: '#ffeaea',
+                      borderRadius: '4px',
+                      border: '1px solid #e74c3c'
+                    }}>
+                      {pdfError}
+                    </div>
+                  )}
                   <button className="pdf-view-button" onClick={handleViewPDF}>
                     مشاهده PDF
                   </button>
@@ -227,7 +319,7 @@ const EducationalContent = () => {
         </div>
       )}
 
-      {/* Add any missing CSS that might not be in your CSS file */}
+      {/* Enhanced CSS for better PDF viewing experience */}
       <style jsx>{`
         .pdf-viewer-fullscreen {
           position: fixed;
@@ -245,35 +337,151 @@ const EducationalContent = () => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 10px 20px;
-          background-color: #f5f5f5;
-          border-bottom: 1px solid #ddd;
+          padding: 15px 20px;
+          background-color: #f8f9fa;
+          border-bottom: 2px solid #dee2e6;
           direction: rtl;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .pdf-viewer-header h3 {
           margin: 0;
+          color: #2c3e50;
+          font-size: 18px;
         }
         
         .close-button {
           background-color: #e74c3c;
           color: white;
           border: none;
-          padding: 8px 16px;
-          border-radius: 4px;
+          padding: 10px 20px;
+          border-radius: 6px;
           cursor: pointer;
           font-family: inherit;
+          font-size: 14px;
+          transition: background-color 0.3s;
+        }
+        
+        .close-button:hover {
+          background-color: #c0392b;
         }
         
         .pdf-viewer-container-fullscreen {
           flex: 1;
           overflow: hidden;
+          position: relative;
         }
         
         .pdf-viewer-iframe {
           width: 100%;
           height: 100%;
           border: none;
+        }
+        
+        .pdf-error {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          padding: 40px;
+          text-align: center;
+          direction: rtl;
+        }
+        
+        .error-icon {
+          font-size: 48px;
+          margin-bottom: 20px;
+        }
+        
+        .pdf-error h4 {
+          color: #e74c3c;
+          margin-bottom: 15px;
+          font-size: 24px;
+        }
+        
+        .pdf-error p {
+          color: #7f8c8d;
+          margin-bottom: 20px;
+          line-height: 1.6;
+        }
+        
+        .error-suggestions {
+          background-color: #f8f9fa;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+          text-align: right;
+        }
+        
+        .error-suggestions h5 {
+          color: #2c3e50;
+          margin-bottom: 10px;
+        }
+        
+        .error-suggestions ul {
+          text-align: right;
+          padding-right: 20px;
+        }
+        
+        .error-suggestions li {
+          margin-bottom: 8px;
+          color: #34495e;
+        }
+        
+        .error-suggestions code {
+          background-color: #ecf0f1;
+          padding: 2px 6px;
+          border-radius: 3px;
+          font-family: 'Courier New', monospace;
+          color: #e74c3c;
+        }
+        
+        .retry-button {
+          background-color: #3498db;
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 16px;
+          transition: background-color 0.3s;
+        }
+        
+        .retry-button:hover {
+          background-color: #2980b9;
+        }
+        
+        .pdf-fallback {
+          position: absolute;
+          bottom: 20px;
+          right: 20px;
+          background-color: rgba(255, 255, 255, 0.95);
+          padding: 15px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          direction: rtl;
+        }
+        
+        .download-button {
+          display: inline-block;
+          background-color: #27ae60;
+          color: white;
+          text-decoration: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          margin-top: 8px;
+          transition: background-color 0.3s;
+        }
+        
+        .download-button:hover {
+          background-color: #219a52;
+        }
+        
+        .error-message {
+          font-size: 14px;
+          line-height: 1.4;
         }
       `}</style>
     </div>

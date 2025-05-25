@@ -1,6 +1,6 @@
-// src/App.js
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+// src/App.js - SIMPLIFIED FIXED VERSION
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import './App.css';
 import { UserProvider } from './contexts/UserContext';
 import { useUser } from './contexts/UserContext';
@@ -15,10 +15,29 @@ import TeacherProfile from './components/auth/TeacherProfile';
 import ChildDashboard from './components/dashboards/ChildDashboard';
 import CaretakerDashboard from './components/dashboards/CaretakerDashboard';
 import ParentDashboard from './components/dashboards/ParentDashboard';
-import FAQ from './components/FAQ'; // Import the FAQ component
+import FAQ from './components/FAQ';
 
 function AppContent() {
   const { currentUser, isLoading } = useUser();
+  const navigate = useNavigate();
+
+  // Handle navigation based on user state changes
+  useEffect(() => {
+    if (!isLoading && currentUser) {
+      console.log('[App] User state changed:', currentUser);
+      
+      if (!currentUser.role) {
+        // User logged in but no role selected
+        console.log('[App] User has no role, navigating to role selection');
+        navigate('/role-selection');
+      } else {
+        // User has role, navigate to appropriate dashboard
+        const dashboardPath = getDashboardPath(currentUser.role);
+        console.log('[App] User has role, navigating to:', dashboardPath);
+        navigate(dashboardPath);
+      }
+    }
+  }, [currentUser, isLoading, navigate]);
 
   if (isLoading) {
     return (
@@ -29,40 +48,91 @@ function AppContent() {
     );
   }
 
+  // Helper function to get dashboard path based on role
+  const getDashboardPath = (role) => {
+    switch (role) {
+      case 'child':
+        return '/dashboard/child';
+      case 'parent':
+        return '/dashboard/parent';
+      case 'teacher':
+        return '/dashboard/caretaker';
+      default:
+        return '/role-selection';
+    }
+  };
+
   const ProtectedRoute = ({ children, requiredRole }) => {
+    console.log('[ProtectedRoute] Check:', {
+      currentUser: currentUser?.username,
+      currentUserRole: currentUser?.role,
+      requiredRole
+    });
+
+    // If no user is logged in, redirect to login
     if (!currentUser) {
+      console.log('[ProtectedRoute] No current user, redirecting to login');
       return <Navigate to="/login" replace />;
     }
     
-    // Get role from localStorage as backup
-    const storedRole = localStorage.getItem('userRole');
+    // If no role is set and we're not on role selection, redirect to role selection
+    if (!currentUser.role && requiredRole) {
+      console.log('[ProtectedRoute] No role set, redirecting to role selection');
+      return <Navigate to="/role-selection" replace />;
+    }
     
-    // Use the most recent role - either from localStorage or currentUser
-    const effectiveRole = storedRole || currentUser.role;
+    // If a specific role is required and it doesn't match
+    if (requiredRole && currentUser.role && currentUser.role !== requiredRole) {
+      console.log(`[ProtectedRoute] Role mismatch: required ${requiredRole}, got ${currentUser.role}`);
+      // Redirect to the appropriate dashboard for the user's actual role
+      return <Navigate to={getDashboardPath(currentUser.role)} replace />;
+    }
     
-    if (requiredRole && effectiveRole !== requiredRole) {
-      // Handle different user roles by redirecting to the appropriate dashboard
-      if (effectiveRole === 'child') {
-        return <Navigate to="/dashboard/child" replace />;
-      } else if (effectiveRole === 'parent') {
-        return <Navigate to="/dashboard/parent" replace />;
-      } else if (effectiveRole === 'teacher') {
-        return <Navigate to="/dashboard/caretaker" replace />;
+    // All checks passed, render the protected content
+    return children;
+  };
+
+  // Handle redirects for logged-in users on auth pages
+  const LoginRoute = () => {
+    if (currentUser) {
+      if (currentUser.role) {
+        return <Navigate to={getDashboardPath(currentUser.role)} replace />;
       } else {
-        // If no effective role is found, redirect to role selection
         return <Navigate to="/role-selection" replace />;
       }
     }
-    
-    return children;
+    return <Login />;
+  };
+
+  const RegisterRoute = () => {
+    if (currentUser) {
+      if (currentUser.role) {
+        return <Navigate to={getDashboardPath(currentUser.role)} replace />;
+      } else {
+        return <Navigate to="/role-selection" replace />;
+      }
+    }
+    return <Register />;
+  };
+
+  // Default route handler
+  const DefaultRoute = () => {
+    if (currentUser) {
+      if (currentUser.role) {
+        return <Navigate to={getDashboardPath(currentUser.role)} replace />;
+      } else {
+        return <Navigate to="/role-selection" replace />;
+      }
+    }
+    return <Navigate to="/login" replace />;
   };
 
   return (
     <div className="app" dir="rtl">
       <Routes>
         {/* Public routes */}
-        <Route path="/login" element={currentUser ? <Navigate to={`/dashboard/${currentUser.role}`} /> : <Login />} />
-        <Route path="/register" element={currentUser ? <Navigate to={`/dashboard/${currentUser.role}`} /> : <Register />} />
+        <Route path="/login" element={<LoginRoute />} />
+        <Route path="/register" element={<RegisterRoute />} />
         
         {/* Protected routes */}
         <Route 
@@ -134,14 +204,10 @@ function AppContent() {
         <Route path="/faq" element={<FAQ />} />
         
         {/* Default redirect */}
-        <Route path="/" element={
-          currentUser 
-            ? <Navigate to={`/dashboard/${currentUser.role}`} replace /> 
-            : <Navigate to="/login" replace />
-        } />
+        <Route path="/" element={<DefaultRoute />} />
         
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* Fallback for unmatched routes */}
+        <Route path="*" element={<DefaultRoute />} />
       </Routes>
     </div>
   );

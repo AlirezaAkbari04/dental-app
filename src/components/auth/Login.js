@@ -1,4 +1,4 @@
-// src/components/auth/Login.js
+// src/components/auth/Login.js - FIXED VERSION
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
@@ -24,14 +24,32 @@ const Login = () => {
   
     try {
       // Pass the credentials in the expected format
-      const success = await login({ username: credentials });
+      const user = await login({ username: credentials });
   
-      if (success) {
-        // Clear any stored role to force role selection
-        localStorage.removeItem('userRole');
+      if (user) {
+        console.log('Login successful, user:', user);
         
-        // Navigate to role selection after login
-        navigate('/role-selection');
+        // Check if user has a role assigned
+        if (user.role && user.role !== '') {
+          // User has role, redirect to appropriate dashboard
+          switch (user.role) {
+            case 'child':
+              navigate('/dashboard/child');
+              break;
+            case 'parent':
+              navigate('/dashboard/parent');
+              break;
+            case 'teacher':
+              navigate('/dashboard/caretaker');
+              break;
+            default:
+              // If role is unrecognized, go to role selection
+              navigate('/role-selection');
+          }
+        } else {
+          // User has no role assigned, go to role selection
+          navigate('/role-selection');
+        }
       } else {
         setError('خطا در ورود. لطفاً دوباره تلاش کنید');
       }
@@ -63,11 +81,12 @@ const Login = () => {
               className={error ? 'input-error' : ''}
               dir="ltr" // Input direction is LTR even in RTL layout
               disabled={isLoading}
+              required
             />
             {error && <div className="error-message">{error}</div>}
           </div>
           
-          <button type="submit" className="auth-button" disabled={isLoading}>
+          <button type="submit" className="auth-button" disabled={isLoading || !credentials.trim()}>
             {isLoading ? 'در حال ورود...' : 'ادامه'}
           </button>
         </form>

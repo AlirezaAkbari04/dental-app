@@ -1,4 +1,4 @@
-// src/components/auth/Register.js
+// src/components/auth/Register.js - FIXED VERSION
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import '../../styles/Auth.css';
@@ -20,10 +20,9 @@ function Register() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const sanitizedValue = value; 
     setFormData(prevState => ({
       ...prevState,
-      [name]: sanitizedValue
+      [name]: value
     }));
     setError('');
   };
@@ -71,15 +70,32 @@ function Register() {
 
     try {
       // Register with the username (email or phone)
-      // Adjust based on your UserContext.js implementation
-      const success = await register(username);
+      const user = await register(username, 'parent'); // Default to parent role
       
-      if (success) {
-        // Clear any stored role
-        localStorage.removeItem('userRole');
+      if (user) {
+        console.log('Registration successful, user:', user);
         
-        // Navigate to role selection page after successful registration
-        navigate('/role-selection');
+        // Check if user already had a role (existing user)
+        if (user.role && user.role !== '') {
+          // Existing user with role, redirect to appropriate dashboard
+          switch (user.role) {
+            case 'child':
+              navigate('/dashboard/child');
+              break;
+            case 'parent':
+              navigate('/dashboard/parent');
+              break;
+            case 'teacher':
+              navigate('/dashboard/caretaker');
+              break;
+            default:
+              // If role is unrecognized, go to role selection
+              navigate('/role-selection');
+          }
+        } else {
+          // New user or user without role, go to role selection
+          navigate('/role-selection');
+        }
       } else {
         setError('خطایی رخ داده است. لطفا دوباره تلاش کنید.');
       }
@@ -119,6 +135,7 @@ function Register() {
               placeholder="نام خود را وارد کنید"
               className={error && !formData.name ? 'input-error' : ''}
               disabled={isLoading}
+              required
             />
           </div>
           
@@ -163,6 +180,7 @@ function Register() {
               placeholder="رمز عبور خود را وارد کنید"
               className={error && !formData.password ? 'input-error' : ''}
               disabled={isLoading}
+              required
             />
           </div>
           

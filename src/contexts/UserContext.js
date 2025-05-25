@@ -1,7 +1,6 @@
-// src/contexts/UserContext.js
+// src/contexts/UserContext.js - SIMPLIFIED FIXED VERSION
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import DatabaseService from '../services/DatabaseService';
-import MigrationService from '../services/MigrationService';
+import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 
@@ -10,204 +9,275 @@ const UserContext = createContext();
 export const UserProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [dbInitialized, setDbInitialized] = useState(false);
 
+  // Initialize app and check for existing session
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Close any existing connections first
-        await DatabaseService.close();
+        console.log('[UserContext] Starting app initialization...');
         
-        // Reset the database to ensure a fresh connection
-        if (Capacitor.isNativePlatform()) {
-          await DatabaseService.resetDatabase();
-        } else {
-          await DatabaseService.init();
-        }
-        
-        setDbInitialized(true);
-        
-        // Migrate data from localStorage to database
-        await MigrationService.migrateLocalStorageToDatabase();
-        
-        // Check if user is already logged in - use Capacitor Preferences for native platforms
+        // Check for existing auth data
         let authData = null;
 
         if (Capacitor.isNativePlatform()) {
-          // Get from Capacitor Preferences for native platforms
-          const { value } = await Preferences.get({ key: 'userAuth' });
-          if (value) {
-            authData = JSON.parse(value);
+          console.log('[UserContext] Checking Capacitor Preferences...');
+          try {
+            const { value } = await Preferences.get({ key: 'userAuth' });
+            if (value) {
+              authData = JSON.parse(value);
+            }
+          } catch (error) {
+            console.error('[UserContext] Error reading from Preferences:', error);
           }
         } else {
-          // Use localStorage for web
+          console.log('[UserContext] Checking localStorage...');
           const storedAuth = localStorage.getItem('userAuth');
           if (storedAuth) {
             authData = JSON.parse(storedAuth);
           }
         }
         
-        if (authData) {
-          // Get user data from database
-          const userData = await DatabaseService.getUserByUsername(authData.username);
+        if (authData && authData.username) {
+          console.log('[UserContext] Found existing auth data:', authData);
           
-          if (userData) {
-            console.log("Found stored user:", userData);
-            setCurrentUser(userData);
-          }
+          // Restore user session
+          const userData = {
+            id: authData.id || Date.now(), // Generate ID if not exists
+            username: authData.username,
+            role: authData.role || null
+          };
+          
+          setCurrentUser(userData);
+          console.log('[UserContext] User session restored:', userData);
+        } else {
+          console.log('[UserContext] No existing auth data found');
         }
       } catch (error) {
-        console.error('Error initializing app:', error);
+        console.error('[UserContext] Error initializing app:', error);
       } finally {
         setIsLoading(false);
+        console.log('[UserContext] App initialization completed');
       }
     };
 
     initializeApp();
-    
-    return () => {
-      // Clean up
-      DatabaseService.close();
-    };
   }, []);
 
-  // Save auth data to both localStorage and Preferences
-  const saveAuthData = async (data) => {
-    const authString = JSON.stringify(data);
-    
-    // Save to localStorage (web)
-    localStorage.setItem('userAuth', authString);
-    
-    // Save to Preferences (native)
-    if (Capacitor.isNativePlatform()) {
-      await Preferences.set({
-        key: 'userAuth',
-        value: authString
-      });
-    }
-  };
-
-  // Clear auth data from both localStorage and Preferences
-  const clearAuthData = async () => {
-    localStorage.removeItem('userAuth');
-    
-    if (Capacitor.isNativePlatform()) {
-      await Preferences.remove({ key: 'userAuth' });
-    }
-  };
-
-  const login = async (username) => {
+  // Save auth data to storage
+  const saveAuthData = async (userData) => {
     try {
-      console.log("Logging in user:", username);
+      const authData = {
+        id: userData.id,
+        username: userData.username,
+        role: userData.role
+      };
       
-      // If on native platform, ensure database is ready
-      if (Capacitor.isNativePlatform() && !dbInitialized) {
-        console.log("Resetting database before login");
-        await DatabaseService.resetDatabase();
-        setDbInitialized(true);
+      const authString = JSON.stringify(authData);
+      console.log('[UserContext] Saving auth data:', authData);
+      
+      // Save to localStorage (always available)
+      localStorage.setItem('userAuth', authString);
+      if (userData.role) {
+        localStorage.setItem('userRole', userData.role);
       }
       
-      // Check if user exists
-      let user = await DatabaseService.getUserByUsername(username);
+      // Save to Preferences (native only)
+      if (Capacitor.isNativePlatform()) {
+        await Preferences.set({
+          key: 'userAuth',
+          value: authString
+        });
+      }
+      
+      console.log('[UserContext] Auth data saved successfully');
+    } catch (error) {
+      console.error('[UserContext] Error saving auth data:', error);
+    }
+  };
+
+  // Clear auth data from storage
+  const clearAuthData = async () => {
+    try {
+      console.log('[UserContext] Clearing auth data...');
+      
+      localStorage.removeItem('userAuth');
+      localStorage.removeItem('userRole');
+      
+      if (Capacitor.isNativePlatform()) {
+        await Preferences.remove({ key: 'userAuth' });
+      }
+      
+      console.log('[UserContext] Auth data cleared successfully');
+    } catch (error) {
+      console.error('[UserContext] Error clearing auth data:', error);
+    }
+  };
+
+  // Get user data from simple storage (localStorage as database)
+  const getUserFromStorage = (username) => {
+    try {
+      const users = JSON.parse(localStorage.getItem('app_users') || '[]');
+      return users.find(user => user.username === username) || null;
+    } catch (error) {
+      console.error('[UserContext] Error reading users from storage:', error);
+      return null;
+    }
+  };
+
+  // Save user to simple storage
+  const saveUserToStorage = (userData) => {
+    try {
+      const users = JSON.parse(localStorage.getItem('app_users') || '[]');
+      const existingIndex = users.findIndex(user => user.username === userData.username);
+      
+      if (existingIndex !== -1) {
+        users[existingIndex] = userData;
+      } else {
+        users.push(userData);
+      }
+      
+      localStorage.setItem('app_users', JSON.stringify(users));
+      console.log('[UserContext] User saved to storage:', userData);
+    } catch (error) {
+      console.error('[UserContext] Error saving user to storage:', error);
+    }
+  };
+
+  const login = async (credentials) => {
+    try {
+      console.log('[UserContext] Starting login process...', credentials);
+      
+      const username = typeof credentials === 'string' ? credentials : credentials.username;
+      
+      if (!username || !username.trim()) {
+        console.error('[UserContext] No username provided');
+        return false;
+      }
+      
+      // Check if user exists in storage
+      let user = getUserFromStorage(username);
       
       if (!user) {
-        console.log("User not found, creating new user");
-        // Auto-create user if not found
-        const userId = await DatabaseService.createUser(username, 'parent');
-        user = await DatabaseService.getUserById(userId);
-      } else {
-        console.log("User found:", user);
+        console.log('[UserContext] User not found in storage');
+        return false;
       }
       
-      if (user) {
-        setCurrentUser(user);
-        await saveAuthData({
-          username: user.username,
-          role: user.role
-        });
-        console.log("User logged in successfully");
-        return true;
-      }
+      console.log('[UserContext] Login successful:', user);
+      setCurrentUser(user);
+      await saveAuthData(user);
       
-      console.log("Login failed - user object is null");
-      return false;
+      return true;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('[UserContext] Login error:', error);
       return false;
     }
   };
 
-  const register = async (username, role = 'parent') => {
+  const register = async (username) => {
     try {
-      console.log("Starting registration for:", username);
+      console.log('[UserContext] Starting registration:', username);
       
-      // If on native platform, ensure database is ready
-      if (Capacitor.isNativePlatform() && !dbInitialized) {
-        console.log("Resetting database before registration");
-        await DatabaseService.resetDatabase();
-        setDbInitialized(true);
+      if (!username || !username.trim()) {
+        console.error('[UserContext] No username provided');
+        return false;
       }
       
       // Check if user already exists
-      console.log("Checking if user already exists");
-      const existingUser = await DatabaseService.getUserByUsername(username);
+      const existingUser = getUserFromStorage(username);
       
       if (existingUser) {
-        console.log("User already exists:", existingUser);
-        return { success: false, message: 'این نام کاربری قبلاً ثبت شده است' };
+        console.log('[UserContext] User already exists');
+        return false;
       }
       
-      // Create new user
-      console.log("Creating new user");
-      const userId = await DatabaseService.createUser(username, role);
+      // Create new user without role (will be set in role selection)
+      const newUser = {
+        id: Date.now(),
+        username: username.trim(),
+        role: null, // No role initially
+        created_at: new Date().toISOString()
+      };
       
-      if (userId) {
-        console.log("User created successfully with ID:", userId);
-        
-        // Get the complete user data
-        const newUser = await DatabaseService.getUserById(userId);
-        
-        if (newUser) {
-          console.log("Retrieved new user data:", newUser);
-          setCurrentUser(newUser);
-          
-          // Store auth data
-          await saveAuthData({
-            username: newUser.username,
-            role: newUser.role
-          });
-          
-          return { success: true };
-        } else {
-          console.error("Failed to retrieve user after creation");
-        }
-      }
+      // Save to storage
+      saveUserToStorage(newUser);
       
-      console.error("Failed to create user, no user ID returned");
-      return { success: false, message: 'خطا در ایجاد کاربر' };
+      console.log('[UserContext] Registration successful:', newUser);
+      setCurrentUser(newUser);
+      await saveAuthData(newUser);
+      
+      return true;
     } catch (error) {
-      console.error('Registration error:', error);
-      return { success: false, message: 'خطا در ثبت‌نام' };
+      console.error('[UserContext] Registration error:', error);
+      return false;
+    }
+  };
+
+  const updateUserRole = async (newRole) => {
+    try {
+      if (!currentUser) {
+        console.error('[UserContext] No current user to update role');
+        return false;
+      }
+      
+      console.log('[UserContext] Updating user role to:', newRole);
+      
+      // Update current user
+      const updatedUser = { ...currentUser, role: newRole };
+      
+      // Save to storage
+      saveUserToStorage(updatedUser);
+      
+      // Update state
+      setCurrentUser(updatedUser);
+      
+      // Update stored auth data
+      await saveAuthData(updatedUser);
+      
+      console.log('[UserContext] User role updated successfully');
+      return true;
+    } catch (error) {
+      console.error('[UserContext] Error updating user role:', error);
+      return false;
     }
   };
 
   const logout = async () => {
-    setCurrentUser(null);
-    await clearAuthData();
+    try {
+      console.log('[UserContext] Starting logout process...');
+      
+      // Clear user state
+      setCurrentUser(null);
+      
+      // Clear stored auth data
+      await clearAuthData();
+      
+      console.log('[UserContext] Logout completed successfully');
+    } catch (error) {
+      console.error('[UserContext] Error during logout:', error);
+      
+      // Ensure state is cleared even if there's an error
+      setCurrentUser(null);
+      localStorage.removeItem('userAuth');
+      localStorage.removeItem('userRole');
+    }
   };
 
   const value = {
     currentUser,
     isLoading,
-    dbInitialized,
     login,
     register,
-    logout
+    logout,
+    updateUserRole
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
 
 export const useUser = () => {
-  return useContext(UserContext);
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
 };

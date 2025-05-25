@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/ChildDashboard.css';
@@ -15,7 +14,7 @@ const ChildDashboard = () => {
   const [showMessage, setShowMessage] = useState(false);
   const [childName, setChildName] = useState('');
   
-  // Added logout function from useUser
+  // Use UserContext for proper state management
   const { currentUser, logout } = useUser();
   
   useEffect(() => {
@@ -23,16 +22,12 @@ const ChildDashboard = () => {
       try {
         // Initialize database and run migration if needed
         if (!DatabaseService.initialized) {
-          await DatabaseService.init();
+          await DatabaseService.ensureInitialized();
           await MigrationService.migrateChildDataToDatabase();
         }
         
-        // Get child profile
-        const childProfile = currentUser?.id 
-          ? await DatabaseService.getChildProfile(currentUser.id)
-          : JSON.parse(localStorage.getItem('childProfile') || '{}');
-        
-        setChildName(childProfile.fullName || 'کودک عزیز');
+        // Load child profile data
+        await loadChildProfile();
         
         // Show the logo message after a short delay
         const messageTimer = setTimeout(() => {
@@ -56,6 +51,32 @@ const ChildDashboard = () => {
       }
     };
     
+    const loadChildProfile = async () => {
+      try {
+        if (currentUser?.id) {
+          // Try to get from database first
+          const userProfile = await DatabaseService.getUserById(currentUser.id);
+          if (userProfile && userProfile.profile_data) {
+            const profileData = JSON.parse(userProfile.profile_data);
+            setChildName(profileData.fullName || profileData.name || 'کودک عزیز');
+          } else {
+            // Fallback to localStorage
+            const storedProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
+            setChildName(storedProfile.fullName || 'کودک عزیز');
+          }
+        } else {
+          // Fallback to localStorage if no currentUser
+          const storedProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
+          setChildName(storedProfile.fullName || 'کودک عزیز');
+        }
+      } catch (error) {
+        console.error('Error loading child profile:', error);
+        // Final fallback
+        const storedProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
+        setChildName(storedProfile.fullName || 'کودک عزیز');
+      }
+    };
+    
     initApp();
   }, [currentUser]);
   
@@ -65,28 +86,47 @@ const ChildDashboard = () => {
   
   const handleLogout = async () => {
     try {
+      console.log('Child logout initiated');
+      
       // Close database connection if open
       if (DatabaseService.initialized) {
         await DatabaseService.close();
       }
       
-      // Clear auth data
-      localStorage.removeItem('userAuth');
+      // Clear child-specific localStorage items
+      localStorage.removeItem('childProfile');
+      localStorage.removeItem('childAchievements');
+      localStorage.removeItem('brushAlarms');
+      localStorage.removeItem('healthySnackScore');
       localStorage.removeItem('userRole');
       
-      // Use the useUser hook's logout function if available
-      if (typeof logout === 'function') {
-        await logout();
-      }
+      // Use the UserContext logout function
+      await logout();
       
-      // Navigate directly to login page, not to parent dashboard
+      // Reset component state
+      setChildName('');
+      setActiveTab('home');
+      setShowMessage(false);
+      
+      console.log('Child logout completed, navigating to login');
+      
+      // Navigate to login page and replace the history stack
       navigate('/login', { replace: true });
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error('Error during child logout:', error);
       
-      // Still logout even if error
+      // Force cleanup even if error occurs
       localStorage.removeItem('userAuth');
+      localStorage.removeItem('childProfile');
+      localStorage.removeItem('childAchievements');
+      localStorage.removeItem('brushAlarms');
+      localStorage.removeItem('healthySnackScore');
       localStorage.removeItem('userRole');
+      
+      // Reset component state
+      setChildName('');
+      setActiveTab('home');
+      setShowMessage(false);
       
       // Force navigation to login
       navigate('/login', { replace: true });
@@ -94,7 +134,7 @@ const ChildDashboard = () => {
   };
   
   const navigateToFAQ = () => {
-    // ذخیره نقش کاربر برای برگشت به داشبورد مناسب
+    // Save user role for returning to appropriate dashboard
     localStorage.setItem('userRole', 'child');
     navigate('/faq');
   };

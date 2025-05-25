@@ -1,4 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { Toast } from '@capacitor/toast';
 import './CaretakerComponents.css';
 
 const HealthReports = () => {
@@ -8,6 +14,7 @@ const HealthReports = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showReportModal, setShowReportModal] = useState(false);
   const [currentStudent, setCurrentStudent] = useState(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [formData, setFormData] = useState({
     date: '',
     hasBrushed: false,
@@ -229,10 +236,189 @@ const HealthReports = () => {
     }
   };
 
+  // Show toast message
+  const showToast = async (message) => {
+    if (Capacitor.isNativePlatform()) {
+      await Toast.show({
+        text: message,
+        duration: 'short',
+        position: 'bottom'
+      });
+    } else {
+      alert(message);
+    }
+  };
+
   // Generate a PDF report
-  const generatePDF = (student) => {
-    // In a real app, this would generate a PDF report
-    alert(`در یک برنامه واقعی، گزارش PDF برای ${student.name} تولید می‌شود.`);
+  const generatePDF = async (student) => {
+    if (!student.healthRecords || student.healthRecords.length === 0) {
+      await showToast('هیچ گزارش سلامتی برای این دانش‌آموز وجود ندارد');
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+
+    try {
+      // Create a new PDF document
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      // Set RTL direction and font
+      doc.setR2L(true);
+
+      // Add title
+      doc.setFontSize(18);
+      doc.text('گزارش سلامت دهان و دندان', doc.internal.pageSize.width / 2, 20, { align: 'center' });
+
+      // Add student info
+      doc.setFontSize(14);
+      doc.text(`نام دانش‌آموز: ${student.name}`, 20, 35);
+      doc.text(`سن: ${student.age} سال`, 20, 45);
+      doc.text(`کلاس: ${student.grade === 'preschool' ? 'پیش دبستانی' : `کلاس ${student.grade}`}`, 20, 55);
+      doc.text(`مدرسه: ${student.schoolName}`, 20, 65);
+
+      // Add generation date
+      const today = new Date();
+      const formattedDate = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+      doc.text(`تاریخ تولید گزارش: ${formattedDate}`, 20, 75);
+
+      // Prepare table data
+      const tableData = [];
+      
+      student.healthRecords.forEach(record => {
+        const warningFlagsText = Object.entries(record.warningFlags || {})
+          .filter(([key, value]) => value)
+          .map(([key, value]) => {
+            const flagLabels = {
+              brokenTooth: 'دندان شکسته',
+              severePain: 'درد شدید',
+              abscess: 'آبسه',
+              bleeding: 'خونریزی لثه',
+              feverWithPain: 'تب با درد',
+              fistula: 'فیستول',
+              abnormalTissue: 'بافت غیرطبیعی'
+            };
+            return flagLabels[key] || key;
+          })
+          .join(', ') || 'ندارد';
+
+        tableData.push([
+          formatDate(record.date),
+          record.hasBrushed ? 'بله' : 'خیر',
+          record.hasCavity ? 'بله' : 'خیر',
+          record.hasHealthyGums ? 'سالم' : 'مشکل دارد',
+          record.score.toString(),
+          warningFlagsText,
+          record.needsReferral ? 'بله' : 'خیر',
+          record.notes || 'ندارد'
+        ]);
+      });
+
+      // Add the table
+      doc.autoTable({
+        startY: 85,
+        head: [['تاریخ', 'مسواک زده', 'پوسیدگی', 'سلامت لثه', 'امتیاز', 'علائم هشدار', 'نیاز به ارجاع', 'یادداشت']],
+        body: tableData,
+        headStyles: { 
+          fillColor: [46, 125, 50], 
+          halign: 'center',
+          fontSize: 10
+        },
+        styles: { 
+          halign: 'center', 
+          font: 'helvetica',
+          fontSize: 8,
+          cellPadding: 2
+        },
+        theme: 'grid',
+        columnStyles: {
+          0: { cellWidth: 20 },  // Date
+          1: { cellWidth: 15 },  // Brushed
+          2: { cellWidth: 15 },  // Cavity
+          3: { cellWidth: 20 },  // Gums
+          4: { cellWidth: 15 },  // Score
+          5: { cellWidth: 30 },  // Warning flags
+          6: { cellWidth: 20 },  // Referral
+          7: { cellWidth: 35 }   // Notes
+        }
+      });
+
+      // Add summary section
+      const finalY = doc.lastAutoTable.finalY + 10;
+      doc.setFontSize(12);
+      doc.text('خلاصه وضعیت:', 20, finalY);
+
+      const latestRecord = student.healthRecords[0];
+      const summaryY = finalY + 10;
+      
+      doc.setFontSize(10);
+      doc.text(`آخرین بررسی: ${formatDate(latestRecord.date)}`, 20, summaryY);
+      doc.text(`امتیاز کلی: ${latestRecord.score} از 10`, 20, summaryY + 8);
+      doc.text(`وضعیت کلی: ${getLatestHealthStatus(student)}`, 20, summaryY + 16);
+
+      if (latestRecord.needsReferral) {
+        doc.setTextColor(255, 0, 0); // Red color for referral
+        doc.text('⚠️ نیاز به ارجاع فوری به دندان‌پزشک', 20, summaryY + 24);
+        if (latestRecord.referralNotes) {
+          doc.text(`دلیل ارجاع: ${latestRecord.referralNotes}`, 20, summaryY + 32);
+        }
+        doc.setTextColor(0, 0, 0); // Reset to black
+      }
+
+      // Add footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(
+          'لبخند شاد دندان سالم - دانشگاه علوم پزشکی تهران',
+          doc.internal.pageSize.width / 2,
+          doc.internal.pageSize.height - 10,
+          { align: 'center' }
+        );
+      }
+
+      const fileName = `health_report_${student.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+
+      if (Capacitor.isNativePlatform()) {
+        // Save to device
+        const pdfOutput = doc.output('datauristring');
+        const base64Data = pdfOutput.split(',')[1];
+
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Documents,
+        });
+
+        await showToast('گزارش PDF با موفقیت ذخیره شد');
+
+        // Try to share the file
+        try {
+          await Share.share({
+            title: 'گزارش سلامت دهان و دندان',
+            text: `گزارش سلامت دهان و دندان ${student.name}`,
+            url: result.uri,
+            dialogTitle: 'اشتراک گذاری گزارش'
+          });
+        } catch (shareError) {
+          console.log('Share not available, file saved to documents');
+        }
+      } else {
+        // Download in browser
+        doc.save(fileName);
+        await showToast('گزارش PDF دانلود شد');
+      }
+
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      await showToast('خطا در تولید گزارش PDF');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   // Get the latest health status for a student
@@ -275,7 +461,7 @@ const HealthReports = () => {
   // Format date for display
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+    return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
   };
 
   return (
@@ -354,10 +540,10 @@ const HealthReports = () => {
                       </span>
                       {hasRecords && (
                         <span 
-                          className="action-link edit-link" 
-                          onClick={() => generatePDF(student)}
+                          className={`action-link edit-link ${isGeneratingPDF ? 'disabled' : ''}`}
+                          onClick={() => !isGeneratingPDF && generatePDF(student)}
                         >
-                          چاپ گزارش
+                          {isGeneratingPDF ? 'در حال تولید...' : 'چاپ گزارش'}
                         </span>
                       )}
                     </td>

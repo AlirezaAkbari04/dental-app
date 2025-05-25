@@ -8,11 +8,15 @@ import UrgentReferrals from './caretaker/UrgentReferrals';
 import EducationalContent from './caretaker/EducationalContent';
 import DatabaseService from '../../services/DatabaseService';
 import MigrationService from '../../services/MigrationService';
+import { useUser } from '../../contexts/UserContext';
 
 const CaretakerDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('schools');
   const [teacherName, setTeacherName] = useState('');
+  
+  // Use the UserContext for proper logout
+  const { currentUser, logout } = useUser();
   
   // Load user data and initialize database
   useEffect(() => {
@@ -20,7 +24,7 @@ const CaretakerDashboard = () => {
       try {
         // Initialize database
         if (!DatabaseService.initialized) {
-          await DatabaseService.init();
+          await DatabaseService.ensureInitialized();
         }
         
         // Run migration if needed
@@ -32,32 +36,84 @@ const CaretakerDashboard = () => {
     
     initDatabase();
     
-    // Existing code to load user data from localStorage
-    const teacherProfile = JSON.parse(localStorage.getItem('teacherProfile') || '{}');
-    setTeacherName(teacherProfile.name || 'معلم بهداشت');
-  }, []);
+    // Load teacher profile data
+    const loadTeacherProfile = async () => {
+      try {
+        if (currentUser?.id) {
+          // Try to get from database first
+          const teacherProfile = await DatabaseService.getUserById(currentUser.id);
+          if (teacherProfile && teacherProfile.profile_data) {
+            const profileData = JSON.parse(teacherProfile.profile_data);
+            setTeacherName(profileData.name || 'معلم بهداشت');
+          } else {
+            // Fallback to localStorage
+            const storedProfile = JSON.parse(localStorage.getItem('teacherProfile') || '{}');
+            setTeacherName(storedProfile.name || 'معلم بهداشت');
+          }
+        } else {
+          // Fallback to localStorage if no currentUser
+          const storedProfile = JSON.parse(localStorage.getItem('teacherProfile') || '{}');
+          setTeacherName(storedProfile.name || 'معلم بهداشت');
+        }
+      } catch (error) {
+        console.error('Error loading teacher profile:', error);
+        setTeacherName('معلم بهداشت');
+      }
+    };
+    
+    loadTeacherProfile();
+  }, [currentUser]);
   
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
   
-  const handleLogout = () => {
-    // Clear all relevant localStorage items
-    localStorage.removeItem('userAuth');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('teacherProfile');
-    
-    // Force clear any cached state
-    setTeacherName('');
-    setActiveTab('schools');
-    
-    // Navigate to login page and replace the history stack
-    navigate('/login', { replace: true });
+  const handleLogout = async () => {
+    try {
+      console.log('Caretaker logout initiated');
+      
+      // Close database connection if open
+      if (DatabaseService.initialized) {
+        await DatabaseService.close();
+      }
+      
+      // Clear specific localStorage items
+      localStorage.removeItem('teacherProfile');
+      localStorage.removeItem('caretakerSchools');
+      localStorage.removeItem('userRole');
+      
+      // Use the UserContext logout function
+      await logout();
+      
+      // Reset component state
+      setTeacherName('');
+      setActiveTab('schools');
+      
+      console.log('Caretaker logout completed, navigating to login');
+      
+      // Navigate to login page and replace the history stack
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('Error during caretaker logout:', error);
+      
+      // Force cleanup even if error occurs
+      localStorage.removeItem('userAuth');
+      localStorage.removeItem('teacherProfile');
+      localStorage.removeItem('caretakerSchools');
+      localStorage.removeItem('userRole');
+      
+      // Reset component state
+      setTeacherName('');
+      setActiveTab('schools');
+      
+      // Force navigation to login
+      navigate('/login', { replace: true });
+    }
   };
   
   const navigateToFAQ = () => {
-    // ذخیره نقش کاربر برای برگشت به داشبورد مناسب
-    localStorage.setItem('userRole', 'caretaker');
+    // Save user role for returning to appropriate dashboard
+    localStorage.setItem('userRole', 'teacher');
     navigate('/faq');
   };
   

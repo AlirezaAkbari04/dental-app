@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PdfService from '../../../services/PdfService'; // Import the PdfService
 import './CaretakerComponents.css';
 
 const UrgentReferrals = () => {
@@ -8,12 +9,13 @@ const UrgentReferrals = () => {
   const [selectedDateRange, setSelectedDateRange] = useState('all');
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [currentReferral, setCurrentReferral] = useState(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false); // Loading state for PDF generation
 
   useEffect(() => {
     const loadData = () => {
       try {
         // Get schools from localStorage
-        const savedSchools = JSON.parse(localStorage.getItem('schools') || '[]');
+        const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
         setSchools(savedSchools);
 
         // Extract all students with referrals from all schools
@@ -28,7 +30,7 @@ const UrgentReferrals = () => {
                 if (referralRecords.length > 0) {
                   referralRecords.forEach(record => {
                     allReferrals.push({
-                      localId: record.localId || `ref_${Date.now()}`,
+                      localId: record.localId || `ref_${Date.now()}_${Math.random()}`,
                       studentLocalId: student.localId,
                       studentName: student.name,
                       studentAge: student.age,
@@ -104,7 +106,7 @@ const UrgentReferrals = () => {
       }
 
       // Update the health record in localStorage
-      const savedSchools = JSON.parse(localStorage.getItem('schools') || '[]');
+      const savedSchools = JSON.parse(localStorage.getItem('caretakerSchools') || '[]');
       const updatedSchools = savedSchools.map(school => {
         if (school.localId === referral.schoolId) {
           return {
@@ -128,7 +130,7 @@ const UrgentReferrals = () => {
         return school;
       });
 
-      localStorage.setItem('schools', JSON.stringify(updatedSchools));
+      localStorage.setItem('caretakerSchools', JSON.stringify(updatedSchools));
     } catch (error) {
       console.error('Error updating referral status:', error);
       alert('خطا در به‌روزرسانی وضعیت ارجاع. لطفاً دوباره تلاش کنید');
@@ -141,16 +143,50 @@ const UrgentReferrals = () => {
     setShowDetailsModal(true);
   };
 
-  // Generate a PDF report of all referrals
-  const generatePDF = () => {
-    // In a real app, this would generate a PDF report
-    alert('در یک برنامه واقعی، گزارش PDF از لیست ارجاع‌ها تولید می‌شود.');
+  // Generate a PDF report of all referrals - IMPLEMENTED
+  const generatePDF = async () => {
+    if (filteredReferrals.length === 0) {
+      alert('هیچ ارجاعی برای تولید گزارش وجود ندارد');
+      return;
+    }
+
+    setIsGeneratingPdf(true);
+    
+    try {
+      // Get school name for filter
+      const schoolName = selectedSchool ? 
+        schools.find(s => s.localId === selectedSchool)?.name : null;
+      
+      // Generate PDF using PdfService
+      const result = await PdfService.generateUrgentReferralsPdf(
+        filteredReferrals, 
+        schoolName, 
+        selectedDateRange
+      );
+      
+      if (result.success) {
+        if (result.filePath) {
+          // Native platform - file saved
+          alert(`گزارش PDF با موفقیت ذخیره شد: ${result.fileName}`);
+        } else {
+          // Web platform - file downloaded
+          alert('گزارش PDF با موفقیت دانلود شد');
+        }
+      } else {
+        throw new Error(result.error || 'خطا در تولید فایل PDF');
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert(`خطا در تولید گزارش PDF: ${error.message}`);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   // Format date for display
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+    return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
   };
 
   // Get warning flags as text
@@ -176,10 +212,10 @@ const UrgentReferrals = () => {
         <button 
           className="action-button" 
           onClick={generatePDF}
-          disabled={filteredReferrals.length === 0}
+          disabled={filteredReferrals.length === 0 || isGeneratingPdf}
         >
           <span className="action-icon">📄</span>
-          دریافت گزارش PDF
+          {isGeneratingPdf ? 'در حال تولید گزارش...' : 'دریافت گزارش PDF'}
         </button>
       </div>
       
@@ -213,55 +249,88 @@ const UrgentReferrals = () => {
         {filteredReferrals.length === 0 ? (
           <div className="empty-state">
             <p>هیچ مورد ارجاع فوری یافت نشد.</p>
+            {referrals.length > 0 && (
+              <p>ممکن است فیلترهای انتخاب شده نتایج را محدود کرده باشد.</p>
+            )}
           </div>
         ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>نام دانش‌آموز</th>
-                <th>سن</th>
-                <th>مدرسه</th>
-                <th>تاریخ ارجاع</th>
-                <th>علائم هشدار</th>
-                <th>وضعیت</th>
-                <th>عملیات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredReferrals.map(referral => (
-                <tr key={referral.localId} className={referral.resolved ? 'resolved-row' : ''}>
-                  <td>{referral.studentName}</td>
-                  <td>{referral.studentAge} سال</td>
-                  <td>{referral.schoolName}</td>
-                  <td>{formatDate(referral.date)}</td>
-                  <td className="warning-flags-cell">
-                    {getWarningFlagsText(referral.warningFlags)}
-                  </td>
-                  <td>
-                    <span 
-                      className={`status-badge ${referral.resolved ? 'status-success' : 'status-error'}`}
-                    >
-                      {referral.resolved ? 'رسیدگی شده' : 'در انتظار رسیدگی'}
-                    </span>
-                  </td>
-                  <td className="table-action">
-                    <span 
-                      className="action-link view-link" 
-                      onClick={() => viewReferralDetails(referral)}
-                    >
-                      جزئیات
-                    </span>
-                    <span 
-                      className={`action-link ${referral.resolved ? 'edit-link' : 'delete-link'}`}
-                      onClick={() => handleToggleResolved(referral)}
-                    >
-                      {referral.resolved ? 'برگشت به حالت انتظار' : 'علامت‌گذاری به عنوان رسیدگی شده'}
-                    </span>
-                  </td>
+          <div>
+            <div className="summary-stats" style={{
+              display: 'flex',
+              gap: '20px',
+              marginBottom: '20px',
+              padding: '15px',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px'
+            }}>
+              <div className="stat">
+                <strong>کل ارجاع‌ها: </strong>
+                <span>{filteredReferrals.length}</span>
+              </div>
+              <div className="stat">
+                <strong>رسیدگی شده: </strong>
+                <span style={{ color: '#28a745' }}>
+                  {filteredReferrals.filter(r => r.resolved).length}
+                </span>
+              </div>
+              <div className="stat">
+                <strong>در انتظار رسیدگی: </strong>
+                <span style={{ color: '#dc3545' }}>
+                  {filteredReferrals.filter(r => !r.resolved).length}
+                </span>
+              </div>
+            </div>
+            
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>نام دانش‌آموز</th>
+                  <th>سن</th>
+                  <th>مدرسه</th>
+                  <th>تاریخ ارجاع</th>
+                  <th>علائم هشدار</th>
+                  <th>وضعیت</th>
+                  <th>عملیات</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredReferrals.map(referral => (
+                  <tr key={referral.localId} className={referral.resolved ? 'resolved-row' : ''}>
+                    <td>{referral.studentName}</td>
+                    <td>{referral.studentAge} سال</td>
+                    <td>{referral.schoolName}</td>
+                    <td>{formatDate(referral.date)}</td>
+                    <td className="warning-flags-cell">
+                      {getWarningFlagsText(referral.warningFlags)}
+                    </td>
+                    <td>
+                      <span 
+                        className={`status-badge ${referral.resolved ? 'status-success' : 'status-error'}`}
+                      >
+                        {referral.resolved ? 'رسیدگی شده' : 'در انتظار رسیدگی'}
+                      </span>
+                    </td>
+                    <td className="table-action">
+                      <span 
+                        className="action-link view-link" 
+                        onClick={() => viewReferralDetails(referral)}
+                        style={{ cursor: 'pointer', marginLeft: '10px' }}
+                      >
+                        جزئیات
+                      </span>
+                      <span 
+                        className={`action-link ${referral.resolved ? 'edit-link' : 'delete-link'}`}
+                        onClick={() => handleToggleResolved(referral)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {referral.resolved ? 'برگشت به حالت انتظار' : 'علامت‌گذاری به عنوان رسیدگی شده'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
       
