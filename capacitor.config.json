@@ -12,7 +12,11 @@
       }
     },
     "SplashScreen": {
-      "launchShowDuration": 0
+      "launchShowDuration": 1000,
+      "launchAutoHide": true,
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "FIT_CENTER",
+      "showSpinner": false
     }
   },
   "server": {

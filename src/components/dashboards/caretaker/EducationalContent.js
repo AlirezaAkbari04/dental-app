@@ -4,11 +4,49 @@ import './EducationalContent.css';
 
 const EducationalContent = () => {
   const [selectedContent, setSelectedContent] = useState(null);
+  const [imageErrors, setImageErrors] = useState({});
 
-  // Platform-aware path function
-  const getImagePath = (filename) => Capacitor.isNativePlatform() 
-    ? `file:///android_asset/assets/images/${filename}`
-    : `/assets/images/${filename}`;
+  // Platform-aware path function with multiple fallbacks
+  const getImagePath = (filename) => {
+    if (Capacitor.isNativePlatform()) {
+      // For native platforms (Android/iOS)
+      return `assets/images/${filename}`;
+    } else {
+      // For web platform - use public folder path
+      return `/assets/images/${filename}`;
+    }
+  };
+
+  // Handle image load errors with fallback
+  const handleImageError = (filename) => {
+    setImageErrors(prev => ({ ...prev, [filename]: true }));
+  };
+
+  // Create image element with fallback
+  const createImageElement = (filename, altText = 'تصویر آموزشی') => {
+    const imagePath = getImagePath(filename);
+    
+    // If image failed to load, show placeholder
+    if (imageErrors[filename]) {
+      return `
+        <div class="image-placeholder-box">
+          <div class="placeholder-icon">🖼️</div>
+          <p class="placeholder-text">تصویر ${filename} در دسترس نیست</p>
+        </div>
+      `;
+    }
+    
+    return `
+      <div class="image-container">
+        <img 
+          src="${imagePath}" 
+          alt="${altText}" 
+          class="content-image" 
+          onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>'"
+        />
+      </div>
+    `;
+  };
 
   const [contentList] = useState([
     {
@@ -54,9 +92,7 @@ const EducationalContent = () => {
               </div>
             </div>
 
-            <div class="image-placeholder">
-              <img src="${getImagePath('1.jpg')}" class="content-image" />
-            </div>
+            ${createImageElement('1.jpg', 'تصویر پلاک دندانی')}
           </section>
 
           <section class="content-section">
@@ -76,9 +112,7 @@ const EducationalContent = () => {
               <p>مسواک روی دندانها طوری قرار داده میشود که هر بار 3 تا 4 دندان شسته شود. مسواک در فک بالا با حرکت جلو و عقب حرکت میکند. در فک پایین بطور مشابه این حرکت انجام میشود.</p>
             </div>
 
-            <div class="image-placeholder">
-              <img src="${getImagePath('2.jpg')}" class="content-image" />
-            </div>
+            ${createImageElement('2.jpg', 'روش مسواک زدن کودکان')}
 
             <div class="tips">
               <ul>
@@ -138,9 +172,7 @@ const EducationalContent = () => {
               <p><strong>کشیدن دندانهای شیری موجب بهم ریختگی قوس فکی می شود لذا حفظ دندانهای شیری مهم است.</strong></p>
             </div>
 
-            <div class="image-placeholder">
-              <img src="${getImagePath('3.jpg')}" class="content-image" />
-            </div>
+            ${createImageElement('3.jpg', 'اهمیت دندان شیری')}
           </section>
 
           <section class="content-section">
@@ -154,9 +186,7 @@ const EducationalContent = () => {
               <li>بهتر است آب نمک ساده (یک لیوان آب جوشیده سرد و کمی نمک) را دهانشویه کنید.</li>
             </ol>
 
-            <div class="image-placeholder">
-              <img src="${getImagePath('4.jpg')}" class="content-image" />
-            </div>
+            ${createImageElement('4.jpg', 'نحوه صحیح مسواک زدن')}
           </section>
 
           <section class="content-section references">
@@ -168,6 +198,41 @@ const EducationalContent = () => {
             </ul>
           </section>
         </div>
+
+        <style>
+          .image-container {
+            margin: 20px 0;
+            text-align: center;
+          }
+          
+          .content-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          }
+          
+          .image-placeholder-box {
+            background-color: #f5f5f5;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+          }
+          
+          .placeholder-icon {
+            font-size: 48px;
+            color: #ccc;
+            margin-bottom: 10px;
+          }
+          
+          .placeholder-text {
+            color: #666;
+            font-size: 14px;
+            margin: 0;
+          }
+        </style>
       `,
       icon: '📄'
     },

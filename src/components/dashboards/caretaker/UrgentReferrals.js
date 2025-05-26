@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import PdfService from '../../../services/PdfService'; // Import the PdfService
+import PdfService from '../../../services/PDFService.js';
 import './CaretakerComponents.css';
 
 const UrgentReferrals = () => {
@@ -9,55 +9,76 @@ const UrgentReferrals = () => {
   const [selectedDateRange, setSelectedDateRange] = useState('all');
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [currentReferral, setCurrentReferral] = useState(null);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false); // Loading state for PDF generation
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
-  useEffect(() => {
-    const loadData = () => {
-      try {
-        // FIXED: Use the same localStorage key as HealthReports component
-        const savedSchools = JSON.parse(localStorage.getItem('schools') || '[]');
-        setSchools(savedSchools);
+  // Function to load data
+  const loadData = () => {
+    try {
+      const savedSchools = JSON.parse(localStorage.getItem('schools') || '[]');
+      setSchools(savedSchools);
 
-        // Extract all students with referrals from all schools
-        const allReferrals = [];
-        savedSchools.forEach(school => {
-          if (school.students && Array.isArray(school.students)) {
-            school.students.forEach(student => {
-              if (student.healthRecords && Array.isArray(student.healthRecords)) {
-                // Filter health records that need referral
-                const referralRecords = student.healthRecords.filter(record => record.needsReferral);
+      // Extract all students with referrals from all schools
+      const allReferrals = [];
+      savedSchools.forEach(school => {
+        if (school.students && Array.isArray(school.students)) {
+          school.students.forEach(student => {
+            if (student.healthRecords && Array.isArray(student.healthRecords)) {
+              // Filter health records that need referral
+              const referralRecords = student.healthRecords.filter(record => record.needsReferral);
 
-                if (referralRecords.length > 0) {
-                  referralRecords.forEach(record => {
-                    allReferrals.push({
-                      localId: record.localId || `ref_${Date.now()}_${Math.random()}`,
-                      studentLocalId: student.localId,
-                      studentName: student.name,
-                      studentAge: student.age,
-                      studentGrade: student.grade,
-                      schoolId: school.localId,
-                      schoolName: school.name,
-                      date: record.date,
-                      warningFlags: record.warningFlags,
-                      referralNotes: record.referralNotes || '',
-                      resolved: record.resolved || false
-                    });
+              if (referralRecords.length > 0) {
+                referralRecords.forEach(record => {
+                  allReferrals.push({
+                    localId: record.localId || `ref_${Date.now()}_${Math.random()}`,
+                    studentLocalId: student.localId,
+                    studentName: student.name,
+                    studentAge: student.age,
+                    studentGrade: student.grade,
+                    schoolId: school.localId,
+                    schoolName: school.name,
+                    date: record.date,
+                    warningFlags: record.warningFlags || {},
+                    referralNotes: record.referralNotes || '',
+                    resolved: record.resolved || false
                   });
-                }
+                });
               }
-            });
-          }
-        });
+            }
+          });
+        }
+      });
 
-        // Sort by date (most recent first)
-        allReferrals.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setReferrals(allReferrals);
-      } catch (error) {
-        console.error('Error loading data:', error);
+      // Sort by date (most recent first)
+      allReferrals.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setReferrals(allReferrals);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  };
+
+  // Load data on mount and add event listener for storage changes
+  useEffect(() => {
+    loadData();
+
+    // Listen for storage changes (when new health reports are added)
+    const handleStorageChange = (e) => {
+      if (e.key === 'schools') {
+        loadData();
       }
     };
 
-    loadData();
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also check for custom event dispatched by HealthReports
+    const handleDataUpdate = () => {
+      loadData();
+    };
+    window.addEventListener('healthReportUpdated', handleDataUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('healthReportUpdated', handleDataUpdate);
+    };
   }, []);
 
   // Filter referrals based on school and date range
@@ -67,7 +88,9 @@ const UrgentReferrals = () => {
     let matchesDateRange = true;
     if (selectedDateRange !== 'all') {
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
       const referralDate = new Date(referral.date);
+      referralDate.setHours(0, 0, 0, 0);
       const daysDifference = Math.floor((today - referralDate) / (1000 * 60 * 60 * 24));
 
       switch (selectedDateRange) {
@@ -105,7 +128,7 @@ const UrgentReferrals = () => {
         setCurrentReferral({ ...currentReferral, resolved: !referral.resolved });
       }
 
-      // FIXED: Update the health record in localStorage using the correct key
+      // Update the health record in localStorage
       const savedSchools = JSON.parse(localStorage.getItem('schools') || '[]');
       const updatedSchools = savedSchools.map(school => {
         if (school.localId === referral.schoolId) {
@@ -130,8 +153,10 @@ const UrgentReferrals = () => {
         return school;
       });
 
-      // FIXED: Save to the same localStorage key as HealthReports component
       localStorage.setItem('schools', JSON.stringify(updatedSchools));
+      
+      // Dispatch custom event
+      window.dispatchEvent(new Event('healthReportUpdated'));
     } catch (error) {
       console.error('Error updating referral status:', error);
       alert('خطا در به‌روزرسانی وضعیت ارجاع. لطفاً دوباره تلاش کنید');
@@ -144,7 +169,7 @@ const UrgentReferrals = () => {
     setShowDetailsModal(true);
   };
 
-  // Generate a PDF report of all referrals - IMPLEMENTED
+  // Generate a PDF report of all referrals
   const generatePDF = async () => {
     if (filteredReferrals.length === 0) {
       alert('هیچ ارجاعی برای تولید گزارش وجود ندارد');
@@ -158,11 +183,15 @@ const UrgentReferrals = () => {
       const schoolName = selectedSchool ? 
         schools.find(s => s.localId === selectedSchool)?.name : null;
       
-      // Generate PDF using PdfService
+      // Generate PDF using PdfService with correct parameters
+      const filters = {
+        schoolName: schoolName,
+        dateRange: selectedDateRange
+      };
+      
       const result = await PdfService.generateUrgentReferralsPdf(
         filteredReferrals, 
-        schoolName, 
-        selectedDateRange
+        filters
       );
       
       if (result.success) {
@@ -205,6 +234,18 @@ const UrgentReferrals = () => {
 
     return flags.join('، ');
   };
+
+  // Reload data when component receives focus
+  useEffect(() => {
+    const handleFocus = () => {
+      loadData();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
 
   return (
     <div className="urgent-referrals-container">

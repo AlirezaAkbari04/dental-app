@@ -185,7 +185,7 @@ class PdfService {
     }
   }
 
-  // Generate urgent referrals report PDF - NEW METHOD
+  // Generate urgent referrals report PDF - FIXED METHOD
   async generateUrgentReferralsPdf(referrals, filters = {}) {
     try {
       const doc = new jsPDF({
@@ -235,7 +235,7 @@ class PdfService {
         const tableData = referrals.map((referral, index) => {
           const warningFlags = this.getWarningFlagsText(referral.warningFlags);
           const status = referral.resolved ? 'رسیدگی شده' : 'در انتظار رسیدگی';
-          const date = this.formatDateForPdf(referral.date);
+          const date = this.formatDate(referral.date);
           
           return [
             (index + 1).toString(),
@@ -383,7 +383,7 @@ class PdfService {
       );
 
       // Save the PDF
-      return await this.savePdf(doc, `health_report_${studentInfo.name}`);
+      return await this.savePdf(doc, `health_report_${studentInfo.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
     } catch (error) {
       console.error('Error generating health report PDF:', error);
       return { success: false, error: error.message };
@@ -449,7 +449,7 @@ class PdfService {
       );
 
       // Save the PDF
-      return await this.savePdf(doc, `dental_history_${student.name}`);
+      return await this.savePdf(doc, `dental_history_${student.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
     } catch (error) {
       console.error('Error generating student reports PDF:', error);
       return { success: false, error: error.message };
@@ -461,10 +461,11 @@ class PdfService {
     try {
       if (Capacitor.isNativePlatform()) {
         const pdfOutput = doc.output('datauristring');
+        const base64Data = pdfOutput.split(',')[1];
         
         const result = await Filesystem.writeFile({
           path: filename,
-          data: pdfOutput.split(',')[1], // Remove data URI prefix
+          data: base64Data,
           directory: Directory.Documents,
         });
         
@@ -492,7 +493,7 @@ class PdfService {
 
   // Helper to format warning flags
   getWarningFlagsText(warningFlags) {
-    if (!warningFlags) return 'هیچ علامت خاصی ندارد';
+    if (!warningFlags) return 'ندارد';
 
     const flags = [];
     if (warningFlags.brokenTooth) flags.push('دندان شکسته');
@@ -500,14 +501,14 @@ class PdfService {
     if (warningFlags.abscess) flags.push('آبسه یا ورم چرکی');
     if (warningFlags.bleeding) flags.push('خونریزی لثه');
     if (warningFlags.feverWithPain) flags.push('تب همراه با درد دهان');
-    if (warningFlags.fistula) flags.push('فیستول');
-    if (warningFlags.abnormalTissue) flags.push('بافت غیرطبیعی');
+    if (warningFlags.fistula) flags.push('فیستول یا مجرای خروج چرک');
+    if (warningFlags.abnormalTissue) flags.push('لثه زخمی یا بافت غیرطبیعی');
 
-    return flags.length > 0 ? flags.join('، ') : 'هیچ علامت خاصی ندارد';
+    return flags.length > 0 ? flags.join('، ') : 'ندارد';
   }
 
   // Helper to format date
-  formatDateForPdf(dateString) {
+  formatDate(dateString) {
     try {
       const date = new Date(dateString);
       return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;

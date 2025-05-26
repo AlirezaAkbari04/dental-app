@@ -11,6 +11,7 @@
     "@capacitor/filesystem": "^7.0.1",
     "@capacitor/preferences": "^5.0.6",
     "@capacitor/share": "^7.0.1",
+    "@capacitor/splash-screen": "^7.0.1",
     "@capacitor/toast": "^7.0.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -53,5 +54,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
   }
 }

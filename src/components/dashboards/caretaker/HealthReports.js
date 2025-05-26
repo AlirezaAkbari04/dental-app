@@ -228,8 +228,15 @@ const HealthReports = () => {
 
       setSchools(updatedSchools);
       localStorage.setItem('schools', JSON.stringify(updatedSchools));
+      
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new Event('healthReportUpdated'));
+      
       setShowReportModal(false);
       setCurrentStudent(null);
+      
+      // Show success message
+      showToast('گزارش سلامت با موفقیت ثبت شد');
     } catch (error) {
       console.error('Error saving health report:', error);
       alert('خطا در ثبت گزارش سلامت. لطفاً دوباره تلاش کنید');
