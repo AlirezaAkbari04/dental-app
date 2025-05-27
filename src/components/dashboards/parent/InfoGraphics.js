@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ParentComponents.css';
 import DatabaseService from '../../../services/DatabaseService';
 import { Capacitor } from '@capacitor/core';
@@ -18,18 +18,11 @@ const InfoGraphics = () => {
     audioSource: ''
   });
 
-  // Platform-aware path functions
-  const getImagePath = (filename) => Capacitor.isNativePlatform() 
-    ? `file:///android_asset/assets/images/${filename}`
-    : `/assets/images/${filename}`;
-  
-  const getAudioPath = (filename) => Capacitor.isNativePlatform() 
-    ? `file:///android_asset/assets/audios/${filename}`
-    : `/assets/audios/${filename}`;
-  
-  const getVideoPath = (filename) => Capacitor.isNativePlatform() 
-    ? `file:///android_asset/assets/videos/${filename}`
-    : `/assets/videos/${filename}`;
+  // Simple path functions - direct paths like your working alarm code
+  const getImagePath = (filename) => `/assets/images/${filename}`;
+  const getAudioPath = (filename) => `/assets/audios/${filename}`;
+  const getVideoPath = (filename) => `/assets/videos/${filename}`;
+  const getPdfPath = (filename) => `/assets/pdfs/${filename}`;
 
   // Format time for display (MM:SS)
   const formatTime = (timeInSeconds) => {
@@ -40,12 +33,16 @@ const InfoGraphics = () => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
   
-  // Load and play audio file
-  const initAudio = (audioPath) => {
+  // Load and play audio file - using direct paths like alarm
+  const initAudio = (audioFilename) => {
     // Clean up any existing audio
     if (audioState.audioRef) {
       audioState.audioRef.pause();
     }
+    
+    // Create direct path like your working alarm code
+    const audioPath = `/assets/audios/${audioFilename}`;
+    console.log('Loading audio with direct path:', audioPath);
     
     // Reset the audio state
     setAudioState({
@@ -181,54 +178,19 @@ const InfoGraphics = () => {
     }));
   };
 
-  // Helper to process content paths - Updated for platform awareness
+  // Helper to process content paths - simplified for direct paths
   const processContent = (content) => {
-    let processedContent = content;
-    
-    if (Capacitor.isNativePlatform()) {
-      // Fix paths for Android
-      processedContent = processedContent.replace(
-        /\/assets\/audios\/([^'\"]+)/g, 
-        (match, filename) => `file:///android_asset/assets/audios/${filename}`
-      );
-      
-      processedContent = processedContent.replace(
-        /\/assets\/videos\/([^'\"]+)/g, 
-        (match, filename) => `file:///android_asset/assets/videos/${filename}`
-      );
-      
-      processedContent = processedContent.replace(
-        /\/assets\/images\/([^'\"]+)/g, 
-        (match, filename) => `file:///android_asset/assets/images/${filename}`
-      );
-    } else {
-      // Fix regular paths for web
-      processedContent = processedContent.replace(
-        /file:\/\/\/android_asset\/.*?\/assets\/audios\/([^'\"]+)/g, 
-        (match, filename) => `/assets/audios/${filename}`
-      );
-      
-      processedContent = processedContent.replace(
-        /file:\/\/\/android_asset\/.*?\/assets\/videos\/([^'\"]+)/g, 
-        (match, filename) => `/assets/videos/${filename}`
-      );
-      
-      processedContent = processedContent.replace(
-        /file:\/\/\/android_asset\/.*?\/assets\/images\/([^'\"]+)/g, 
-        (match, filename) => `/assets/images/${filename}`
-      );
-    }
-    
-    return processedContent;
+    // Content now uses direct paths, so minimal processing needed
+    return content;
   };
 
-  // List of available infographics with fixed asset paths
+  // List of available infographics with direct paths like alarm code
   const infographics = [
     {
       id: 1,
       title: 'اهمیت دندان شیری',
       description: 'چرا دندان‌های شیری مهم هستند و چگونه از آنها مراقبت کنیم؟',
-      imageUrl: getImagePath('infographics/baby-teeth.jpg'),
+      imageUrl: '/assets/images/baby-teeth.jpg',
       audioPath: 'baby-teeth-audio.mp3',
       content: `
         <h2>اهمیت دندان‌های شیری</h2>
@@ -239,19 +201,19 @@ const InfoGraphics = () => {
       id: 2,
       title: 'فلوراید',
       description: 'فواید فلوراید برای سلامت دندان‌ها و چگونگی استفاده صحیح از آن',
-      imageUrl: getImagePath('infographics/fluoride.jpg'),
+      imageUrl: '/assets/images/fluoride.jpg',
       audioPath: 'fluoride-audio.mp3',
       content: `
         <h2>فلوراید</h2>
         <div class="fluoride-brochure-container">
           <img 
-            src="${getImagePath('fluoride-brochure-1.PNG')}" 
-            alt="" 
+            src="/assets/images/fluoride-brochure-1.PNG" 
+            alt="بروشور فلوراید - قسمت اول" 
             class="fluoride-brochure-image"
           />
           <img 
-            src="${getImagePath('fluoride-brochure-2.PNG')}" 
-            alt="" 
+            src="/assets/images/fluoride-brochure-2.PNG" 
+            alt="بروشور فلوراید - قسمت دوم" 
             class="fluoride-brochure-image"
           />
         </div>
@@ -261,7 +223,7 @@ const InfoGraphics = () => {
       id: 3,
       title: 'راهنمای جامع بهداشت دهان و دندان',
       description: 'مجموعه کاملی از اطلاعات و آموزش‌های مربوط به سلامت دهان و دندان برای دانش‌آموزان و والدین',
-      imageUrl: getImagePath('infographics/dental-guide.jpg'),
+      imageUrl: '/assets/images/dental-guide.jpg',
       content: `
         <div class="content-container">
           <div class="document-header">
@@ -301,7 +263,7 @@ const InfoGraphics = () => {
             </div>
 
             <div class="image-placeholder">
-              <img src="${getImagePath('1.jpg')}" class="content-image" />
+              <img src="/assets/images/1.jpg" class="content-image" alt="نمایش تشکیل پلاک دندانی" />
               <p class="image-caption">نمایش تشکیل پلاک دندانی و جرم روی دندان</p>
             </div>
           </section>
@@ -309,14 +271,12 @@ const InfoGraphics = () => {
           <section class="content-section">
             <h3>آموزش بهداشت دهان و دندان جهت کودکان 3 تا 6 ساله</h3>
             
-            <div class="important-notes">
-              <ul>
-                <li>لکه های سفید روی سطح بیرونی دندانها ممکن است از علائم اولیه پوسیدگی باشد.</li>
-                <li>دندانهای شیری نقش مهمی در زیبایی و تکلم کودک خردسال دارد. بنابراین با دقت و حوصله بر مسواک زدن کودک نظارت کنید.</li>
-                <li>مسواک مناسب با توجه به ابعاد دهان کودک انتخاب کنید.</li>
-                <li>هزینه اقدامات پیشگیری و رعایت اصول بهداشت دهان و دندان در مقابل هزینه درمانهای دندان پزشکی اندک می باشد. مضافا بر اینکه بدین ترتیب دندانهای شیری حفظ شده و عمل تغذیه کودک دچار مشکل نخواهد شد.</li>
-              </ul>
-            </div>
+            <ul>
+              <li>لکه های سفید روی سطح بیرونی دندانها ممکن است از علائم اولیه پوسیدگی باشد.</li>
+              <li>دندانهای شیری نقش مهمی در زیبایی و تکلم کودک خردسال دارد. بنابراین با دقت و حوصله بر مسواک زدن کودک نظارت کنید.</li>
+              <li>مسواک مناسب با توجه به ابعاد دهان کودک انتخاب کنید.</li>
+              <li>هزینه اقدامات پیشگیری و رعایت اصول بهداشت دهان و دندان در مقابل هزینه درمانهای دندان پزشکی اندک می باشد. مضافا بر اینکه بدین ترتیب دندانهای شیری حفظ شده و عمل تغذیه کودک دچار مشکل نخواهد شد.</li>
+            </ul>
 
             <div class="method-box">
               <h4>روش توصیه شده جهت کودکان 3-6 ساله:</h4>
@@ -324,7 +284,7 @@ const InfoGraphics = () => {
             </div>
 
             <div class="image-placeholder">
-              <img src="${getImagePath('2.jpg')}" class="content-image" />
+              <img src="/assets/images/2.jpg" class="content-image" alt="نحوه مسواک زدن کودکان" />
               <p class="image-caption">نحوه صحیح مسواک زدن برای کودکان 3-6 ساله</p>
             </div>
 
@@ -387,7 +347,7 @@ const InfoGraphics = () => {
             </div>
 
             <div class="image-placeholder">
-              <img src="${getImagePath('3.jpg')}" class="content-image" />
+              <img src="/assets/images/3.jpg" class="content-image" alt="اهمیت حفظ دندان‌های شیری" />
               <p class="image-caption">اهمیت حفظ دندان‌های شیری و قوس فکی</p>
             </div>
           </section>
@@ -404,7 +364,7 @@ const InfoGraphics = () => {
             </ol>
 
             <div class="image-placeholder">
-              <img src="${getImagePath('4.jpg')}" class="content-image" />
+              <img src="/assets/images/4.jpg" class="content-image" alt="نحوه مسواک زدن بزرگسالان" />
               <p class="image-caption">نحوه صحیح مسواک زدن برای بزرگسالان</p>
             </div>
           </section>
@@ -424,7 +384,7 @@ const InfoGraphics = () => {
       id: 4,
       title: 'فیشورسیلنت (شیارپوش)',
       description: 'آشنایی با شیارپوش دندان و مزایای آن برای پیشگیری از پوسیدگی',
-      imageUrl: getImagePath('infographics/fissure-sealant.jpg'),
+      imageUrl: '/assets/images/fissure-sealant.jpg',
       videoPath: 'fissure-sealant-video.MP4',
       content: `
         <h2>فیشورسیلنت (شیارپوش)</h2>
@@ -439,7 +399,7 @@ const InfoGraphics = () => {
       id: 5,
       title: 'آموزش مسواک زدن برای کودکان',
       description: 'راهنمای والدین برای مسواک زدن صحیح دندان‌های کودکان',
-      imageUrl: getImagePath('infographics/toothbrushing-kids.jpg'),
+      imageUrl: '/assets/images/toothbrushing-kids.jpg',
       videoPath: 'toothbrushing-kids-video.mp4',
       content: `
         <h2>آموزش مسواک زدن برای کودکان</h2>
@@ -469,15 +429,11 @@ const InfoGraphics = () => {
     initResources();
   }, []);
 
-  // Setup audio player when infographic changes
+  // Setup audio player when infographic changes - using direct filename
   useEffect(() => {
     if (selectedInfoGraphic?.audioPath) {
-      // Update to use platform-aware path
-      const audioPath = Capacitor.isNativePlatform() 
-        ? `file:///android_asset/assets/audios/${selectedInfoGraphic.audioPath}`
-        : `/assets/audios/${selectedInfoGraphic.audioPath}`;
-      
-      initAudio(audioPath);
+      console.log('Setting up audio for infographic:', selectedInfoGraphic.id, 'Audio file:', selectedInfoGraphic.audioPath);
+      initAudio(selectedInfoGraphic.audioPath); // Pass filename directly
     }
   }, [selectedInfoGraphic]);
 
@@ -549,29 +505,29 @@ const InfoGraphics = () => {
           </div>
           
           <div className="infographic-content">
-            {/* Display tooth anatomy images for Baby Teeth section */}
+            {/* Display tooth anatomy images for Baby Teeth section - using direct paths */}
             {selectedInfoGraphic.id === 1 && (
               <div className="side-by-side-images">
                 <div className="tooth-image">
                   <img 
-                    src={getImagePath('tooth-anatomy-english.jpg')}
-                    alt="" 
+                    src="/assets/images/tooth-anatomy-english.jpg"
+                    alt="آناتومی دندان - انگلیسی" 
                     className="anatomy-image"
                     onError={(e) => {
-                      console.warn('Failed to load tooth anatomy image, trying alternate');
-                      e.target.src = getImagePath('tooth-anatomy-english.png');
+                      console.warn('Failed to load tooth anatomy english image');
+                      e.target.style.display = 'none';
                     }}
                   />
                 </div>
                 
                 <div className="tooth-image">
                   <img 
-                    src={getImagePath('tooth-anatomy-persian.jpg')}
-                    alt="" 
+                    src="/assets/images/tooth-anatomy-persian.jpg"
+                    alt="آناتومی دندان - فارسی" 
                     className="anatomy-image"
                     onError={(e) => {
-                      console.warn('Failed to load tooth anatomy image, trying alternate');
-                      e.target.src = getImagePath('tooth-anatomy-persian.png');
+                      console.warn('Failed to load tooth anatomy persian image');
+                      e.target.style.display = 'none';
                     }}
                   />
                 </div>
@@ -618,7 +574,7 @@ const InfoGraphics = () => {
               </div>
             )}
             
-            {/* Display video player if infographic has video */}
+            {/* Display video player if infographic has video - using direct paths */}
             {selectedInfoGraphic.videoPath && (
               <div className="integrated-video-player">
                 <h4>ویدیوی آموزشی</h4>
@@ -626,10 +582,16 @@ const InfoGraphics = () => {
                   controls 
                   preload="metadata"
                   className={`video-player ${selectedInfoGraphic.id === 5 ? 'toothbrushing-video' : 'fissure-sealant-video'}`}
-                  poster={getImagePath('video-thumbnail-1.jpg')}
+                  poster="/assets/images/video-thumbnail-1.jpg"
+                  onError={(e) => {
+                    console.error('Video failed to load:', selectedInfoGraphic.videoPath, e);
+                  }}
+                  onLoadStart={() => {
+                    console.log('Video loading started:', selectedInfoGraphic.videoPath);
+                  }}
                 >
-                  <source src={getVideoPath(selectedInfoGraphic.videoPath)} type="video/mp4" />
-                  مرورگر شما قادر به نمایش ویدیو نیست.
+                  <source src={`/assets/videos/${selectedInfoGraphic.videoPath}`} type="video/mp4" />
+                  <p className="video-error">مرورگر شما قادر به نمایش ویدیو نیست.</p>
                 </video>
               </div>
             )}
@@ -738,14 +700,6 @@ const InfoGraphics = () => {
           background-color: #fff;
           border-radius: 4px;
           border-left: 3px solid #27ae60;
-        }
-        
-        .important-notes {
-          background-color: #fff3cd;
-          padding: 20px;
-          border-radius: 8px;
-          border: 1px solid #ffeaa7;
-          margin: 20px 0;
         }
         
         .method-box {
@@ -998,17 +952,24 @@ const InfoGraphics = () => {
           background-color: #000;
         }
         
-        /* تنظیم ابعاد ویدیو مسواک زدن به صورت 16:9 عمودی */
         .toothbrushing-video {
           aspect-ratio: 9/16;
         }
         
-        /* حفظ نسبت مربعی برای ویدیو فیشورسیلنت */
         .fissure-sealant-video {
           aspect-ratio: 1/1;
         }
         
-        /* Additional styles for thumbnails and layout */
+        .video-error {
+          background-color: #ffebee;
+          color: #f44336;
+          padding: 20px;
+          text-align: center;
+          border-radius: 4px;
+          margin: 10px 0;
+        }
+        
+        /* Main container styles */
         .infographics-container {
           padding: 15px;
           max-width: 1200px;
@@ -1137,10 +1098,6 @@ const InfoGraphics = () => {
         .infographics-tips li {
           margin-bottom: 10px;
           line-height: 1.5;
-        }
-        
-        .infographics-tips li:last-child {
-          margin-bottom: 0;
         }
         
         .side-by-side-images {

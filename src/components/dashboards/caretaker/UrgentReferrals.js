@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import PdfService from '../../../services/PDFService.js';
+import PdfService from '../../../services/PdfService.js';
 import './CaretakerComponents.css';
 
 const UrgentReferrals = () => {

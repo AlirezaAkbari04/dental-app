@@ -547,7 +547,7 @@ const BrushReminder = () => {
                 className="video-player"
                 poster="/assets/images/video-thumbnail-1.jpg"
               >
-                <source src="/assets/videos/How_to_Brush_Your_Teeth_Animation.mp4" type="video/mp4" />
+                <source src="/assets/videos/how_to_brush.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
             </div>

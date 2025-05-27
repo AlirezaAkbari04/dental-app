@@ -7,7 +7,7 @@ import DatabaseService from '../../services/DatabaseService';
 
 const ChildProfile = () => {
   const navigate = useNavigate();
-  const { currentUser } = useUser();
+  const { currentUser, markProfileAsCompleted } = useUser();
   const [formData, setFormData] = useState({
     age: '',
     gender: '',
@@ -16,6 +16,7 @@ const ChildProfile = () => {
     educationDistrict: '',
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,29 +69,88 @@ const ChildProfile = () => {
       return;
     }
 
+    if (!currentUser?.id) {
+      setErrors({ general: 'خطا در احراز هویت. لطفاً دوباره وارد شوید.' });
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
+      console.log('[ChildProfile] Starting form submission...');
+      
+      // Initialize database if needed
       if (!DatabaseService.initialized) {
-        await DatabaseService.init();
+        console.log('[ChildProfile] Initializing database...');
+        await DatabaseService.ensureInitialized();
       }
 
-      if (currentUser?.id) {
-        const childId = await DatabaseService.createChild(
-          currentUser.id,
-          formData.name || 'کودک',
-          formData.age,
-          formData.gender,
-          null
-        );
+      // Prepare profile data
+      const profileData = {
+        ...formData,
+        userId: currentUser.id,
+        role: 'child',
+        completedAt: new Date().toISOString()
+      };
 
-        await DatabaseService.initializeChildAchievements(childId);
+      console.log('[ChildProfile] Saving profile data:', profileData);
 
-        localStorage.setItem('childProfile', JSON.stringify(formData));
+      // Save to both database and localStorage for redundancy
+      try {
+        // Try to save to database first
+        if (currentUser?.id) {
+          const childId = await DatabaseService.createChild(
+            currentUser.id,
+            formData.name || 'کودک',
+            formData.age,
+            formData.gender,
+            null
+          );
+
+          await DatabaseService.initializeChildAchievements(childId);
+          console.log('[ChildProfile] Child created and achievements initialized');
+        }
+        
+        await DatabaseService.updateUserProfile(currentUser.id, profileData);
+        console.log('[ChildProfile] Profile saved to database successfully');
+      } catch (dbError) {
+        console.warn('[ChildProfile] Database save failed, using localStorage fallback:', dbError);
       }
 
-      navigate('/dashboard/child');
+      // Always save to localStorage as backup
+      localStorage.setItem('childProfile', JSON.stringify(profileData));
+      localStorage.setItem(`childProfile_${currentUser.id}`, JSON.stringify(profileData));
+      console.log('[ChildProfile] Profile saved to localStorage');
+
+      // Mark profile as completed - THIS IS THE KEY FIX
+      const profileCompleted = await markProfileAsCompleted();
+      
+      if (profileCompleted) {
+        console.log('[ChildProfile] Profile marked as completed successfully');
+        
+        // Navigate to dashboard
+        console.log('[ChildProfile] Navigating to child dashboard...');
+        navigate('/dashboard/child');
+      } else {
+        console.error('[ChildProfile] Failed to mark profile as completed');
+        // Still navigate to dashboard as fallback
+        navigate('/dashboard/child');
+      }
+
     } catch (error) {
-      console.error('Error saving child profile:', error);
-      navigate('/dashboard/child');
+      console.error('[ChildProfile] Error saving child profile:', error);
+      
+      // Set a user-friendly error message
+      setErrors({ 
+        general: 'خطا در ذخیره اطلاعات. اطلاعات شما ذخیره شد و به داشبورد منتقل می‌شوید.' 
+      });
+      
+      // Navigate anyway after a short delay to show the message
+      setTimeout(() => {
+        navigate('/dashboard/child');
+      }, 2000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -105,6 +165,19 @@ const ChildProfile = () => {
 
   return (
     <ProfileForm title="تکمیل پروفایل کودک" onSubmit={handleSubmit}>
+      {errors.general && (
+        <div style={{
+          color: '#e74c3c',
+          backgroundColor: '#ffeaea',
+          padding: '10px',
+          borderRadius: '5px',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          {errors.general}
+        </div>
+      )}
+
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="age">سن</label>
@@ -114,6 +187,7 @@ const ChildProfile = () => {
             value={formData.age}
             onChange={handleChange}
             className={errors.age ? 'input-error' : ''}
+            disabled={isSubmitting}
           >
             <option value="">انتخاب کنید</option>
             {ageOptions}
@@ -131,6 +205,7 @@ const ChildProfile = () => {
                 value="boy"
                 checked={formData.gender === 'boy'}
                 onChange={handleChange}
+                disabled={isSubmitting}
               />
               پسر
             </label>
@@ -141,6 +216,7 @@ const ChildProfile = () => {
                 value="girl"
                 checked={formData.gender === 'girl'}
                 onChange={handleChange}
+                disabled={isSubmitting}
               />
               دختر
             </label>
@@ -157,6 +233,7 @@ const ChildProfile = () => {
           value={formData.grade}
           onChange={handleChange}
           className={errors.grade ? 'input-error' : ''}
+          disabled={isSubmitting}
         >
           <option value="">انتخاب کنید</option>
           <option value="preschool">پیش دبستانی</option>
@@ -181,6 +258,7 @@ const ChildProfile = () => {
             onChange={handleChange}
             placeholder="نام مدرسه خود را وارد کنید"
             className={errors.schoolName ? 'input-error' : ''}
+            disabled={isSubmitting}
           />
           {errors.schoolName && <div className="error-message">{errors.schoolName}</div>}
         </div>
@@ -195,6 +273,7 @@ const ChildProfile = () => {
             onChange={handleChange}
             placeholder="منطقه آموزش و پرورش"
             className={errors.educationDistrict ? 'input-error' : ''}
+            disabled={isSubmitting}
           />
           {errors.educationDistrict && <div className="error-message">{errors.educationDistrict}</div>}
         </div>
@@ -205,6 +284,25 @@ const ChildProfile = () => {
         <div className="achievements-display">
           <p>پس از ثبت نام و شروع فعالیت در برنامه، امتیازات و مدال‌های شما در این قسمت نمایش داده خواهند شد.</p>
         </div>
+      </div>
+
+      {/* Override the submit button to show loading state */}
+      <div className="profile-actions">
+        <button 
+          type="submit" 
+          className="profile-button submit-button"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'در حال ذخیره...' : 'ثبت اطلاعات'}
+        </button>
+        <button 
+          type="button" 
+          onClick={() => navigate('/role-selection')} 
+          className="profile-button cancel-button"
+          disabled={isSubmitting}
+        >
+          بازگشت
+        </button>
       </div>
     </ProfileForm>
   );

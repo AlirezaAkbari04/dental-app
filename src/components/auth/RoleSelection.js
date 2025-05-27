@@ -9,6 +9,7 @@ const RoleSelection = () => {
   const { currentUser, updateUserRole } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showRoleChange, setShowRoleChange] = useState(false);
 
   // Check if user already has a role and has completed profile
   useEffect(() => {
@@ -77,14 +78,33 @@ const RoleSelection = () => {
     }
   };
 
+  const handleChangeRole = () => {
+    setShowRoleChange(true);
+  };
+
+  const handleContinueWithCurrentRole = () => {
+    if (currentUser?.role) {
+      navigate(`/profile/${currentUser.role}`);
+    }
+  };
+
   // Don't render if no user is logged in
   if (!currentUser) {
     navigate('/login');
     return null;
   }
 
-  // If user already has a role but hasn't completed profile, show message
-  if (currentUser.role && !currentUser.profileCompleted) {
+  // If user already has a role but hasn't completed profile
+  if (currentUser.role && !currentUser.profileCompleted && !showRoleChange) {
+    const getRoleName = (role) => {
+      switch (role) {
+        case 'child': return 'کودک';
+        case 'parent': return 'والدین';
+        case 'teacher': return 'معلم بهداشت';
+        default: return role;
+      }
+    };
+
     return (
       <div className="auth-container" dir="rtl">
         <div className="auth-form-container">
@@ -92,15 +112,39 @@ const RoleSelection = () => {
             <img src={logoImage} alt="لبخند شاد دندان سالم" className="app-logo" />
             <h1 className="app-title">لبخند شاد دندان سالم</h1>
           </div>
+          
           <div style={{ textAlign: 'center', padding: '20px' }}>
-            <p>شما قبلاً نقش خود را انتخاب کرده‌اید.</p>
-            <button 
-              className="auth-button" 
-              onClick={() => navigate(`/profile/${currentUser.role}`)}
-              style={{ marginTop: '20px' }}
-            >
-              ادامه به تکمیل پروفایل
-            </button>
+            <h2 style={{ marginBottom: '15px', color: '#2c3e50' }}>
+              نقش انتخابی شما: {getRoleName(currentUser.role)}
+            </h2>
+            <p style={{ marginBottom: '20px', color: '#7f8c8d', lineHeight: '1.6' }}>
+              شما قبلاً نقش <strong>{getRoleName(currentUser.role)}</strong> را انتخاب کرده‌اید.
+              <br />
+              می‌توانید پروفایل خود را تکمیل کنید یا نقش خود را تغییر دهید.
+            </p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '300px', margin: '0 auto' }}>
+              <button 
+                className="auth-button" 
+                onClick={handleContinueWithCurrentRole}
+                style={{ 
+                  backgroundColor: '#27ae60',
+                  marginBottom: '10px'
+                }}
+              >
+                ادامه به تکمیل پروفایل {getRoleName(currentUser.role)}
+              </button>
+              
+              <button 
+                className="auth-button" 
+                onClick={handleChangeRole}
+                style={{ 
+                  backgroundColor: '#e74c3c'
+                }}
+              >
+                تغییر نقش
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -116,8 +160,15 @@ const RoleSelection = () => {
         </div>
 
         <div className="role-selection">
-          <h2>لطفاً نقش خود را انتخاب کنید</h2>
-          <p className="role-instruction">برای ادامه، نقش خود را از گزینه‌های زیر انتخاب کنید</p>
+          <h2>
+            {showRoleChange ? 'انتخاب نقش جدید' : 'لطفاً نقش خود را انتخاب کنید'}
+          </h2>
+          <p className="role-instruction">
+            {showRoleChange 
+              ? 'نقش جدید خود را از گزینه‌های زیر انتخاب کنید'
+              : 'برای ادامه، نقش خود را از گزینه‌های زیر انتخاب کنید'
+            }
+          </p>
 
           {error && (
             <div style={{ 
@@ -306,6 +357,27 @@ const RoleSelection = () => {
             }}>
               <div style={{ marginBottom: '10px' }}>در حال پردازش...</div>
               <div style={{ fontSize: '12px' }}>لطفا صبر کنید</div>
+            </div>
+          )}
+
+          {/* Show cancel button when changing role */}
+          {showRoleChange && (
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <button 
+                onClick={() => setShowRoleChange(false)}
+                style={{
+                  backgroundColor: '#95a5a6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+                disabled={isLoading}
+              >
+                انصراف از تغییر نقش
+              </button>
             </div>
           )}
         </div>

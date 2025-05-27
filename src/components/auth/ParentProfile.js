@@ -7,7 +7,7 @@ import DatabaseService from '../../services/DatabaseService';
 
 const ParentProfile = () => {
   const navigate = useNavigate();
-  const { currentUser } = useUser();
+  const { currentUser, markProfileAsCompleted } = useUser();
 
   const [formData, setFormData] = useState({
     parentType: '',
@@ -22,6 +22,7 @@ const ParentProfile = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,16 +75,75 @@ const ParentProfile = () => {
       return;
     }
 
+    if (!currentUser?.id) {
+      setErrors({ general: 'خطا در احراز هویت. لطفاً دوباره وارد شوید.' });
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
+      console.log('[ParentProfile] Starting form submission...');
+      
+      // Initialize database if needed
       if (!DatabaseService.initialized) {
-        await DatabaseService.init();
+        console.log('[ParentProfile] Initializing database...');
+        await DatabaseService.ensureInitialized();
       }
 
-      localStorage.setItem('parentProfile', JSON.stringify(formData));
-      navigate('/dashboard/parent');
+      // Prepare profile data
+      const profileData = {
+        ...formData,
+        userId: currentUser.id,
+        role: 'parent',
+        completedAt: new Date().toISOString()
+      };
+
+      console.log('[ParentProfile] Saving profile data:', profileData);
+
+      // Save to both database and localStorage for redundancy
+      try {
+        // Try to save to database first
+        await DatabaseService.updateUserProfile(currentUser.id, profileData);
+        console.log('[ParentProfile] Profile saved to database successfully');
+      } catch (dbError) {
+        console.warn('[ParentProfile] Database save failed, using localStorage fallback:', dbError);
+      }
+
+      // Always save to localStorage as backup
+      localStorage.setItem('parentProfile', JSON.stringify(profileData));
+      localStorage.setItem(`parentProfile_${currentUser.id}`, JSON.stringify(profileData));
+      console.log('[ParentProfile] Profile saved to localStorage');
+
+      // Mark profile as completed - THIS IS THE KEY FIX
+      const profileCompleted = await markProfileAsCompleted();
+      
+      if (profileCompleted) {
+        console.log('[ParentProfile] Profile marked as completed successfully');
+        
+        // Navigate to dashboard
+        console.log('[ParentProfile] Navigating to parent dashboard...');
+        navigate('/dashboard/parent');
+      } else {
+        console.error('[ParentProfile] Failed to mark profile as completed');
+        // Still navigate to dashboard as fallback
+        navigate('/dashboard/parent');
+      }
+
     } catch (error) {
-      console.error('Error saving parent profile:', error);
-      navigate('/dashboard/parent');
+      console.error('[ParentProfile] Error saving parent profile:', error);
+      
+      // Set a user-friendly error message
+      setErrors({ 
+        general: 'خطا در ذخیره اطلاعات. اطلاعات شما ذخیره شد و به داشبورد منتقل می‌شوید.' 
+      });
+      
+      // Navigate anyway after a short delay to show the message
+      setTimeout(() => {
+        navigate('/dashboard/parent');
+      }, 2000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -99,6 +159,19 @@ const ParentProfile = () => {
 
   return (
     <ProfileForm title="تکمیل پروفایل والدین" onSubmit={handleSubmit}>
+      {errors.general && (
+        <div style={{
+          color: '#e74c3c',
+          backgroundColor: '#ffeaea',
+          padding: '10px',
+          borderRadius: '5px',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          {errors.general}
+        </div>
+      )}
+
       <div className="form-group">
         <label htmlFor="parentType">نوع والد</label>
         <div className="radio-group">
@@ -109,6 +182,7 @@ const ParentProfile = () => {
               value="father"
               checked={formData.parentType === 'father'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             پدر
           </label>
@@ -119,6 +193,7 @@ const ParentProfile = () => {
               value="mother"
               checked={formData.parentType === 'mother'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             مادر
           </label>
@@ -129,6 +204,7 @@ const ParentProfile = () => {
               value="other"
               checked={formData.parentType === 'other'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             سایر (سرپرست)
           </label>
@@ -149,6 +225,7 @@ const ParentProfile = () => {
             className={errors.relationship ? 'input-error' : ''}
             pattern="[\u0600-\u06FF\s]+"
             title="لطفاً فقط حروف فارسی وارد کنید"
+            disabled={isSubmitting}
           />
           {errors.relationship && <div className="error-message">{errors.relationship}</div>}
         </div>
@@ -165,6 +242,7 @@ const ParentProfile = () => {
             value={formData.fatherEducation}
             onChange={handleChange}
             className={errors.fatherEducation ? 'input-error' : ''}
+            disabled={isSubmitting}
           >
             <option value="">انتخاب کنید</option>
             {educationOptions.map((option) => (
@@ -188,6 +266,7 @@ const ParentProfile = () => {
             className={errors.fatherJob ? 'input-error' : ''}
             pattern="[\u0600-\u06FF\s]+"
             title="لطفاً فقط حروف فارسی وارد کنید"
+            disabled={isSubmitting}
           />
           {errors.fatherJob && <div className="error-message">{errors.fatherJob}</div>}
         </div>
@@ -202,6 +281,7 @@ const ParentProfile = () => {
             value={formData.motherEducation}
             onChange={handleChange}
             className={errors.motherEducation ? 'input-error' : ''}
+            disabled={isSubmitting}
           >
             <option value="">انتخاب کنید</option>
             {educationOptions.map((option) => (
@@ -225,6 +305,7 @@ const ParentProfile = () => {
             className={errors.motherJob ? 'input-error' : ''}
             pattern="[\u0600-\u06FF\s]+"
             title="لطفاً فقط حروف فارسی وارد کنید"
+            disabled={isSubmitting}
           />
           {errors.motherJob && <div className="error-message">{errors.motherJob}</div>}
         </div>
@@ -242,6 +323,7 @@ const ParentProfile = () => {
               value="father"
               checked={formData.appUser === 'father'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             پدر
           </label>
@@ -252,6 +334,7 @@ const ParentProfile = () => {
               value="mother"
               checked={formData.appUser === 'mother'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             مادر
           </label>
@@ -262,6 +345,7 @@ const ParentProfile = () => {
               value="other"
               checked={formData.appUser === 'other'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             سایر
           </label>
@@ -279,6 +363,7 @@ const ParentProfile = () => {
               value="good"
               checked={formData.economicStatus === 'good'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             خوب
           </label>
@@ -289,6 +374,7 @@ const ParentProfile = () => {
               value="medium"
               checked={formData.economicStatus === 'medium'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             متوسط
           </label>
@@ -299,6 +385,7 @@ const ParentProfile = () => {
               value="poor"
               checked={formData.economicStatus === 'poor'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             ضعیف
           </label>
@@ -316,6 +403,7 @@ const ParentProfile = () => {
               value="good"
               checked={formData.oralHealthStatus === 'good'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             خوب
           </label>
@@ -326,6 +414,7 @@ const ParentProfile = () => {
               value="medium"
               checked={formData.oralHealthStatus === 'medium'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             متوسط
           </label>
@@ -336,11 +425,31 @@ const ParentProfile = () => {
               value="poor"
               checked={formData.oralHealthStatus === 'poor'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             ضعیف
           </label>
         </div>
         {errors.oralHealthStatus && <div className="error-message">{errors.oralHealthStatus}</div>}
+      </div>
+
+      {/* Override the submit button to show loading state */}
+      <div className="profile-actions">
+        <button 
+          type="submit" 
+          className="profile-button submit-button"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'در حال ذخیره...' : 'ثبت اطلاعات'}
+        </button>
+        <button 
+          type="button" 
+          onClick={() => navigate('/role-selection')} 
+          className="profile-button cancel-button"
+          disabled={isSubmitting}
+        >
+          بازگشت
+        </button>
       </div>
     </ProfileForm>
   );

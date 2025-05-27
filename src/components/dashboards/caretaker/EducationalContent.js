@@ -5,12 +5,8 @@ import './EducationalContent.css';
 const EducationalContent = () => {
   const [selectedContent, setSelectedContent] = useState(null);
 
-  // Platform-aware path function - same logic as InfoGraphics
-  const getImagePath = (filename) => {
-    return Capacitor.isNativePlatform() 
-      ? `file:///android_asset/assets/images/${filename}`
-      : `/assets/images/${filename}`;
-  };
+  // Simple path function - direct paths like your working alarm code
+  const getImagePath = (filename) => `/assets/images/${filename}`;
 
   const [contentList] = useState([
     {
@@ -18,7 +14,7 @@ const EducationalContent = () => {
       title: 'اهمیت دندان شیری',
       description: 'چرا دندان‌های شیری مهم هستند و چگونه باید از آنها مراقبت کرد',
       type: 'html',
-      imageUrl: getImagePath('infographics/dental-guide.jpg'),
+      imageUrl: '/assets/images/dental-guide.jpg', // Direct path, removed infographics/
       content: `
         <div class="content-container">
           <h2>اهمیت دندان‌های شیری</h2>
@@ -58,34 +54,30 @@ const EducationalContent = () => {
       id: 2,
       title: 'فلوراید',
       description: 'فواید فلوراید برای سلامت دندان‌ها و چگونگی استفاده صحیح از آن',
-      type: 'html',
-      imageUrl: getImagePath('infographics/fluoride.jpg'),
+      imageUrl: '/assets/images/fluoride.jpg', // Direct path
       audioPath: 'fluoride-audio.mp3',
       content: `
         <h2>فلوراید</h2>
         <div class="fluoride-brochure-container">
           <img 
-            src="${getImagePath('fluoride-brochure-1.PNG')}" 
-            alt="بروشور فلوراید - صفحه اول" 
+            src="/assets/images/fluoride-brochure-1.PNG" 
+            alt="بروشور فلوراید - قسمت اول" 
             class="fluoride-brochure-image"
-            onerror="this.onerror=null; this.src=''; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>');"
           />
           <img 
-            src="${getImagePath('fluoride-brochure-2.PNG')}" 
-            alt="بروشور فلوراید - صفحه دوم" 
+            src="/assets/images/fluoride-brochure-2.PNG" 
+            alt="بروشور فلوراید - قسمت دوم" 
             class="fluoride-brochure-image"
-            onerror="this.onerror=null; this.src=''; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>');"
           />
         </div>
       `,
-      icon: '💧'
+      icon: '🧪'
     },
     {
       id: 3,
       title: 'راهنمای جامع بهداشت دهان و دندان',
       description: 'مجموعه کاملی از اطلاعات و آموزش‌های مربوط به سلامت دهان و دندان برای دانش‌آموزان و والدین',
-      type: 'html',
-      imageUrl: getImagePath('infographics/dental-guide.jpg'),
+      imageUrl: '/assets/images/dental-guide.jpg', // Direct path
       content: `
         <div class="content-container">
           <div class="document-header">
@@ -101,7 +93,7 @@ const EducationalContent = () => {
           <section class="content-section">
             <h3>روند ایجاد پوسیدگی</h3>
             <ul>
-              <li>پس از مصرف غذا خصوصا غذاهای حاوی قند، ذرات باقی مانده در لابهلای سطوح و بین دندانها جمع شده توسط میکروبهای موجود در دهان مصرف و تجزیه میشوند.</li>
+              <li>پس از مصرف غذا خصوصا غذاهای حاوی قند، ذرات باقی مانده در لابه لای سطوح و بین دندانها جمع شده توسط میکروبهای موجود در دهان مصرف و تجزیه میشوند.</li>
               <li>این موجودات میکروسکوپی بطور معمول در دهان هر فردی وجود دارند و در صورتی که غذاهای حاوی قند به آنها نرسد برای دندانها مضر نمی باشند.</li>
               <li>این موجودات ریز پس از مصرف قند اسید تولید می کنند که باعث تخریب دندان وایجاد پوسیدگی می شود.</li>
             </ul>
@@ -125,12 +117,7 @@ const EducationalContent = () => {
             </div>
 
             <div class="image-placeholder">
-              <img 
-                src="${getImagePath('image01.jpg')}" 
-                class="content-image" 
-                alt="نمایش تشکیل پلاک دندانی و جرم روی دندان"
-                onerror="this.onerror=null; this.src=''; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>');"
-              />
+              <img src="/assets/images/1.jpg" class="content-image" alt="نمایش تشکیل پلاک دندانی" />
               <p class="image-caption">نمایش تشکیل پلاک دندانی و جرم روی دندان</p>
             </div>
           </section>
@@ -138,14 +125,12 @@ const EducationalContent = () => {
           <section class="content-section">
             <h3>آموزش بهداشت دهان و دندان جهت کودکان 3 تا 6 ساله</h3>
             
-            <div class="important-notes">
-              <ul>
-                <li>لکه های سفید روی سطح بیرونی دندانها ممکن است از علائم اولیه پوسیدگی باشد.</li>
-                <li>دندانهای شیری نقش مهمی در زیبایی و تکلم کودک خردسال دارد. بنابراین با دقت و حوصله بر مسواک زدن کودک نظارت کنید.</li>
-                <li>مسواک مناسب با توجه به ابعاد دهان کودک انتخاب کنید.</li>
-                <li>هزینه اقدامات پیشگیری و رعایت اصول بهداشت دهان و دندان در مقابل هزینه درمانهای دندان پزشکی اندک می باشد. مضافا بر اینکه بدین ترتیب دندانهای شیری حفظ شده و عمل تغذیه کودک دچار مشکل نخواهد شد.</li>
-              </ul>
-            </div>
+            <ul>
+              <li>لکه های سفید روی سطح بیرونی دندانها ممکن است از علائم اولیه پوسیدگی باشد.</li>
+              <li>دندانهای شیری نقش مهمی در زیبایی و تکلم کودک خردسال دارد. بنابراین با دقت و حوصله بر مسواک زدن کودک نظارت کنید.</li>
+              <li>مسواک مناسب با توجه به ابعاد دهان کودک انتخاب کنید.</li>
+              <li>هزینه اقدامات پیشگیری و رعایت اصول بهداشت دهان و دندان در مقابل هزینه درمانهای دندان پزشکی اندک می باشد. مضافا بر اینکه بدین ترتیب دندانهای شیری حفظ شده و عمل تغذیه کودک دچار مشکل نخواهد شد.</li>
+            </ul>
 
             <div class="method-box">
               <h4>روش توصیه شده جهت کودکان 3-6 ساله:</h4>
@@ -153,12 +138,8 @@ const EducationalContent = () => {
             </div>
 
             <div class="image-placeholder">
-              <img 
-                src="${getImagePath('image02.jpg')}" 
-                class="content-image" 
-                alt="روش مسواک زدن کودکان"
-                onerror="this.onerror=null; this.src=''; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>');"
-              />
+              <img src="/assets/images/2.jpg" class="content-image" alt="نحوه مسواک زدن کودکان" />
+              <p class="image-caption">نحوه صحیح مسواک زدن برای کودکان 3-6 ساله</p>
             </div>
 
             <div class="tips">
@@ -220,12 +201,8 @@ const EducationalContent = () => {
             </div>
 
             <div class="image-placeholder">
-              <img 
-                src="${getImagePath('image03.jpg')}" 
-                class="content-image" 
-                alt="اهمیت دندان شیری"
-                onerror="this.onerror=null; this.src=''; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>');"
-              />
+              <img src="/assets/images/3.jpg" class="content-image" alt="اهمیت حفظ دندان‌های شیری" />
+              <p class="image-caption">اهمیت حفظ دندان‌های شیری و قوس فکی</p>
             </div>
           </section>
 
@@ -241,12 +218,8 @@ const EducationalContent = () => {
             </ol>
 
             <div class="image-placeholder">
-              <img 
-                src="${getImagePath('image04.jpg')}" 
-                class="content-image" 
-                alt="نحوه صحیح مسواک زدن"
-                onerror="this.onerror=null; this.src=''; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>');"
-              />
+              <img src="/assets/images/4.jpg" class="content-image" alt="نحوه مسواک زدن بزرگسالان" />
+              <p class="image-caption">نحوه صحیح مسواک زدن برای بزرگسالان</p>
             </div>
           </section>
 
@@ -260,13 +233,14 @@ const EducationalContent = () => {
           </section>
         </div>
       `,
-      icon: '📄'
+      icon: '📚'
     },
     {
       id: 4,
       title: 'نحوه صحیح مسواک زدن',
       description: 'آموزش مرحله به مرحله مسواک زدن صحیح برای دانش‌آموزان',
       type: 'html',
+      imageUrl: '/assets/images/toothbrushing-kids.jpg', // Direct path, consistent with InfoGraphics
       content: `
         <div class="content-container">
           <h2>نحوه صحیح مسواک زدن</h2>
@@ -387,6 +361,7 @@ const EducationalContent = () => {
                     src={content.imageUrl} 
                     alt={content.title}
                     onError={(e) => {
+                      console.warn('Failed to load thumbnail:', content.imageUrl);
                       e.target.style.display = 'none';
                     }}
                   />

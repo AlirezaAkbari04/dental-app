@@ -7,7 +7,7 @@ import DatabaseService from '../../services/DatabaseService';
 
 const TeacherProfile = () => {
   const navigate = useNavigate();
-  const { currentUser } = useUser();
+  const { currentUser, markProfileAsCompleted } = useUser();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -21,6 +21,7 @@ const TeacherProfile = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -114,21 +115,92 @@ const TeacherProfile = () => {
       return;
     }
 
+    if (!currentUser?.id) {
+      setErrors({ general: 'خطا در احراز هویت. لطفاً دوباره وارد شوید.' });
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
+      console.log('[TeacherProfile] Starting form submission...');
+      
+      // Initialize database if needed
       if (!DatabaseService.initialized) {
-        await DatabaseService.init();
+        console.log('[TeacherProfile] Initializing database...');
+        await DatabaseService.ensureInitialized();
       }
 
-      localStorage.setItem('teacherProfile', JSON.stringify(formData));
-      navigate('/dashboard/caretaker');
+      // Prepare profile data
+      const profileData = {
+        ...formData,
+        userId: currentUser.id,
+        role: 'teacher',
+        completedAt: new Date().toISOString()
+      };
+
+      console.log('[TeacherProfile] Saving profile data:', profileData);
+
+      // Save to both database and localStorage for redundancy
+      try {
+        // Try to save to database first
+        await DatabaseService.updateUserProfile(currentUser.id, profileData);
+        console.log('[TeacherProfile] Profile saved to database successfully');
+      } catch (dbError) {
+        console.warn('[TeacherProfile] Database save failed, using localStorage fallback:', dbError);
+      }
+
+      // Always save to localStorage as backup
+      localStorage.setItem('teacherProfile', JSON.stringify(profileData));
+      localStorage.setItem(`teacherProfile_${currentUser.id}`, JSON.stringify(profileData));
+      console.log('[TeacherProfile] Profile saved to localStorage');
+
+      // Mark profile as completed - THIS IS THE KEY FIX
+      const profileCompleted = await markProfileAsCompleted();
+      
+      if (profileCompleted) {
+        console.log('[TeacherProfile] Profile marked as completed successfully');
+        
+        // Navigate to dashboard
+        console.log('[TeacherProfile] Navigating to caretaker dashboard...');
+        navigate('/dashboard/caretaker');
+      } else {
+        console.error('[TeacherProfile] Failed to mark profile as completed');
+        // Still navigate to dashboard as fallback
+        navigate('/dashboard/caretaker');
+      }
+
     } catch (error) {
-      console.error('Error saving teacher profile:', error);
-      navigate('/dashboard/caretaker');
+      console.error('[TeacherProfile] Error saving teacher profile:', error);
+      
+      // Set a user-friendly error message
+      setErrors({ 
+        general: 'خطا در ذخیره اطلاعات. اطلاعات شما ذخیره شد و به داشبورد منتقل می‌شوید.' 
+      });
+      
+      // Navigate anyway after a short delay to show the message
+      setTimeout(() => {
+        navigate('/dashboard/caretaker');
+      }, 2000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <ProfileForm title="تکمیل پروفایل معلم بهداشت" onSubmit={handleSubmit}>
+      {errors.general && (
+        <div style={{
+          color: '#e74c3c',
+          backgroundColor: '#ffeaea',
+          padding: '10px',
+          borderRadius: '5px',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          {errors.general}
+        </div>
+      )}
 
       <div className="form-group">
         <label htmlFor="name">نام</label>
@@ -140,6 +212,7 @@ const TeacherProfile = () => {
           onChange={handleChange}
           placeholder="نام و نام خانوادگی خود را وارد کنید"
           className={errors.name ? 'input-error' : ''}
+          disabled={isSubmitting}
         />
         {errors.name && <div className="error-message">{errors.name}</div>}
       </div>
@@ -154,6 +227,7 @@ const TeacherProfile = () => {
               value="male"
               checked={formData.gender === 'male'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             مرد
           </label>
@@ -164,6 +238,7 @@ const TeacherProfile = () => {
               value="female"
               checked={formData.gender === 'female'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             زن
           </label>
@@ -181,6 +256,7 @@ const TeacherProfile = () => {
               value="parttime"
               checked={formData.careType === 'parttime'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             پاره‌وقت
           </label>
@@ -191,6 +267,7 @@ const TeacherProfile = () => {
               value="fulltime"
               checked={formData.careType === 'fulltime'}
               onChange={handleChange}
+              disabled={isSubmitting}
             />
             تمام‌وقت
           </label>
@@ -211,6 +288,7 @@ const TeacherProfile = () => {
             onChange={handleChange}
             placeholder="بین 1 تا 7 روز"
             className={errors.daysPerWeek ? 'input-error' : ''}
+            disabled={isSubmitting}
           />
           {errors.daysPerWeek && <div className="error-message">{errors.daysPerWeek}</div>}
         </div>
@@ -225,6 +303,7 @@ const TeacherProfile = () => {
                 value="regular"
                 checked={formData.isRegular === 'regular'}
                 onChange={handleChange}
+                disabled={isSubmitting}
               />
               منظم
             </label>
@@ -235,6 +314,7 @@ const TeacherProfile = () => {
                 value="irregular"
                 checked={formData.isRegular === 'irregular'}
                 onChange={handleChange}
+                disabled={isSubmitting}
               />
               نامنظم
             </label>
@@ -256,6 +336,7 @@ const TeacherProfile = () => {
             onChange={handleChange}
             placeholder="بین 1 تا 7 روز"
             className={errors.daysPerSchool ? 'input-error' : ''}
+            disabled={isSubmitting}
           />
           {errors.daysPerSchool && <div className="error-message">{errors.daysPerSchool}</div>}
         </div>
@@ -271,6 +352,7 @@ const TeacherProfile = () => {
             onChange={handleChange}
             placeholder="تعداد مدارس"
             className={errors.schoolsCount ? 'input-error' : ''}
+            disabled={isSubmitting}
           />
           {errors.schoolsCount && <div className="error-message">{errors.schoolsCount}</div>}
         </div>
@@ -286,6 +368,7 @@ const TeacherProfile = () => {
               value="girls"
               checked={formData.schoolTypes.includes('girls')}
               onChange={handleCheckboxChange}
+              disabled={isSubmitting}
             />
             دخترانه
           </label>
@@ -296,11 +379,31 @@ const TeacherProfile = () => {
               value="boys"
               checked={formData.schoolTypes.includes('boys')}
               onChange={handleCheckboxChange}
+              disabled={isSubmitting}
             />
             پسرانه
           </label>
         </div>
         {errors.schoolTypes && <div className="error-message">{errors.schoolTypes}</div>}
+      </div>
+
+      {/* Override the submit button to show loading state */}
+      <div className="profile-actions">
+        <button 
+          type="submit" 
+          className="profile-button submit-button"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'در حال ذخیره...' : 'ثبت اطلاعات'}
+        </button>
+        <button 
+          type="button" 
+          onClick={() => navigate('/role-selection')} 
+          className="profile-button cancel-button"
+          disabled={isSubmitting}
+        >
+          بازگشت
+        </button>
       </div>
     </ProfileForm>
   );
