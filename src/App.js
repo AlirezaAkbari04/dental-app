@@ -1,4 +1,4 @@
-// src/App.js - SIMPLIFIED FIXED VERSION
+// src/App.js - FIXED VERSION
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import './App.css';
@@ -19,25 +19,6 @@ import FAQ from './components/FAQ';
 
 function AppContent() {
   const { currentUser, isLoading } = useUser();
-  const navigate = useNavigate();
-
-  // Handle navigation based on user state changes
-  useEffect(() => {
-    if (!isLoading && currentUser) {
-      console.log('[App] User state changed:', currentUser);
-      
-      if (!currentUser.role) {
-        // User logged in but no role selected
-        console.log('[App] User has no role, navigating to role selection');
-        navigate('/role-selection');
-      } else {
-        // User has role, navigate to appropriate dashboard
-        const dashboardPath = getDashboardPath(currentUser.role);
-        console.log('[App] User has role, navigating to:', dashboardPath);
-        navigate(dashboardPath);
-      }
-    }
-  }, [currentUser, isLoading, navigate]);
 
   if (isLoading) {
     return (
@@ -62,93 +43,111 @@ function AppContent() {
     }
   };
 
-  const ProtectedRoute = ({ children, requiredRole }) => {
+  const ProtectedRoute = ({ children, requiresAuth = true, requiresRole = false, requiresProfile = false, specificRole = null }) => {
     console.log('[ProtectedRoute] Check:', {
       currentUser: currentUser?.username,
       currentUserRole: currentUser?.role,
-      requiredRole
+      profileCompleted: currentUser?.profileCompleted,
+      requiresAuth,
+      requiresRole,
+      requiresProfile,
+      specificRole
     });
 
-    // If no user is logged in, redirect to login
-    if (!currentUser) {
-      console.log('[ProtectedRoute] No current user, redirecting to login');
+    // If authentication is required and no user is logged in
+    if (requiresAuth && !currentUser) {
+      console.log('[ProtectedRoute] No user, redirecting to login');
       return <Navigate to="/login" replace />;
     }
-    
-    // If no role is set and we're not on role selection, redirect to role selection
-    if (!currentUser.role && requiredRole) {
-      console.log('[ProtectedRoute] No role set, redirecting to role selection');
+
+    // If role is required but user has no role
+    if (requiresRole && currentUser && !currentUser.role) {
+      console.log('[ProtectedRoute] No role, redirecting to role selection');
       return <Navigate to="/role-selection" replace />;
     }
-    
-    // If a specific role is required and it doesn't match
-    if (requiredRole && currentUser.role && currentUser.role !== requiredRole) {
-      console.log(`[ProtectedRoute] Role mismatch: required ${requiredRole}, got ${currentUser.role}`);
-      // Redirect to the appropriate dashboard for the user's actual role
-      return <Navigate to={getDashboardPath(currentUser.role)} replace />;
+
+    // If profile completion is required but profile is not completed
+    if (requiresProfile && currentUser && !currentUser.profileCompleted) {
+      console.log('[ProtectedRoute] Profile not completed, redirecting to profile form');
+      if (currentUser.role) {
+        return <Navigate to={`/profile/${currentUser.role}`} replace />;
+      }
+      return <Navigate to="/role-selection" replace />;
     }
-    
-    // All checks passed, render the protected content
+
+    // If specific role is required and doesn't match
+    if (specificRole && currentUser && currentUser.role !== specificRole) {
+      console.log(`[ProtectedRoute] Role mismatch: required ${specificRole}, got ${currentUser.role}`);
+      // If user has completed profile, go to their dashboard
+      if (currentUser.profileCompleted) {
+        return <Navigate to={getDashboardPath(currentUser.role)} replace />;
+      }
+      // Otherwise, go to their profile form
+      return <Navigate to={`/profile/${currentUser.role}`} replace />;
+    }
+
+    // All checks passed
     return children;
   };
 
-  // Handle redirects for logged-in users on auth pages
-  const LoginRoute = () => {
+  // Handle auth pages (login/register) - redirect if already logged in
+  const AuthRoute = ({ children }) => {
     if (currentUser) {
-      if (currentUser.role) {
-        return <Navigate to={getDashboardPath(currentUser.role)} replace />;
-      } else {
+      // User is logged in
+      if (!currentUser.role) {
+        // No role selected yet
         return <Navigate to="/role-selection" replace />;
+      } else if (!currentUser.profileCompleted) {
+        // Role selected but profile not completed
+        return <Navigate to={`/profile/${currentUser.role}`} replace />;
+      } else {
+        // Everything complete, go to dashboard
+        return <Navigate to={getDashboardPath(currentUser.role)} replace />;
       }
     }
-    return <Login />;
-  };
-
-  const RegisterRoute = () => {
-    if (currentUser) {
-      if (currentUser.role) {
-        return <Navigate to={getDashboardPath(currentUser.role)} replace />;
-      } else {
-        return <Navigate to="/role-selection" replace />;
-      }
-    }
-    return <Register />;
+    // Not logged in, show auth page
+    return children;
   };
 
   // Default route handler
   const DefaultRoute = () => {
-    if (currentUser) {
-      if (currentUser.role) {
-        return <Navigate to={getDashboardPath(currentUser.role)} replace />;
-      } else {
-        return <Navigate to="/role-selection" replace />;
-      }
+    if (!currentUser) {
+      return <Navigate to="/login" replace />;
     }
-    return <Navigate to="/login" replace />;
+
+    if (!currentUser.role) {
+      return <Navigate to="/role-selection" replace />;
+    }
+
+    if (!currentUser.profileCompleted) {
+      return <Navigate to={`/profile/${currentUser.role}`} replace />;
+    }
+
+    return <Navigate to={getDashboardPath(currentUser.role)} replace />;
   };
 
   return (
     <div className="app" dir="rtl">
       <Routes>
-        {/* Public routes */}
-        <Route path="/login" element={<LoginRoute />} />
-        <Route path="/register" element={<RegisterRoute />} />
+        {/* Public auth routes */}
+        <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
+        <Route path="/register" element={<AuthRoute><Register /></AuthRoute>} />
         
-        {/* Protected routes */}
+        {/* Role selection - requires auth but not role */}
         <Route 
           path="/role-selection" 
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiresAuth={true} requiresRole={false} requiresProfile={false}>
               <RoleSelection />
             </ProtectedRoute>
           } 
         />
         
-        {/* Profile completion routes */}
+        {/* Profile completion routes - requires auth and role but not completed profile */}
         <Route 
           path="/profile/child" 
           element={
-            <ProtectedRoute requiredRole="child">
+            <ProtectedRoute requiresAuth={true} requiresRole={true} requiresProfile={false} specificRole="child">
               <ChildProfile />
             </ProtectedRoute>
           } 
@@ -157,7 +156,7 @@ function AppContent() {
         <Route 
           path="/profile/parent" 
           element={
-            <ProtectedRoute requiredRole="parent">
+            <ProtectedRoute requiresAuth={true} requiresRole={true} requiresProfile={false} specificRole="parent">
               <ParentProfile />
             </ProtectedRoute>
           } 
@@ -166,17 +165,17 @@ function AppContent() {
         <Route 
           path="/profile/teacher" 
           element={
-            <ProtectedRoute requiredRole="teacher">
+            <ProtectedRoute requiresAuth={true} requiresRole={true} requiresProfile={false} specificRole="teacher">
               <TeacherProfile />
             </ProtectedRoute>
           } 
         />
         
-        {/* Dashboard routes */}
+        {/* Dashboard routes - requires auth, role, and completed profile */}
         <Route 
           path="/dashboard/child" 
           element={
-            <ProtectedRoute requiredRole="child">
+            <ProtectedRoute requiresAuth={true} requiresRole={true} requiresProfile={true} specificRole="child">
               <ChildDashboard />
             </ProtectedRoute>
           } 
@@ -185,7 +184,7 @@ function AppContent() {
         <Route 
           path="/dashboard/caretaker" 
           element={
-            <ProtectedRoute requiredRole="teacher">
+            <ProtectedRoute requiresAuth={true} requiresRole={true} requiresProfile={true} specificRole="teacher">
               <CaretakerDashboard />
             </ProtectedRoute>
           } 
@@ -194,13 +193,13 @@ function AppContent() {
         <Route 
           path="/dashboard/parent" 
           element={
-            <ProtectedRoute requiredRole="parent">
+            <ProtectedRoute requiresAuth={true} requiresRole={true} requiresProfile={true} specificRole="parent">
               <ParentDashboard />
             </ProtectedRoute>
           } 
         />
         
-        {/* FAQ route - accessible to all users */}
+        {/* FAQ route - accessible to all */}
         <Route path="/faq" element={<FAQ />} />
         
         {/* Default redirect */}

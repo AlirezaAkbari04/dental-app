@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/Auth.css';
 import logoImage from '../../logo.svg';
@@ -9,6 +9,28 @@ const RoleSelection = () => {
   const { currentUser, updateUserRole } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Check if user already has a role and has completed profile
+  useEffect(() => {
+    if (currentUser?.role && currentUser?.profileCompleted) {
+      // User already has a role and completed profile, redirect to dashboard
+      const dashboardPath = getDashboardPath(currentUser.role);
+      navigate(dashboardPath);
+    }
+  }, [currentUser, navigate]);
+
+  const getDashboardPath = (role) => {
+    switch (role) {
+      case 'child':
+        return '/dashboard/child';
+      case 'parent':
+        return '/dashboard/parent';
+      case 'teacher':
+        return '/dashboard/caretaker';
+      default:
+        return '/role-selection';
+    }
+  };
 
   const handleRoleSelect = async (role) => {
     setIsLoading(true);
@@ -23,7 +45,7 @@ const RoleSelection = () => {
         return;
       }
       
-      // Update user role using UserContext (which handles localStorage and state)
+      // Update user role using UserContext
       const success = await updateUserRole(role);
       
       if (success) {
@@ -42,7 +64,7 @@ const RoleSelection = () => {
             break;
           default:
             console.error(`Unknown role: ${role}`);
-            navigate('/profile/parent');
+            setError('نقش نامعتبر انتخاب شده است');
         }
       } else {
         setError('خطا در انتخاب نقش. لطفا دوباره تلاش کنید.');
@@ -57,6 +79,12 @@ const RoleSelection = () => {
 
   // Don't render if no user is logged in
   if (!currentUser) {
+    navigate('/login');
+    return null;
+  }
+
+  // If user already has a role but hasn't completed profile, show message
+  if (currentUser.role && !currentUser.profileCompleted) {
     return (
       <div className="auth-container" dir="rtl">
         <div className="auth-form-container">
@@ -64,8 +92,15 @@ const RoleSelection = () => {
             <img src={logoImage} alt="لبخند شاد دندان سالم" className="app-logo" />
             <h1 className="app-title">لبخند شاد دندان سالم</h1>
           </div>
-          <div style={{ textAlign: 'center', color: 'red' }}>
-            لطفا ابتدا وارد شوید
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <p>شما قبلاً نقش خود را انتخاب کرده‌اید.</p>
+            <button 
+              className="auth-button" 
+              onClick={() => navigate(`/profile/${currentUser.role}`)}
+              style={{ marginTop: '20px' }}
+            >
+              ادامه به تکمیل پروفایل
+            </button>
           </div>
         </div>
       </div>

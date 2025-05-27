@@ -4,56 +4,88 @@ import './EducationalContent.css';
 
 const EducationalContent = () => {
   const [selectedContent, setSelectedContent] = useState(null);
-  const [imageErrors, setImageErrors] = useState({});
 
-  // Platform-aware path function with multiple fallbacks
+  // Platform-aware path function - same logic as InfoGraphics
   const getImagePath = (filename) => {
-    if (Capacitor.isNativePlatform()) {
-      // For native platforms (Android/iOS)
-      return `assets/images/${filename}`;
-    } else {
-      // For web platform - use public folder path
-      return `/assets/images/${filename}`;
-    }
-  };
-
-  // Handle image load errors with fallback
-  const handleImageError = (filename) => {
-    setImageErrors(prev => ({ ...prev, [filename]: true }));
-  };
-
-  // Create image element with fallback
-  const createImageElement = (filename, altText = 'تصویر آموزشی') => {
-    const imagePath = getImagePath(filename);
-    
-    // If image failed to load, show placeholder
-    if (imageErrors[filename]) {
-      return `
-        <div class="image-placeholder-box">
-          <div class="placeholder-icon">🖼️</div>
-          <p class="placeholder-text">تصویر ${filename} در دسترس نیست</p>
-        </div>
-      `;
-    }
-    
-    return `
-      <div class="image-container">
-        <img 
-          src="${imagePath}" 
-          alt="${altText}" 
-          class="content-image" 
-          onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>'"
-        />
-      </div>
-    `;
+    return Capacitor.isNativePlatform() 
+      ? `file:///android_asset/assets/images/${filename}`
+      : `/assets/images/${filename}`;
   };
 
   const [contentList] = useState([
     {
       id: 1,
+      title: 'اهمیت دندان شیری',
+      description: 'چرا دندان‌های شیری مهم هستند و چگونه باید از آنها مراقبت کرد',
+      type: 'html',
+      imageUrl: getImagePath('infographics/dental-guide.jpg'),
+      content: `
+        <div class="content-container">
+          <h2>اهمیت دندان‌های شیری</h2>
+          <p>دندان‌های شیری نقش بسیار مهمی در رشد و سلامت کودکان دارند. این دندان‌ها نه تنها برای جویدن غذا استفاده می‌شوند، بلکه فضای لازم برای رویش صحیح دندان‌های دائمی را نیز حفظ می‌کنند.</p>
+          
+          <div class="tooth-stages">
+            <div class="tooth-stage">
+              <div class="stage-icon">👶</div>
+              <div class="stage-title">تولد تا 3 سالگی</div>
+              <div class="stage-description">رویش دندان‌های شیری شروع می‌شود</div>
+            </div>
+            <div class="tooth-stage">
+              <div class="stage-icon">🧒</div>
+              <div class="stage-title">6 تا 12 سالگی</div>
+              <div class="stage-description">دندان‌های شیری به تدریج می‌افتند و دندان‌های دائمی رشد می‌کنند</div>
+            </div>
+            <div class="tooth-stage">
+              <div class="stage-icon">👦</div>
+              <div class="stage-title">12 سالگی به بعد</div>
+              <div class="stage-description">بیشتر دندان‌های دائمی رویش پیدا کرده‌اند</div>
+            </div>
+          </div>
+          
+          <h3>دلایل اهمیت مراقبت از دندان‌های شیری:</h3>
+          <ul>
+            <li>کمک به رشد صحیح فک و صورت</li>
+            <li>حفظ فضا برای دندان‌های دائمی</li>
+            <li>کمک به تغذیه مناسب و جویدن غذا</li>
+            <li>کمک به رشد گفتاری صحیح</li>
+            <li>حفظ زیبایی و اعتماد به نفس کودک</li>
+          </ul>
+        </div>
+      `,
+      icon: '🦷'
+    },
+    {
+      id: 2,
+      title: 'فلوراید',
+      description: 'فواید فلوراید برای سلامت دندان‌ها و چگونگی استفاده صحیح از آن',
+      type: 'html',
+      imageUrl: getImagePath('infographics/fluoride.jpg'),
+      audioPath: 'fluoride-audio.mp3',
+      content: `
+        <h2>فلوراید</h2>
+        <div class="fluoride-brochure-container">
+          <img 
+            src="${getImagePath('fluoride-brochure-1.PNG')}" 
+            alt="بروشور فلوراید - صفحه اول" 
+            class="fluoride-brochure-image"
+            onerror="this.onerror=null; this.src=''; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>');"
+          />
+          <img 
+            src="${getImagePath('fluoride-brochure-2.PNG')}" 
+            alt="بروشور فلوراید - صفحه دوم" 
+            class="fluoride-brochure-image"
+            onerror="this.onerror=null; this.src=''; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>');"
+          />
+        </div>
+      `,
+      icon: '💧'
+    },
+    {
+      id: 3,
       title: 'راهنمای جامع بهداشت دهان و دندان',
       description: 'مجموعه کاملی از اطلاعات و آموزش‌های مربوط به سلامت دهان و دندان برای دانش‌آموزان و والدین',
       type: 'html',
+      imageUrl: getImagePath('infographics/dental-guide.jpg'),
       content: `
         <div class="content-container">
           <div class="document-header">
@@ -69,7 +101,7 @@ const EducationalContent = () => {
           <section class="content-section">
             <h3>روند ایجاد پوسیدگی</h3>
             <ul>
-              <li>پس از مصرف غذا خصوصا غذاهای حاوی قند، ذرات باقی مانده در لابه لای سطوح و بین دندانها جمع شده توسط میکروبهای موجود در دهان مصرف و تجزیه میشوند.</li>
+              <li>پس از مصرف غذا خصوصا غذاهای حاوی قند، ذرات باقی مانده در لابهلای سطوح و بین دندانها جمع شده توسط میکروبهای موجود در دهان مصرف و تجزیه میشوند.</li>
               <li>این موجودات میکروسکوپی بطور معمول در دهان هر فردی وجود دارند و در صورتی که غذاهای حاوی قند به آنها نرسد برای دندانها مضر نمی باشند.</li>
               <li>این موجودات ریز پس از مصرف قند اسید تولید می کنند که باعث تخریب دندان وایجاد پوسیدگی می شود.</li>
             </ul>
@@ -92,7 +124,15 @@ const EducationalContent = () => {
               </div>
             </div>
 
-            ${createImageElement('1.jpg', 'تصویر پلاک دندانی')}
+            <div class="image-placeholder">
+              <img 
+                src="${getImagePath('image01.jpg')}" 
+                class="content-image" 
+                alt="نمایش تشکیل پلاک دندانی و جرم روی دندان"
+                onerror="this.onerror=null; this.src=''; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>');"
+              />
+              <p class="image-caption">نمایش تشکیل پلاک دندانی و جرم روی دندان</p>
+            </div>
           </section>
 
           <section class="content-section">
@@ -112,7 +152,14 @@ const EducationalContent = () => {
               <p>مسواک روی دندانها طوری قرار داده میشود که هر بار 3 تا 4 دندان شسته شود. مسواک در فک بالا با حرکت جلو و عقب حرکت میکند. در فک پایین بطور مشابه این حرکت انجام میشود.</p>
             </div>
 
-            ${createImageElement('2.jpg', 'روش مسواک زدن کودکان')}
+            <div class="image-placeholder">
+              <img 
+                src="${getImagePath('image02.jpg')}" 
+                class="content-image" 
+                alt="روش مسواک زدن کودکان"
+                onerror="this.onerror=null; this.src=''; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>');"
+              />
+            </div>
 
             <div class="tips">
               <ul>
@@ -172,7 +219,14 @@ const EducationalContent = () => {
               <p><strong>کشیدن دندانهای شیری موجب بهم ریختگی قوس فکی می شود لذا حفظ دندانهای شیری مهم است.</strong></p>
             </div>
 
-            ${createImageElement('3.jpg', 'اهمیت دندان شیری')}
+            <div class="image-placeholder">
+              <img 
+                src="${getImagePath('image03.jpg')}" 
+                class="content-image" 
+                alt="اهمیت دندان شیری"
+                onerror="this.onerror=null; this.src=''; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>');"
+              />
+            </div>
           </section>
 
           <section class="content-section">
@@ -186,7 +240,14 @@ const EducationalContent = () => {
               <li>بهتر است آب نمک ساده (یک لیوان آب جوشیده سرد و کمی نمک) را دهانشویه کنید.</li>
             </ol>
 
-            ${createImageElement('4.jpg', 'نحوه صحیح مسواک زدن')}
+            <div class="image-placeholder">
+              <img 
+                src="${getImagePath('image04.jpg')}" 
+                class="content-image" 
+                alt="نحوه صحیح مسواک زدن"
+                onerror="this.onerror=null; this.src=''; this.style.display='none'; this.insertAdjacentHTML('afterend', '<div class=\\'image-placeholder-box\\'><div class=\\'placeholder-icon\\'>🖼️</div><p class=\\'placeholder-text\\'>تصویر در دسترس نیست</p></div>');"
+              />
+            </div>
           </section>
 
           <section class="content-section references">
@@ -198,86 +259,11 @@ const EducationalContent = () => {
             </ul>
           </section>
         </div>
-
-        <style>
-          .image-container {
-            margin: 20px 0;
-            text-align: center;
-          }
-          
-          .content-image {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          }
-          
-          .image-placeholder-box {
-            background-color: #f5f5f5;
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-            margin: 20px 0;
-          }
-          
-          .placeholder-icon {
-            font-size: 48px;
-            color: #ccc;
-            margin-bottom: 10px;
-          }
-          
-          .placeholder-text {
-            color: #666;
-            font-size: 14px;
-            margin: 0;
-          }
-        </style>
       `,
       icon: '📄'
     },
     {
-      id: 2,
-      title: 'اهمیت دندان شیری',
-      description: 'چرا دندان‌های شیری مهم هستند و چگونه باید از آنها مراقبت کرد',
-      type: 'html',
-      content: `
-        <div class="content-container">
-          <h2>اهمیت دندان‌های شیری</h2>
-          <p>دندان‌های شیری نقش بسیار مهمی در رشد و سلامت کودکان دارند. این دندان‌ها نه تنها برای جویدن غذا استفاده می‌شوند، بلکه فضای لازم برای رویش صحیح دندان‌های دائمی را نیز حفظ می‌کنند.</p>
-          
-          <div class="tooth-stages">
-            <div class="tooth-stage">
-              <div class="stage-icon">👶</div>
-              <div class="stage-title">تولد تا 3 سالگی</div>
-              <div class="stage-description">رویش دندان‌های شیری شروع می‌شود</div>
-            </div>
-            <div class="tooth-stage">
-              <div class="stage-icon">🧒</div>
-              <div class="stage-title">6 تا 12 سالگی</div>
-              <div class="stage-description">دندان‌های شیری به تدریج می‌افتند و دندان‌های دائمی رشد می‌کنند</div>
-            </div>
-            <div class="tooth-stage">
-              <div class="stage-icon">👦</div>
-              <div class="stage-title">12 سالگی به بعد</div>
-              <div class="stage-description">بیشتر دندان‌های دائمی رویش پیدا کرده‌اند</div>
-            </div>
-          </div>
-          
-          <h3>دلایل اهمیت مراقبت از دندان‌های شیری:</h3>
-          <ul>
-            <li>کمک به رشد صحیح فک و صورت</li>
-            <li>حفظ فضا برای دندان‌های دائمی</li>
-            <li>کمک به تغذیه مناسب و جویدن غذا</li>
-            <li>کمک به رشد گفتاری صحیح</li>
-            <li>حفظ زیبایی و اعتماد به نفس کودک</li>
-          </ul>
-        </div>
-      `,
-      icon: '🦷'
-    },
-    {
-      id: 3,
+      id: 4,
       title: 'نحوه صحیح مسواک زدن',
       description: 'آموزش مرحله به مرحله مسواک زدن صحیح برای دانش‌آموزان',
       type: 'html',
@@ -352,16 +338,25 @@ const EducationalContent = () => {
       {selectedContent ? (
         <div className="content-detail">
           <div className="detail-header">
-            <h3 className="detail-title">{selectedContent.title}</h3>
+            <h3 className="detail-title">
+              {selectedContent.title}
+            </h3>
             <div className="detail-actions">
-              <button className="back-button" onClick={handleBackToList}>
+              <button 
+                className="back-button" 
+                onClick={handleBackToList}
+              >
                 بازگشت به لیست
               </button>
             </div>
           </div>
           
           <div className="content-body">
-            <div dangerouslySetInnerHTML={{ __html: selectedContent.content }} />
+            <div 
+              dangerouslySetInnerHTML={{ 
+                __html: selectedContent.content 
+              }} 
+            />
           </div>
         </div>
       ) : (
@@ -372,12 +367,31 @@ const EducationalContent = () => {
               className="content-card" 
               onClick={() => handleSelectContent(content)}
             >
-              <div className="content-icon">{content.icon}</div>
-              <div className="content-info">
-                <h3 className="content-title">{content.title}</h3>
-                <p className="content-description">{content.description}</p>
-                <div className="content-type">محتوای متنی</div>
+              <div className="content-icon">
+                {content.icon}
               </div>
+              <div className="content-info">
+                <h3 className="content-title">
+                  {content.title}
+                </h3>
+                <p className="content-description">
+                  {content.description}
+                </p>
+                <div className="content-type">
+                  محتوای متنی
+                </div>
+              </div>
+              {content.imageUrl && (
+                <div className="content-thumbnail">
+                  <img 
+                    src={content.imageUrl} 
+                    alt={content.title}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>

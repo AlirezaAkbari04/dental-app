@@ -1,4 +1,4 @@
-// src/contexts/UserContext.js - SIMPLIFIED FIXED VERSION
+// src/contexts/UserContext.js - FIXED VERSION
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
@@ -40,11 +40,15 @@ export const UserProvider = ({ children }) => {
         if (authData && authData.username) {
           console.log('[UserContext] Found existing auth data:', authData);
           
+          // Check if user has completed profile
+          const profileCompleted = localStorage.getItem(`profile_completed_${authData.id}`);
+          
           // Restore user session
           const userData = {
-            id: authData.id || Date.now(), // Generate ID if not exists
+            id: authData.id || Date.now(),
             username: authData.username,
-            role: authData.role || null
+            role: authData.role || null,
+            profileCompleted: profileCompleted === 'true'
           };
           
           setCurrentUser(userData);
@@ -99,6 +103,10 @@ export const UserProvider = ({ children }) => {
   const clearAuthData = async () => {
     try {
       console.log('[UserContext] Clearing auth data...');
+      
+      if (currentUser?.id) {
+        localStorage.removeItem(`profile_completed_${currentUser.id}`);
+      }
       
       localStorage.removeItem('userAuth');
       localStorage.removeItem('userRole');
@@ -162,6 +170,10 @@ export const UserProvider = ({ children }) => {
         return false;
       }
       
+      // Check if user has completed profile
+      const profileCompleted = localStorage.getItem(`profile_completed_${user.id}`);
+      user.profileCompleted = profileCompleted === 'true';
+      
       console.log('[UserContext] Login successful:', user);
       setCurrentUser(user);
       await saveAuthData(user);
@@ -195,6 +207,7 @@ export const UserProvider = ({ children }) => {
         id: Date.now(),
         username: username.trim(),
         role: null, // No role initially
+        profileCompleted: false,
         created_at: new Date().toISOString()
       };
       
@@ -222,7 +235,11 @@ export const UserProvider = ({ children }) => {
       console.log('[UserContext] Updating user role to:', newRole);
       
       // Update current user
-      const updatedUser = { ...currentUser, role: newRole };
+      const updatedUser = { 
+        ...currentUser, 
+        role: newRole,
+        profileCompleted: false // Mark profile as not completed when role changes
+      };
       
       // Save to storage
       saveUserToStorage(updatedUser);
@@ -237,6 +254,38 @@ export const UserProvider = ({ children }) => {
       return true;
     } catch (error) {
       console.error('[UserContext] Error updating user role:', error);
+      return false;
+    }
+  };
+
+  const markProfileAsCompleted = async () => {
+    try {
+      if (!currentUser) {
+        console.error('[UserContext] No current user to mark profile as completed');
+        return false;
+      }
+      
+      console.log('[UserContext] Marking profile as completed for user:', currentUser.id);
+      
+      // Update profile completion status
+      localStorage.setItem(`profile_completed_${currentUser.id}`, 'true');
+      
+      // Update current user
+      const updatedUser = { 
+        ...currentUser, 
+        profileCompleted: true
+      };
+      
+      // Save to storage
+      saveUserToStorage(updatedUser);
+      
+      // Update state
+      setCurrentUser(updatedUser);
+      
+      console.log('[UserContext] Profile marked as completed');
+      return true;
+    } catch (error) {
+      console.error('[UserContext] Error marking profile as completed:', error);
       return false;
     }
   };
@@ -268,7 +317,8 @@ export const UserProvider = ({ children }) => {
     login,
     register,
     logout,
-    updateUserRole
+    updateUserRole,
+    markProfileAsCompleted
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

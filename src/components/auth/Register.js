@@ -69,35 +69,16 @@ function Register() {
     }
 
     try {
-      // Register with the username (email or phone)
-      const user = await register(username, 'parent'); // Default to parent role
+      // Register with only the username (no role parameter)
+      const success = await register(username);
       
-      if (user) {
-        console.log('Registration successful, user:', user);
-        
-        // Check if user already had a role (existing user)
-        if (user.role && user.role !== '') {
-          // Existing user with role, redirect to appropriate dashboard
-          switch (user.role) {
-            case 'child':
-              navigate('/dashboard/child');
-              break;
-            case 'parent':
-              navigate('/dashboard/parent');
-              break;
-            case 'teacher':
-              navigate('/dashboard/caretaker');
-              break;
-            default:
-              // If role is unrecognized, go to role selection
-              navigate('/role-selection');
-          }
-        } else {
-          // New user or user without role, go to role selection
-          navigate('/role-selection');
-        }
+      if (success) {
+        console.log('Registration successful, navigating to role selection');
+        // Navigate to role selection for new users
+        navigate('/role-selection');
       } else {
-        setError('خطایی رخ داده است. لطفا دوباره تلاش کنید.');
+        // Registration failed - user might already exist
+        setError('این کاربر قبلاً ثبت نام کرده است. لطفاً وارد شوید.');
       }
     } catch (err) {
       console.error("Registration error:", err);
