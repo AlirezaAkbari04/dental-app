@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../../../styles/ChildComponents.css';
-import { useUser } from '../../../contexts/UserContext'; // Add this import
-import DatabaseService from '../../../services/DatabaseService'; // Add this import
+import { useUser } from '../../../contexts/UserContext';
+import DatabaseService from '../../../services/DatabaseService';
 
 const BrushReminder = () => {
-  const { currentUser } = useUser(); // Get current user
-  const [childId, setChildId] = useState(null); // Add child ID state
+  const { currentUser } = useUser();
+  const [childId, setChildId] = useState(null);
 
   const [alarms, setAlarms] = useState({
     morning: { hour: 7, minute: 30, enabled: true },
@@ -13,7 +13,7 @@ const BrushReminder = () => {
   });
   
   const [timerRunning, setTimerRunning] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(120); // 2 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(120);
   const [showCongrats, setShowCongrats] = useState(false);
   const [audioError, setAudioError] = useState(false);
   const [alarmActive, setAlarmActive] = useState(false);
@@ -24,6 +24,26 @@ const BrushReminder = () => {
   const timerIntervalRef = useRef(null);
   const alarmCheckIntervalRef = useRef(null);
   
+  // Function to convert English numbers to Persian
+  const toPersianNumber = (num) => {
+    const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+    return num.toString().replace(/\d/g, (digit) => persianDigits[digit]);
+  };
+
+  // Function to convert Persian numbers to English
+  const toEnglishNumber = (str) => {
+    const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+    const englishDigits = '0123456789';
+    return str.replace(/[۰-۹]/g, (digit) => englishDigits[persianDigits.indexOf(digit)]);
+  };
+
+  // Function to format time in Persian format
+  const formatPersianTime = (hour, minute) => {
+    const persianHour = toPersianNumber(hour.toString().padStart(2, '0'));
+    const persianMinute = toPersianNumber(minute.toString().padStart(2, '0'));
+    return `${persianHour}:${persianMinute}`;
+  };
+
   // Load saved alarms from localStorage
   useEffect(() => {
     try {
@@ -51,12 +71,10 @@ const BrushReminder = () => {
       if (!currentUser?.id) return;
 
       try {
-        // Initialize database if needed
         if (!DatabaseService.initialized) {
           await DatabaseService.init();
         }
 
-        // Get children (if parent) or use current user ID (if child)
         if (currentUser.role === 'parent') {
           const children = await DatabaseService.getChildrenByParentId(currentUser.id);
           if (children.length > 0) {
@@ -66,7 +84,6 @@ const BrushReminder = () => {
           setChildId(currentUser.id);
         }
 
-        // Get reminders for the user
         const reminders = await DatabaseService.getRemindersByUserId(currentUser.id);
 
         if (reminders && reminders.length > 0) {
@@ -102,13 +119,11 @@ const BrushReminder = () => {
 
   // Check if alarm should be triggered
   useEffect(() => {
-    // Set up an interval to check if alarm should be triggered
     alarmCheckIntervalRef.current = setInterval(() => {
       const now = new Date();
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
       
-      // Check morning alarm
       if (alarms.morning.enabled && 
           currentHour === alarms.morning.hour && 
           currentMinute === alarms.morning.minute && 
@@ -116,14 +131,13 @@ const BrushReminder = () => {
         triggerAlarm('صبح');
       }
       
-      // Check evening alarm
       if (alarms.evening.enabled && 
           currentHour === alarms.evening.hour && 
           currentMinute === alarms.evening.minute && 
           !alarmActive) {
         triggerAlarm('شب');
       }
-    }, 10000); // Check every 10 seconds
+    }, 10000);
     
     return () => {
       if (alarmCheckIntervalRef.current) {
@@ -136,7 +150,6 @@ const BrushReminder = () => {
   const triggerAlarm = (timeOfDay) => {
     setAlarmActive(true);
     
-    // Show notification if supported
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(`یادآوری مسواک ${timeOfDay}`, {
         body: `زمان مسواک زدن ${timeOfDay} رسیده است!`,
@@ -144,14 +157,12 @@ const BrushReminder = () => {
       });
     }
     
-    // Play alarm sound
     if (alarmAudioRef.current) {
       alarmAudioRef.current.currentTime = 0;
       alarmAudioRef.current.play().catch(error => {
         console.error("Error playing alarm audio:", error);
       });
       
-      // Stop alarm after 30 seconds
       setTimeout(() => {
         stopAlarm();
       }, 30000);
@@ -191,14 +202,14 @@ const BrushReminder = () => {
   }, [timerRunning, timeLeft]);
   
   const handleTimeChange = async (alarmType, timeString) => {
-    // Parse the time string (format: HH:MM)
-    const [hourStr, minuteStr] = timeString.split(':');
+    const englishTimeString = toEnglishNumber(timeString);
+    
+    const [hourStr, minuteStr] = englishTimeString.split(':');
     const hour = parseInt(hourStr, 10);
     const minute = parseInt(minuteStr, 10);
     
     console.log(`Setting ${alarmType} alarm to ${hour}:${minute}`);
     
-    // Update the alarm locally
     const updatedAlarms = {
       ...alarms,
       [alarmType]: {
@@ -210,7 +221,6 @@ const BrushReminder = () => {
     
     setAlarms(updatedAlarms);
     
-    // Save to database if we have a user
     if (childId && DatabaseService.initialized) {
       try {
         await DatabaseService.saveChildAlarms(childId, updatedAlarms);
@@ -221,7 +231,6 @@ const BrushReminder = () => {
   };
 
   const handleEnabledChange = async (alarmType, enabled) => {
-    // Update the alarm locally
     const updatedAlarms = {
       ...alarms,
       [alarmType]: {
@@ -232,7 +241,6 @@ const BrushReminder = () => {
     
     setAlarms(updatedAlarms);
     
-    // Save to database if we have a user
     if (childId && DatabaseService.initialized) {
       try {
         await DatabaseService.saveChildAlarms(childId, updatedAlarms);
@@ -248,19 +256,15 @@ const BrushReminder = () => {
     setShowCongrats(false);
     setAudioError(false);
     
-    // If the timer is already at 0, reset it first
     if (timeLeft === 0) {
       setTimeLeft(120);
     }
     
-    // Start playing music
     if (audioRef.current) {
-      // Reset audio to beginning
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(error => {
         console.error("Error playing audio:", error);
         setAudioError(true);
-        // Continue even if audio fails
       });
     }
   };
@@ -269,7 +273,6 @@ const BrushReminder = () => {
     console.log("Stopping timer");
     setTimerRunning(false);
     
-    // Stop music
     if (audioRef.current) {
       try {
         audioRef.current.pause();
@@ -291,25 +294,21 @@ const BrushReminder = () => {
     setTimeLeft(120);
   };
   
-  // Add this unified function to save brushing state
   const saveBrushingState = async (isCompleted, timeOfDay, durationMinutes) => {
     if (!childId) return;
     
     try {
-      // Get current date as YYYY-MM-DD
       const currentDate = DatabaseService.formatDate(new Date());
       
-      // Create brushing record in database
       await DatabaseService.createBrushingRecord(
         childId,
         currentDate,
         timeOfDay,
-        durationMinutes.toString(), // Convert to string
+        durationMinutes.toString(),
         isCompleted
       );
       
       if (isCompleted) {
-        // Update achievements for successful brushing
         await DatabaseService.updateAchievement(childId, 'regularBrushing', 1);
         await DatabaseService.updateAchievement(childId, 'stars', 1);
         
@@ -320,27 +319,22 @@ const BrushReminder = () => {
     }
   };
 
-  // Update the showCongratulations function to use saveBrushingState
   const showCongratulations = async () => {
     console.log("Showing congratulations");
     setShowCongrats(true);
 
-    // Play congratulations sound
     if (congratsAudioRef.current) {
       congratsAudioRef.current.play().catch((error) => {
         console.error('Error playing congratulations audio:', error);
       });
     }
 
-    // Determine if it's morning or evening based on current time
     const currentHour = new Date().getHours();
     const timeOfDay = currentHour < 12 ? 'morning' : 'evening';
 
-    // Save brushing record
     await saveBrushingState(true, timeOfDay, timeLeft);
   };
   
-  // Request notification permission for when we convert to mobile
   const requestNotificationPermission = () => {
     if ('Notification' in window) {
       Notification.requestPermission().then(permission => {
@@ -353,19 +347,17 @@ const BrushReminder = () => {
     }
   };
   
-  // Format time for display
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    const formattedTime = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    return toPersianNumber(formattedTime);
   };
   
-  // Format time string for input value (HH:MM)
   const formatTimeForInput = (hour, minute) => {
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   };
   
-  // Test alarm function for development purposes
   const testAlarm = () => {
     triggerAlarm('تست');
   };
@@ -389,11 +381,15 @@ const BrushReminder = () => {
               </label>
             </div>
             <div className="alarm-time">
+              <div className="persian-time-display">
+                ساعت: {formatPersianTime(alarms.morning.hour, alarms.morning.minute)}
+              </div>
               <input
                 type="time"
                 value={formatTimeForInput(alarms.morning.hour, alarms.morning.minute)}
                 onChange={(e) => handleTimeChange('morning', e.target.value)}
                 disabled={!alarms.morning.enabled}
+                className="time-input-hidden"
               />
             </div>
           </div>
@@ -411,11 +407,15 @@ const BrushReminder = () => {
               </label>
             </div>
             <div className="alarm-time">
+              <div className="persian-time-display">
+                ساعت: {formatPersianTime(alarms.evening.hour, alarms.evening.minute)}
+              </div>
               <input
                 type="time"
                 value={formatTimeForInput(alarms.evening.hour, alarms.evening.minute)}
                 onChange={(e) => handleTimeChange('evening', e.target.value)}
                 disabled={!alarms.evening.enabled}
+                className="time-input-hidden"
               />
             </div>
           </div>
@@ -432,7 +432,6 @@ const BrushReminder = () => {
             برای دریافت یادآوری مسواک، لطفاً مجوز اعلان‌ها را تأیید کنید.
           </p>
           
-          {/* For development purposes only - remove in production */}
           <button 
             className="test-button" 
             onClick={testAlarm}
@@ -520,7 +519,7 @@ const BrushReminder = () => {
               <p>تو مسواک زدن رو با موفقیت به پایان رسوندی</p>
               <div className="reward-info">
                 <span className="reward-item">
-                  <span className="reward-icon" aria-hidden="true">⭐</span> 1 ستاره
+                  <span className="reward-icon" aria-hidden="true">⭐</span> ۱ ستاره
                 </span>
               </div>
               <button 
@@ -535,7 +534,6 @@ const BrushReminder = () => {
         )}
       </div>
       
-      {/* MODIFIED: Changed to show only one video with the name "ویدیوی مسواک" */}
       <div className="educational-video">
         <h3>آموزش مسواک زدن</h3>
         <div className="videos-container">
@@ -555,6 +553,21 @@ const BrushReminder = () => {
           </div>
         </div>
       </div>
+
+      <audio ref={audioRef} loop preload="auto">
+        <source src="/assets/audios/brushing_music.mp3" type="audio/mpeg" />
+        <source src="/assets/audios/brushing_music.ogg" type="audio/ogg" />
+      </audio>
+      
+      <audio ref={alarmAudioRef} loop preload="auto">
+        <source src="/assets/audios/brushing_music.mp3" type="audio/mpeg" />
+        <source src="/assets/audios/brushing_music.ogg" type="audio/ogg" />
+      </audio>
+      
+      <audio ref={congratsAudioRef} preload="auto">
+        <source src="/assets/audios/applause.mp3" type="audio/mpeg" />
+        <source src="/assets/audios/applause.ogg" type="audio/ogg" />
+      </audio>
 
       <style jsx>{`
         .educational-video {
@@ -584,7 +597,7 @@ const BrushReminder = () => {
         .video-wrapper {
           position: relative;
           width: 100%;
-          padding-top: 56.25%; /* 16:9 Aspect Ratio */
+          padding-top: 56.25%;
           overflow: hidden;
         }
         
@@ -605,7 +618,40 @@ const BrushReminder = () => {
           color: #555;
         }
         
-        /* Media queries for larger screens */
+        .persian-time-display {
+          background-color: #f5f8ff;
+          border: 2px solid #4a6bff;
+          border-radius: 8px;
+          padding: 12px;
+          text-align: center;
+          font-size: 18px;
+          font-weight: bold;
+          color: #4a6bff;
+          margin-bottom: 10px;
+          font-family: 'Vazir', 'Tahoma', sans-serif;
+          direction: rtl;
+          cursor: pointer;
+        }
+        
+        .time-input-hidden {
+          position: absolute;
+          opacity: 0;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          pointer-events: none;
+        }
+        
+        .alarm-time {
+          position: relative;
+        }
+        
+        .alarm-time:hover .persian-time-display {
+          background-color: #e8f2ff;
+          transform: scale(1.02);
+          transition: all 0.2s ease;
+        }
+        
         @media (min-width: 768px) {
           .videos-container {
             flex-direction: row;
@@ -661,26 +707,7 @@ const BrushReminder = () => {
           font-size: 16px;
           cursor: pointer;
         }
-      `}</style>
-
-      {/* Audio elements for timer music and congratulations */}
-      <audio ref={audioRef} loop preload="auto">
-        <source src="/assets/audios/brushing_music.mp3" type="audio/mpeg" />
-        <source src="/assets/audios/brushing_music.ogg" type="audio/ogg" />
-      </audio>
-      
-      {/* Audio element for alarm */}
-      <audio ref={alarmAudioRef} loop preload="auto">
-        <source src="/assets/audios/brushing_music.mp3" type="audio/mpeg" />
-        <source src="/assets/audios/brushing_music.ogg" type="audio/ogg" />
-      </audio>
-      
-      <audio ref={congratsAudioRef} preload="auto">
-        <source src="/assets/audios/applause.mp3" type="audio/mpeg" />
-        <source src="/assets/audios/applause.ogg" type="audio/ogg" />
-      </audio>
-      
-      <style jsx>{`
+        
         .alarm-card {
           background-color: white;
           border-radius: 12px;
@@ -711,15 +738,6 @@ const BrushReminder = () => {
           margin-bottom: 15px;
         }
         
-        .alarm-time input {
-          width: 100%;
-          padding: 10px;
-          border: 1px solid #ddd;
-          border-radius: 6px;
-          font-size: 16px;
-        }
-        
-        /* Switch Styling */
         .switch {
           position: relative;
           display: inline-block;
@@ -825,6 +843,7 @@ const BrushReminder = () => {
           font-size: 36px;
           font-weight: bold;
           color: #333;
+          font-family: 'Vazir', 'Tahoma', sans-serif;
         }
         
         .timer-controls {
@@ -920,6 +939,7 @@ const BrushReminder = () => {
           padding: 10px 15px;
           border-radius: 8px;
           font-weight: bold;
+          font-family: 'Vazir', 'Tahoma', sans-serif;
         }
         
         .reward-icon {
@@ -1019,7 +1039,6 @@ const BrushReminder = () => {
           transition: height 1s linear;
         }
         
-        /* Decorative elements to make it look more like glass */
         .hourglass-top-chamber:before,
         .hourglass-bottom-chamber:before {
           content: '';
@@ -1055,7 +1074,6 @@ const BrushReminder = () => {
           transform: rotate(-45deg);
         }
         
-        /* Mobile optimizations */
         @media (max-width: 768px) {
           .timer-controls {
             flex-direction: column;
@@ -1078,6 +1096,10 @@ const BrushReminder = () => {
           
           .timer-time {
             font-size: 28px;
+          }
+          
+          .persian-time-display {
+            font-size: 16px;
           }
         }
       `}</style>

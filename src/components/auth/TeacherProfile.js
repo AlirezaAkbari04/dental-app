@@ -65,7 +65,7 @@ const TeacherProfile = () => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'لطفاً نام خود را وارد کنید';
+      newErrors.name = 'لطفاً نام و نام خانوادگی خود را وارد کنید';
     }
 
     if (!formData.gender) {

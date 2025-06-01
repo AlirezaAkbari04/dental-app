@@ -65,8 +65,8 @@ const Login = () => {
     <div className="auth-container" dir="rtl">
       <div className="auth-form-container">
         <div className="logo-container">
-          <img src={logoImage} alt="لبخند شاد دندان سالم" className="app-logo" />
-          <h1 className="app-title">لبخند شاد دندان سالم</h1>
+          <img src={logoImage} alt="دندان سالم لبخند شاد" className="app-logo" />
+          <h1 className="app-title">دندان سالم لبخند شاد</h1>
         </div>
         
         <form onSubmit={handleSubmit} className="auth-form">
