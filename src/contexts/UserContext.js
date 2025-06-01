@@ -1,4 +1,4 @@
-// src/contexts/UserContext.js - FIXED VERSION
+// src/contexts/UserContext.js - FLEXIBLE LOGIN VERSION
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
@@ -37,7 +37,7 @@ export const UserProvider = ({ children }) => {
           }
         }
         
-        if (authData && authData.username) {
+        if (authData && (authData.email || authData.phone)) {
           console.log('[UserContext] Found existing auth data:', authData);
           
           // Check if user has completed profile
@@ -46,7 +46,9 @@ export const UserProvider = ({ children }) => {
           // Restore user session
           const userData = {
             id: authData.id || Date.now(),
-            username: authData.username,
+            email: authData.email || null,
+            phone: authData.phone || null,
+            name: authData.name || '',
             role: authData.role || null,
             profileCompleted: profileCompleted === 'true'
           };
@@ -72,7 +74,9 @@ export const UserProvider = ({ children }) => {
     try {
       const authData = {
         id: userData.id,
-        username: userData.username,
+        email: userData.email,
+        phone: userData.phone,
+        name: userData.name,
         role: userData.role
       };
       
@@ -121,22 +125,49 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // Get user data from simple storage (localStorage as database)
-  const getUserFromStorage = (username) => {
+  // Helper function to validate email format
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Helper function to validate phone format
+  const isValidPhone = (phone) => {
+    const phoneRegex = /^09[0-9]{9}$/;
+    return phoneRegex.test(phone);
+  };
+
+  // Get user data from storage - UPDATED TO SEARCH BY EMAIL OR PHONE
+  const getUserFromStorage = (credential) => {
     try {
       const users = JSON.parse(localStorage.getItem('app_users') || '[]');
-      return users.find(user => user.username === username) || null;
+      
+      // Search by email or phone
+      const user = users.find(user => {
+        // Check if credential matches email
+        if (user.email && user.email.toLowerCase() === credential.toLowerCase()) {
+          return true;
+        }
+        // Check if credential matches phone
+        if (user.phone && user.phone === credential) {
+          return true;
+        }
+        return false;
+      });
+      
+      console.log('[UserContext] getUserFromStorage - searching for:', credential, 'found:', user ? 'YES' : 'NO');
+      return user || null;
     } catch (error) {
       console.error('[UserContext] Error reading users from storage:', error);
       return null;
     }
   };
 
-  // Save user to simple storage
+  // Save user to storage - UPDATED TO STORE BOTH EMAIL AND PHONE
   const saveUserToStorage = (userData) => {
     try {
       const users = JSON.parse(localStorage.getItem('app_users') || '[]');
-      const existingIndex = users.findIndex(user => user.username === userData.username);
+      const existingIndex = users.findIndex(user => user.id === userData.id);
       
       if (existingIndex !== -1) {
         users[existingIndex] = userData;
@@ -151,22 +182,23 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  // UPDATED LOGIN FUNCTION - ACCEPTS EMAIL OR PHONE
   const login = async (credentials) => {
     try {
       console.log('[UserContext] Starting login process...', credentials);
       
-      const username = typeof credentials === 'string' ? credentials : credentials.username;
+      const credential = typeof credentials === 'string' ? credentials : credentials.username;
       
-      if (!username || !username.trim()) {
-        console.error('[UserContext] No username provided');
+      if (!credential || !credential.trim()) {
+        console.error('[UserContext] No credential provided');
         return false;
       }
       
-      // Check if user exists in storage
-      let user = getUserFromStorage(username);
+      // Check if user exists in storage (search by email or phone)
+      let user = getUserFromStorage(credential.trim());
       
       if (!user) {
-        console.log('[UserContext] User not found in storage');
+        console.log('[UserContext] User not found in storage for credential:', credential);
         return false;
       }
       
@@ -185,27 +217,54 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  const register = async (username) => {
+  // UPDATED REGISTER FUNCTION - ACCEPTS FULL USER DATA WITH EMAIL AND PHONE
+  const register = async (userData) => {
     try {
-      console.log('[UserContext] Starting registration:', username);
+      console.log('[UserContext] Starting registration:', userData);
       
-      if (!username || !username.trim()) {
-        console.error('[UserContext] No username provided');
+      // userData should now contain: { email, phone, name, password }
+      const { email, phone, name } = userData;
+      
+      if (!name || !name.trim()) {
+        console.error('[UserContext] No name provided');
         return false;
       }
       
-      // Check if user already exists
-      const existingUser = getUserFromStorage(username);
-      
-      if (existingUser) {
-        console.log('[UserContext] User already exists');
+      // Must have at least email or phone
+      if (!email && !phone) {
+        console.error('[UserContext] No email or phone provided');
         return false;
       }
       
-      // Create new user without role (will be set in role selection)
+      // Validate email format if provided
+      if (email && !isValidEmail(email)) {
+        console.error('[UserContext] Invalid email format');
+        return false;
+      }
+      
+      // Validate phone format if provided
+      if (phone && !isValidPhone(phone)) {
+        console.error('[UserContext] Invalid phone format');
+        return false;
+      }
+      
+      // Check if user already exists with this email or phone
+      if (email && getUserFromStorage(email)) {
+        console.log('[UserContext] User already exists with this email');
+        return false;
+      }
+      
+      if (phone && getUserFromStorage(phone)) {
+        console.log('[UserContext] User already exists with this phone');
+        return false;
+      }
+      
+      // Create new user with both email and phone
       const newUser = {
         id: Date.now(),
-        username: username.trim(),
+        email: email?.trim() || null,
+        phone: phone?.trim() || null,
+        name: name.trim(),
         role: null, // No role initially
         profileCompleted: false,
         created_at: new Date().toISOString()

@@ -433,24 +433,6 @@ const ParentProfile = () => {
         {errors.oralHealthStatus && <div className="error-message">{errors.oralHealthStatus}</div>}
       </div>
 
-      {/* Override the submit button to show loading state */}
-      <div className="profile-actions">
-        <button 
-          type="submit" 
-          className="profile-button submit-button"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'در حال ذخیره...' : 'ثبت اطلاعات'}
-        </button>
-        <button 
-          type="button" 
-          onClick={() => navigate('/role-selection')} 
-          className="profile-button cancel-button"
-          disabled={isSubmitting}
-        >
-          بازگشت
-        </button>
-      </div>
     </ProfileForm>
   );
 };

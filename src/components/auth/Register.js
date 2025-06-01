@@ -1,4 +1,4 @@
-// src/components/auth/Register.js - FIXED VERSION
+// src/components/auth/Register.js - UPDATED FOR FLEXIBLE LOGIN SYSTEM
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import '../../styles/Auth.css';
@@ -12,7 +12,8 @@ function Register() {
     email: '',
     phone: '',
     name: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
   
   const [error, setError] = useState('');
@@ -24,6 +25,8 @@ function Register() {
       ...prevState,
       [name]: value
     }));
+    
+    // Clear error when user starts typing in any field
     setError('');
   };
 
@@ -32,14 +35,11 @@ function Register() {
     setIsLoading(true);
 
     // Basic validation
-    if (!formData.name || !formData.password || (!formData.email && !formData.phone)) {
-      setError('لطفا نام، رمز عبور و ایمیل یا شماره موبایل را وارد کنید');
+    if (!formData.name || !formData.password || !formData.confirmPassword || (!formData.email && !formData.phone)) {
+      setError('لطفا تمام فیلدهای الزامی را پر کنید');
       setIsLoading(false);
       return;
     }
-
-    // Username will be either email or phone
-    const username = formData.email || formData.phone;
 
     // Email validation if provided
     if (formData.email) {
@@ -68,9 +68,23 @@ function Register() {
       return;
     }
 
+    // Password confirmation validation
+    if (formData.password !== formData.confirmPassword) {
+      setError('رمزهای عبور مطابقت ندارند');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // Register with only the username (no role parameter)
-      const success = await register(username);
+      // UPDATED: Pass complete user data instead of just username
+      const userData = {
+        email: formData.email || null,
+        phone: formData.phone || null,
+        name: formData.name,
+        password: formData.password // Password included for future use
+      };
+      
+      const success = await register(userData);
       
       if (success) {
         console.log('Registration successful, navigating to role selection');
@@ -78,7 +92,13 @@ function Register() {
         navigate('/role-selection');
       } else {
         // Registration failed - user might already exist
-        setError('این کاربر قبلاً ثبت نام کرده است. لطفاً وارد شوید.');
+        if (formData.email && formData.phone) {
+          setError('کاربری با این ایمیل یا شماره موبایل قبلاً ثبت نام کرده است');
+        } else if (formData.email) {
+          setError('کاربری با این ایمیل قبلاً ثبت نام کرده است');
+        } else {
+          setError('کاربری با این شماره موبایل قبلاً ثبت نام کرده است');
+        }
       }
     } catch (err) {
       console.error("Registration error:", err);
@@ -160,6 +180,21 @@ function Register() {
               onChange={handleChange}
               placeholder="رمز عبور خود را وارد کنید"
               className={error && !formData.password ? 'input-error' : ''}
+              disabled={isLoading}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="confirmPassword">تکرار رمز عبور</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="رمز عبور را دوباره وارد کنید"
+              className={error && !formData.confirmPassword ? 'input-error' : ''}
               disabled={isLoading}
               required
             />
