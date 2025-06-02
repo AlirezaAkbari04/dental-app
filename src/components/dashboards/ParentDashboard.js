@@ -143,7 +143,7 @@ const ParentDashboard = () => {
               e.target.src = "/logo.png";
             }}
           />
-          <span className="app-name">لبخند شاد دندان سالم</span>
+          <span className="app-name">دندان سالم لبخند شاد</span>
         </div>
         <div className="user-info">
           <span className="welcome-text">خوش آمدید {parentName}</span>

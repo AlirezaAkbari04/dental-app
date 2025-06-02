@@ -418,7 +418,8 @@ const ChildGames = () => {
           >
             <div className="zone-content">
               <div className="zone-emoji-container">
-                <span className="zone-emoji" aria-hidden="true">😀</span>
+                <span className="zone-emoji" aria-hidden="true">🦷</span>
+                <span className="zone-face" aria-hidden="true">😊</span>
                 <div className="emoji-glow healthy-glow"></div>
               </div>
               <span className="zone-label">سالم</span>
@@ -435,7 +436,8 @@ const ChildGames = () => {
           >
             <div className="zone-content">
               <div className="zone-emoji-container">
-                <span className="zone-emoji" aria-hidden="true">😫</span>
+                <span className="zone-emoji" aria-hidden="true">🦷</span>
+                <span className="zone-face" aria-hidden="true">😢</span>
                 <div className="emoji-glow unhealthy-glow"></div>
               </div>
               <span className="zone-label">ناسالم</span>
@@ -681,9 +683,9 @@ const ChildGames = () => {
 
         .zone-content {
           position: relative;
-          padding: 25px;
+          padding: 20px;
           text-align: center;
-          height: 120px;
+          height: 110px;
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -703,12 +705,21 @@ const ChildGames = () => {
         .zone-emoji-container {
           position: relative;
           margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
         }
 
         .zone-emoji {
-          font-size: 3rem;
-          display: block;
+          font-size: 2.5rem;
           animation: pulse-emoji 2s ease-in-out infinite;
+        }
+
+        .zone-face {
+          font-size: 2rem;
+          animation: pulse-emoji 2s ease-in-out infinite;
+          animation-delay: 0.5s;
         }
 
         .emoji-glow {
@@ -716,8 +727,8 @@ const ChildGames = () => {
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          width: 60px;
-          height: 60px;
+          width: 80px;
+          height: 40px;
           border-radius: 50%;
           opacity: 0.3;
         }
@@ -752,7 +763,8 @@ const ChildGames = () => {
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
-        .drop-zone:hover .zone-emoji {
+        .drop-zone:hover .zone-emoji,
+        .drop-zone:hover .zone-face {
           animation: wiggle 0.5s ease-in-out infinite;
         }
 
@@ -991,7 +1003,11 @@ const ChildGames = () => {
           }
 
           .zone-emoji {
-            font-size: 2.5rem;
+            font-size: 2rem;
+          }
+
+          .zone-face {
+            font-size: 1.5rem;
           }
 
           .drop-zones {
@@ -1014,8 +1030,25 @@ const ChildGames = () => {
           }
 
           .drop-zones {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
+          }
+
+          .zone-content {
+            padding: 15px;
+            height: 90px;
+          }
+
+          .zone-emoji {
+            font-size: 2rem;
+          }
+
+          .zone-face {
+            font-size: 1.5rem;
+          }
+
+          .zone-label {
+            font-size: 0.9rem;
           }
 
           .feedback-icon {

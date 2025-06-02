@@ -344,6 +344,8 @@ const UrgentReferrals = () => {
     if (warningFlags.feverWithPain) flags.push('تب همراه با درد دهان');
     if (warningFlags.fistula) flags.push('فیستول یا مجرای خروج چرک به صورت جوش رو لثه');
     if (warningFlags.abnormalTissue) flags.push('لثه زخمی یا هرنوع حالت غیرطبیعی داخل یا خارج دهان');
+    if (warningFlags.extensiveCaries) flags.push('پوسیدگی وسیع دندان');
+    if (warningFlags.spontaneousPain) flags.push('درد خود به خود دندان');
 
     return flags.join('، ');
   };
@@ -647,6 +649,8 @@ const UrgentReferrals = () => {
                   {currentReferral.warningFlags.feverWithPain && <li>تب همراه با درد دهان</li>}
                   {currentReferral.warningFlags.fistula && <li>فیستول یا مجرای خروج چرک به صورت جوش رو لثه</li>}
                   {currentReferral.warningFlags.abnormalTissue && <li>لثه زخمی یا هرنوع حالت غیرطبیعی داخل یا خارج دهان</li>}
+                  {currentReferral.warningFlags.extensiveCaries && <li>پوسیدگی وسیع دندان</li>}
+                  {currentReferral.warningFlags.spontaneousPain && <li>درد خود به خود دندان</li>}
                 </ul>
               </div>
               

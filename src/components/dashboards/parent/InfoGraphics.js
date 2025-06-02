@@ -405,7 +405,74 @@ const InfoGraphics = () => {
         <h2>آموزش مسواک زدن برای کودکان</h2>
         <p>در این بخش، نحوه صحیح مسواک زدن دندان‌های کودکان توسط والدین آموزش داده می‌شود. این تکنیک‌ها به شما کمک می‌کند تا به عنوان والدین، دندان‌های فرزند خود را به درستی و بدون آسیب تمیز کنید.</p>
       `
+    },
+    // ...existing code...
+    {
+      id: 6,
+      title: 'نحوه مسواک زدن دندان‌های آسیا',
+      description: 'راهنمای مسواک زدن تحت نظارت برای دندان‌های آسیای اول دائمی در کودکان',
+      imageUrl: '/assets/images/molar-brushing.jpg', // Direct path
+      content: `
+        <div class="content-container">
+          <div class="document-header">
+            <h1>نحوه مسواک زدن دندان‌های آسیا</h1>
+            <h2>راهنمای مسواک زدن تحت نظارت برای کودکان</h2>
+          </div>
+
+          <section class="content-section">
+            <h3>اهمیت مسواک زدن تحت نظارت</h3>
+            <p>مسواک زدن تحت نظارت والدین یا مربیان در کودکان تا سن 8 سالگی توصیه می شود. به دلیل رویش دندان‌های آسیای اول دایمی در سن ۶ الی ۸ سالگی توجه ویژه به مراقبت از این دندان از اهمیت خاصی برخوردار است. این به معنای کمک یا هدایت کودک در حین انجام مسواک زدن می باشد تا حرکات مسواک زدن را بدرستی انجام دهد، مقدار مناسب از خمیر دندان استفاده کند و اطمینان حاصل شود که کودک خمیر دندان را نبلعیده است.</p>
+            
+            <div class="method-box">
+              <h4>مراحل انجام مسواک زدن تحت نظارت:</h4>
+              <ul>
+                <li>دستها بخوبی شسته شده باشد</li>
+                <li>تمام سطوح دندانی به مدت 2 دقیقه مسواک زده شود (بخش داخل و خارج و سطوح جونده) دندانهای بالا و پایین</li>
+                <li>سطح زبان به آرامی با مسواک تمیزشود</li>
+                <li>کودک باقیمانده خمیر دندان را بیرون بریزد و با مقدارمناسبی آب شستشو دهد</li>
+              </ul>
+            </div>
+
+            <div class="image-placeholder">
+              <img src="/assets/images/molar1.png" class="content-image" alt="تکنیک مسواک زدن دندان‌های آسیا" />
+              <p class="image-caption">نحوه صحیح مسواک زدن دندان‌های آسیا</p>
+            </div>
+          </section>
+
+          <section class="content-section">
+            <h3>تکنیک مسواک زدن دندان‌های آسیای در حال رویش</h3>
+            <p>مسواک زدن دندانهای آسیای اول که درحال رویش هستند با قرار دادن مسواک به صورت عمود در آن ناحیه و اطمینان از تمیز شدن دندان توصیه می شود.</p>
+            
+            <div class="side-by-side-images">
+              <div class="tooth-image">
+                <img src="/assets/images/molar2.png" alt="رویش دندان‌های آسیای اول" class="content-image" />
+                <p class="image-caption">رویش دندان‌های آسیای اول در کودکان</p>
+              </div>
+              <div class="tooth-image">
+                <video controls preload="metadata" class="video-player molar-video">
+                  <source src="/assets/videos/molar-video.mp4" type="video/mp4" />
+                  <p class="video-error">مرورگر شما قادر به نمایش ویدیو نیست.</p>
+                </video>
+                <p class="image-caption">ویدیوی آموزش مسواک زدن دندان‌های آسیا</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="content-section">
+            <h3>نکات مهم</h3>
+            <div class="tips">
+              <ul>
+                <li>دندان‌های آسیای اول دائمی در سن 6 سالگی رویش می‌کنند</li>
+                <li>این دندان‌ها برای مدت طولانی در دهان باقی می‌مانند</li>
+                <li>مراقبت صحیح از ابتدای رویش بسیار مهم است</li>
+                <li>والدین باید تا سن 8 سالگی کودک را نظارت کنند</li>
+              </ul>
+            </div>
+          </section>
+        </div>
+      `
     }
+// ...existing code...
   ];
 
   // Initialize database and resources
@@ -1172,6 +1239,18 @@ const InfoGraphics = () => {
             padding: 15px;
           }
         }
+          .molar-video {
+  aspect-ratio: 16/9;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+/* Optional: If you want the video to be smaller */
+.tooth-image .video-player {
+  max-width: 400px;
+  margin: 0 auto;
+  display: block;
+}
       `}</style>
     </div>
   );

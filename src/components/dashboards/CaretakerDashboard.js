@@ -148,7 +148,7 @@ const CaretakerDashboard = () => {
               e.target.src = "/logo.png";
             }}
           />
-          <span className="app-name">لبخند شاد دندان سالم</span>
+          <span className="app-name">دندان سالم لبخند شاد</span>
         </div>
         <div className="user-info">
           <span className="welcome-text">خوش آمدید {teacherName}</span>
@@ -161,7 +161,7 @@ const CaretakerDashboard = () => {
           <div className="user-profile">
             <div className="profile-icon">👨‍⚕️</div>
             <div className="profile-name">{teacherName}</div>
-            <div className="profile-title">معلم بهداشت</div>
+            <div className="profile-title">معلم/معلم بهداشت</div>
           </div>
           
           <ul className="nav-menu">

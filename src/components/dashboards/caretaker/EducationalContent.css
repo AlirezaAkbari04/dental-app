@@ -564,3 +564,15 @@
     padding: 5px;
   }
 }
+.molar-video {
+  aspect-ratio: 16/9;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+/* Optional: If you want the video to be smaller */
+.tooth-image .video-player {
+  max-width: 400px;
+  margin: 0 auto;
+  display: block;
+}

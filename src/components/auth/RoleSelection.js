@@ -100,7 +100,7 @@ const RoleSelection = () => {
       switch (role) {
         case 'child': return 'کودک';
         case 'parent': return 'والدین';
-        case 'teacher': return 'معلم بهداشت';
+        case 'teacher': return 'معلم/معلم بهداشت';
         default: return role;
       }
     };
@@ -325,7 +325,7 @@ const RoleSelection = () => {
                 }
               }}
             >
-              <span style={{ fontSize: '40px', marginLeft: '20px' }}>👪</span>
+              <span style={{ fontSize: '40px', marginLeft: '20px' }}>👨‍👩‍👧</span>
               <div>
                 <div style={{ 
                   fontWeight: 'bold', 
