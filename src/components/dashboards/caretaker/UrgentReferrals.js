@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PdfService from '../../../services/PdfService.js';
+import { Toast } from '@capacitor/toast';
 import './CaretakerComponents.css';
 
 const UrgentReferrals = () => {
@@ -10,6 +11,7 @@ const UrgentReferrals = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [currentReferral, setCurrentReferral] = useState(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfResult, setPdfResult] = useState(null);
 
   // Function to load data
   const loadData = () => {
@@ -51,8 +53,9 @@ const UrgentReferrals = () => {
       // Sort by date (most recent first)
       allReferrals.sort((a, b) => new Date(b.date) - new Date(a.date));
       setReferrals(allReferrals);
+      console.log('[UrgentReferrals] Loaded referrals:', allReferrals.length);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('[UrgentReferrals] Error loading data:', error);
     }
   };
 
@@ -157,9 +160,20 @@ const UrgentReferrals = () => {
       
       // Dispatch custom event
       window.dispatchEvent(new Event('healthReportUpdated'));
+      
+      console.log('[UrgentReferrals] Referral status updated successfully');
     } catch (error) {
-      console.error('Error updating referral status:', error);
-      alert('خطا در به‌روزرسانی وضعیت ارجاع. لطفاً دوباره تلاش کنید');
+      console.error('[UrgentReferrals] Error updating referral status:', error);
+      
+      try {
+        Toast.show({
+          text: 'خطا در به‌روزرسانی وضعیت ارجاع. لطفاً دوباره تلاش کنید',
+          duration: 'long',
+          position: 'center'
+        });
+      } catch {
+        alert('خطا در به‌روزرسانی وضعیت ارجاع. لطفاً دوباره تلاش کنید');
+      }
     }
   };
 
@@ -169,47 +183,146 @@ const UrgentReferrals = () => {
     setShowDetailsModal(true);
   };
 
-  // Generate a PDF report of all referrals
+  // Enhanced PDF generation with better UX
   const generatePDF = async () => {
     if (filteredReferrals.length === 0) {
-      alert('هیچ ارجاعی برای تولید گزارش وجود ندارد');
+      try {
+        await Toast.show({
+          text: 'هیچ ارجاعی برای تولید گزارش وجود ندارد',
+          duration: 'short',
+          position: 'center'
+        });
+      } catch {
+        alert('هیچ ارجاعی برای تولید گزارش وجود ندارد');
+      }
       return;
     }
 
     setIsGeneratingPdf(true);
+    setPdfResult(null);
     
     try {
+      console.log('[UrgentReferrals] Starting PDF generation for', filteredReferrals.length, 'referrals');
+      
+      // Initialize PDF service fonts
+      await PdfService.initializeFonts();
+      
       // Get school name for filter
       const schoolName = selectedSchool ? 
         schools.find(s => s.localId === selectedSchool)?.name : null;
       
-      // Generate PDF using PdfService with correct parameters
+      // Prepare filters for PDF
       const filters = {
         schoolName: schoolName,
         dateRange: selectedDateRange
       };
       
+      console.log('[UrgentReferrals] PDF filters:', filters);
+      
+      // Generate PDF using enhanced PdfService
       const result = await PdfService.generateUrgentReferralsPdf(
         filteredReferrals, 
         filters
       );
       
+      console.log('[UrgentReferrals] PDF generation result:', result);
+      
       if (result.success) {
-        if (result.filePath) {
-          // Native platform - file saved
-          alert(`گزارش PDF با موفقیت ذخیره شد: ${result.fileName}`);
-        } else {
-          // Web platform - file downloaded
-          alert('گزارش PDF با موفقیت دانلود شد');
+        setPdfResult(result);
+        
+        // Show success message based on action taken
+        let successMessage = 'گزارش PDF با موفقیت ایجاد شد.';
+        if (result.action === 'shared') {
+          successMessage = 'گزارش با موفقیت اشتراک‌گذاری شد.';
+        } else if (result.action === 'saved') {
+          successMessage = `فایل در دستگاه شما ذخیره شد.`;
+        } else if (result.action === 'downloaded') {
+          successMessage = 'فایل دانلود شد.';
+        }
+        
+        try {
+          await Toast.show({
+            text: successMessage,
+            duration: 'short',
+            position: 'bottom'
+          });
+        } catch {
+          alert(successMessage);
         }
       } else {
-        throw new Error(result.error || 'خطا در تولید فایل PDF');
+        console.error('[UrgentReferrals] PDF generation failed:', result.error);
+        
+        try {
+          await Toast.show({
+            text: 'خطا در تولید گزارش PDF. لطفا دوباره تلاش کنید.',
+            duration: 'long',
+            position: 'center'
+          });
+        } catch {
+          alert('خطا در تولید گزارش PDF. لطفا دوباره تلاش کنید.');
+        }
       }
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert(`خطا در تولید گزارش PDF: ${error.message}`);
+      console.error('[UrgentReferrals] Error in PDF generation process:', error);
+      
+      try {
+        await Toast.show({
+          text: `خطا در تولید گزارش: ${error.message}`,
+          duration: 'long',
+          position: 'center'
+        });
+      } catch {
+        alert(`خطا در تولید گزارش: ${error.message}`);
+      }
     } finally {
       setIsGeneratingPdf(false);
+    }
+  };
+
+  // Manual share function for additional sharing attempt
+  const handleSharePdf = async () => {
+    if (!pdfResult || !pdfResult.filePath) {
+      try {
+        await Toast.show({
+          text: 'فایل PDF برای اشتراک‌گذاری موجود نیست.',
+          duration: 'short',
+          position: 'center'
+        });
+      } catch {
+        alert('فایل PDF برای اشتراک‌گذاری موجود نیست.');
+      }
+      return;
+    }
+
+    try {
+      const shareResult = await PdfService.shareOrDownloadPdf(
+        pdfResult.filePath, 
+        pdfResult.fileName, 
+        'گزارش ارجاع‌های فوری'
+      );
+      
+      if (shareResult.success) {
+        try {
+          await Toast.show({
+            text: shareResult.message || 'فایل اشتراک‌گذاری شد.',
+            duration: 'short',
+            position: 'bottom'
+          });
+        } catch {
+          alert(shareResult.message || 'فایل اشتراک‌گذاری شد.');
+        }
+      }
+    } catch (error) {
+      console.error('[UrgentReferrals] Error sharing PDF:', error);
+      try {
+        await Toast.show({
+          text: 'خطا در اشتراک‌گذاری فایل.',
+          duration: 'short',
+          position: 'center'
+        });
+      } catch {
+        alert('خطا در اشتراک‌گذاری فایل.');
+      }
     }
   };
 
@@ -251,21 +364,124 @@ const UrgentReferrals = () => {
     <div className="urgent-referrals-container">
       <div className="content-header">
         <h2>ارجاع‌های فوری به دندانپزشک</h2>
-        <button 
-          className="action-button" 
-          onClick={generatePDF}
-          disabled={filteredReferrals.length === 0 || isGeneratingPdf}
-        >
-          <span className="action-icon">📄</span>
-          {isGeneratingPdf ? 'در حال تولید گزارش...' : 'دریافت گزارش PDF'}
-        </button>
+        
+        {/* Enhanced PDF Generation Button */}
+        <div className="pdf-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button 
+            className="action-button pdf-generate-button" 
+            onClick={generatePDF}
+            disabled={filteredReferrals.length === 0 || isGeneratingPdf}
+            style={{
+              backgroundColor: isGeneratingPdf ? '#6c757d' : '#007bff',
+              color: 'white',
+              border: 'none',
+              padding: '12px 20px',
+              borderRadius: '8px',
+              cursor: isGeneratingPdf || filteredReferrals.length === 0 ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              opacity: filteredReferrals.length === 0 ? 0.6 : 1
+            }}
+          >
+            {isGeneratingPdf ? (
+              <>
+                <div style={{ 
+                  width: '16px',
+                  height: '16px',
+                  border: '2px solid #ffffff',
+                  borderTop: '2px solid transparent',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }}></div>
+                <span>در حال تولید گزارش...</span>
+              </>
+            ) : (
+              <>
+                <span>📄</span>
+                <span>تبدیل به PDF</span>
+              </>
+            )}
+          </button>
+          
+          {/* Additional Share Button (only if PDF was generated and we have a file) */}
+          {pdfResult && pdfResult.filePath && pdfResult.platform === 'native' && (
+            <button 
+              onClick={handleSharePdf}
+              className="action-button share-button"
+              style={{
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                padding: '12px 20px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              <span>📤</span>
+              <span>اشتراک‌گذاری مجدد</span>
+            </button>
+          )}
+        </div>
       </div>
+      
+      {/* PDF Generation Status */}
+      {pdfResult && (
+        <div className="pdf-status" style={{
+          padding: '15px',
+          marginBottom: '20px',
+          backgroundColor: '#d4edda',
+          border: '1px solid #c3e6cb',
+          borderRadius: '8px',
+          color: '#155724',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px'
+        }}>
+          <span>✅</span>
+          <span>{pdfResult.message || 'گزارش PDF با موفقیت ایجاد شد'}</span>
+        </div>
+      )}
+      
+      {/* Loading Indicator */}
+      {isGeneratingPdf && (
+        <div className="loading-indicator" style={{
+          marginBottom: '20px',
+          textAlign: 'center',
+          padding: '20px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '8px',
+          border: '1px solid #dee2e6'
+        }}>
+          <div style={{ 
+            display: 'inline-block',
+            width: '24px',
+            height: '24px',
+            border: '3px solid #f3f3f3',
+            borderTop: '3px solid #007bff',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            marginLeft: '10px'
+          }}></div>
+          <p style={{ margin: '10px 0 0 0', color: '#6c757d' }}>
+            در حال ایجاد گزارش PDF برای {filteredReferrals.length} مورد ارجاع، لطفا صبر کنید...
+          </p>
+        </div>
+      )}
       
       <div className="filter-container">
         <select
           className="select-filter"
           value={selectedSchool}
           onChange={(e) => setSelectedSchool(e.target.value)}
+          disabled={isGeneratingPdf}
         >
           <option value="">همه مدارس</option>
           {schools.map(school => (
@@ -279,6 +495,7 @@ const UrgentReferrals = () => {
           className="select-filter"
           value={selectedDateRange}
           onChange={(e) => setSelectedDateRange(e.target.value)}
+          disabled={isGeneratingPdf}
         >
           <option value="all">همه تاریخ‌ها</option>
           <option value="today">امروز</option>
@@ -457,6 +674,14 @@ const UrgentReferrals = () => {
           </div>
         </div>
       )}
+
+      {/* Add CSS for loading animation */}
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

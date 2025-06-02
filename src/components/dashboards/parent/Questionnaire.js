@@ -22,6 +22,7 @@ const Questionnaire = ({ childName }) => {
   const [showForm, setShowForm] = useState(true);
   const [savedSurveyData, setSavedSurveyData] = useState(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfResult, setPdfResult] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,13 +60,28 @@ const Questionnaire = ({ childName }) => {
       };
 
       // Save to database if available, otherwise use localStorage
-      if (DatabaseService.initialized && currentUser?.id) {
-        await DatabaseService.saveSurveyResponse(currentUser.id, surveyData);
-      } else {
+      let saveSuccess = false;
+      try {
+        if (DatabaseService.initialized && currentUser?.id) {
+          await DatabaseService.saveSurveyResponse(currentUser.id, surveyData);
+          saveSuccess = true;
+          console.log('[Questionnaire] Survey saved to database successfully');
+        }
+      } catch (dbError) {
+        console.warn('[Questionnaire] Database save failed, using localStorage fallback:', dbError);
+      }
+
+      if (!saveSuccess) {
         // Fallback to localStorage
-        const existingResponses = JSON.parse(localStorage.getItem('surveyResponses') || '[]');
-        existingResponses.push(surveyData);
-        localStorage.setItem('surveyResponses', JSON.stringify(existingResponses));
+        try {
+          const existingResponses = JSON.parse(localStorage.getItem('surveyResponses') || '[]');
+          existingResponses.push(surveyData);
+          localStorage.setItem('surveyResponses', JSON.stringify(existingResponses));
+          console.log('[Questionnaire] Survey saved to localStorage successfully');
+        } catch (storageError) {
+          console.error('[Questionnaire] Failed to save to localStorage:', storageError);
+          throw new Error('خطا در ذخیره اطلاعات');
+        }
       }
 
       setSavedSurveyData(surveyData);
@@ -82,7 +98,7 @@ const Questionnaire = ({ childName }) => {
         // Toast capability not available, continue silently
       }
     } catch (error) {
-      console.error('Error saving survey response:', error);
+      console.error('[Questionnaire] Error saving survey response:', error);
       try {
         await Toast.show({
           text: 'خطا در ثبت پاسخ‌ها. لطفا دوباره تلاش کنید.',
@@ -99,6 +115,7 @@ const Questionnaire = ({ childName }) => {
     setShowForm(true);
     setIsSubmitted(false);
     setSavedSurveyData(null);
+    setPdfResult(null);
     setConsent('');
     setRespondent('');
     setGrade('');
@@ -113,31 +130,60 @@ const Questionnaire = ({ childName }) => {
     setSnackLimiter('');
   };
   
+  // Enhanced PDF generation with better UX
   const handleGeneratePdf = async () => {
+    if (!savedSurveyData) {
+      try {
+        await Toast.show({
+          text: 'داده‌های پرسشنامه موجود نیست.',
+          duration: 'short',
+          position: 'center'
+        });
+      } catch {
+        alert('داده‌های پرسشنامه موجود نیست.');
+      }
+      return;
+    }
+
     setIsGeneratingPdf(true);
+    setPdfResult(null);
+
     try {
+      console.log('[Questionnaire] Starting PDF generation...');
+      
+      // Initialize PDF service fonts
+      await PdfService.initializeFonts();
+      
+      // Generate PDF
       const result = await PdfService.generateQuestionnairePdf(savedSurveyData, childName);
       
+      console.log('[Questionnaire] PDF generation result:', result);
+      
       if (result.success) {
+        setPdfResult(result);
+        
+        // Show success message based on action taken
+        let successMessage = 'گزارش PDF با موفقیت ایجاد شد.';
+        if (result.action === 'shared') {
+          successMessage = 'گزارش با موفقیت اشتراک‌گذاری شد.';
+        } else if (result.action === 'saved') {
+          successMessage = `فایل در دستگاه شما ذخیره شد.`;
+        } else if (result.action === 'downloaded') {
+          successMessage = 'فایل دانلود شد.';
+        }
+        
         try {
           await Toast.show({
-            text: 'گزارش PDF با موفقیت ایجاد شد.',
+            text: successMessage,
             duration: 'short',
             position: 'bottom'
           });
-          
-          // If on a native platform, offer to share the PDF
-          if (result.filePath) {
-            const shareResult = await PdfService.sharePdf(result.filePath, result.fileName);
-            if (!shareResult.success) {
-              console.error('Error sharing PDF:', shareResult.error);
-            }
-          }
         } catch {
-          alert('گزارش PDF با موفقیت ایجاد شد.');
+          alert(successMessage);
         }
       } else {
-        console.error('Error generating PDF:', result.error);
+        console.error('[Questionnaire] PDF generation failed:', result.error);
+        
         try {
           await Toast.show({
             text: 'خطا در ایجاد گزارش PDF. لطفا دوباره تلاش کنید.',
@@ -149,18 +195,66 @@ const Questionnaire = ({ childName }) => {
         }
       }
     } catch (error) {
-      console.error('Error in PDF generation process:', error);
+      console.error('[Questionnaire] Error in PDF generation process:', error);
+      
       try {
         await Toast.show({
-          text: 'خطا در ایجاد گزارش PDF. لطفا دوباره تلاش کنید.',
+          text: `خطا در ایجاد گزارش: ${error.message}`,
           duration: 'long',
           position: 'center'
         });
       } catch {
-        alert('خطا در ایجاد گزارش PDF. لطفا دوباره تلاش کنید.');
+        alert(`خطا در ایجاد گزارش: ${error.message}`);
       }
     } finally {
       setIsGeneratingPdf(false);
+    }
+  };
+
+  // Manual share function for additional sharing attempt
+  const handleSharePdf = async () => {
+    if (!pdfResult || !pdfResult.filePath) {
+      try {
+        await Toast.show({
+          text: 'فایل PDF برای اشتراک‌گذاری موجود نیست.',
+          duration: 'short',
+          position: 'center'
+        });
+      } catch {
+        alert('فایل PDF برای اشتراک‌گذاری موجود نیست.');
+      }
+      return;
+    }
+
+    try {
+      const shareResult = await PdfService.shareOrDownloadPdf(
+        pdfResult.filePath, 
+        pdfResult.fileName, 
+        'گزارش پرسشنامه سلامت دندان'
+      );
+      
+      if (shareResult.success) {
+        try {
+          await Toast.show({
+            text: shareResult.message || 'فایل اشتراک‌گذاری شد.',
+            duration: 'short',
+            position: 'bottom'
+          });
+        } catch {
+          alert(shareResult.message || 'فایل اشتراک‌گذاری شد.');
+        }
+      }
+    } catch (error) {
+      console.error('[Questionnaire] Error sharing PDF:', error);
+      try {
+        await Toast.show({
+          text: 'خطا در اشتراک‌گذاری فایل.',
+          duration: 'short',
+          position: 'center'
+        });
+      } catch {
+        alert('خطا در اشتراک‌گذاری فایل.');
+      }
     }
   };
 
@@ -172,18 +266,117 @@ const Questionnaire = ({ childName }) => {
         <div className="success-message">
           <h3>با تشکر از شما!</h3>
           <p>پاسخ‌های شما با موفقیت ثبت شد.</p>
+          
+          {/* PDF Generation Status */}
+          {pdfResult && (
+            <div className="pdf-status" style={{
+              padding: '10px',
+              marginBottom: '15px',
+              backgroundColor: '#d4edda',
+              border: '1px solid #c3e6cb',
+              borderRadius: '5px',
+              color: '#155724'
+            }}>
+              <p>✅ {pdfResult.message || 'گزارش PDF با موفقیت ایجاد شد'}</p>
+            </div>
+          )}
+          
           <div className="report-actions">
+            {/* PDF Generation Button */}
             <button 
               onClick={handleGeneratePdf} 
               className="pdf-button"
               disabled={isGeneratingPdf}
+              style={{
+                backgroundColor: isGeneratingPdf ? '#6c757d' : '#007bff',
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '5px',
+                cursor: isGeneratingPdf ? 'not-allowed' : 'pointer',
+                marginLeft: '10px',
+                fontSize: '14px',
+                fontWeight: 'bold'
+              }}
             >
-              {isGeneratingPdf ? 'در حال ایجاد گزارش...' : 'دریافت گزارش PDF'}
+              {isGeneratingPdf ? (
+                <>
+                  <span>در حال ایجاد گزارش...</span>
+                  <span style={{ marginRight: '8px' }}>⏳</span>
+                </>
+              ) : (
+                <>
+                  <span>تبدیل به PDF</span>
+                  <span style={{ marginRight: '8px' }}>📄</span>
+                </>
+              )}
             </button>
-            <button onClick={handleReset} className="reset-button">
+            
+            {/* Additional Share Button (only if PDF was generated and we have a file) */}
+            {pdfResult && pdfResult.filePath && pdfResult.platform === 'native' && (
+              <button 
+                onClick={handleSharePdf}
+                className="share-button"
+                style={{
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  marginLeft: '10px',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }}
+              >
+                <span>اشتراک‌گذاری مجدد</span>
+                <span style={{ marginRight: '8px' }}>📤</span>
+              </button>
+            )}
+            
+            {/* Reset Button */}
+            <button 
+              onClick={handleReset} 
+              className="reset-button"
+              style={{
+                backgroundColor: '#6c757d',
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
               تکمیل مجدد پرسشنامه
             </button>
           </div>
+          
+          {/* Loading Indicator */}
+          {isGeneratingPdf && (
+            <div className="loading-indicator" style={{
+              marginTop: '20px',
+              textAlign: 'center',
+              padding: '20px',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              border: '1px solid #dee2e6'
+            }}>
+              <div style={{ 
+                display: 'inline-block',
+                width: '20px',
+                height: '20px',
+                border: '3px solid #f3f3f3',
+                borderTop: '3px solid #007bff',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+                marginLeft: '10px'
+              }}></div>
+              <p style={{ margin: '10px 0 0 0', color: '#6c757d' }}>
+                در حال ایجاد فایل PDF، لطفا صبر کنید...
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -898,6 +1091,14 @@ const Questionnaire = ({ childName }) => {
           </button>
         </div>
       </form>
+
+      {/* Add CSS for loading animation */}
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
