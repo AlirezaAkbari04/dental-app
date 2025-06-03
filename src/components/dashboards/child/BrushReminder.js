@@ -362,6 +362,11 @@ const BrushReminder = () => {
     triggerAlarm('تست');
   };
   
+  // Direct path
+  const hourglassImage = {
+    imageUrl: '/assets/images/hourglass.png', // Direct path
+  };
+  
   return (
     <div className="brush-reminder-container">
       <div className="brush-section">
@@ -389,7 +394,7 @@ const BrushReminder = () => {
                 value={formatTimeForInput(alarms.morning.hour, alarms.morning.minute)}
                 onChange={(e) => handleTimeChange('morning', e.target.value)}
                 disabled={!alarms.morning.enabled}
-                className="time-input-hidden"
+                className="time-input"
               />
             </div>
           </div>
@@ -415,7 +420,7 @@ const BrushReminder = () => {
                 value={formatTimeForInput(alarms.evening.hour, alarms.evening.minute)}
                 onChange={(e) => handleTimeChange('evening', e.target.value)}
                 disabled={!alarms.evening.enabled}
-                className="time-input-hidden"
+                className="time-input"
               />
             </div>
           </div>
@@ -462,18 +467,18 @@ const BrushReminder = () => {
         <div className="timer-display">
           <div className="timer-time">{formatTime(timeLeft)}</div>
           
-          <div className="hourglass-container">
-            <div className="real-hourglass">
-              <div className="hourglass-frame">
-                <div className="hourglass-top-chamber">
-                  <div className="hourglass-top-sand" style={{ height: `${(timeLeft / 120) * 100}%` }}></div>
-                </div>
-                <div className="hourglass-neck"></div>
-                <div className="hourglass-bottom-chamber">
-                  <div className="hourglass-bottom-sand" style={{ height: `${100 - (timeLeft / 120) * 100}%` }}></div>
-                </div>
-              </div>
-            </div>
+          <div className="timer-icon-container">
+            <img 
+              src='/assets/images/hourglass.png' // Direct path
+              alt="توثبرش آیکون" 
+              className="timer-icon"
+              onError={(e) => {
+                // Fallback to emoji if image doesn't load
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'block';
+              }}
+            />
+            <div className="timer-emoji-fallback" style={{display: 'none'}}>🦷</div>
           </div>
         </div>
         
@@ -630,26 +635,33 @@ const BrushReminder = () => {
           margin-bottom: 10px;
           font-family: 'Vazir', 'Tahoma', sans-serif;
           direction: rtl;
-          cursor: pointer;
         }
         
-        .time-input-hidden {
-          position: absolute;
-          opacity: 0;
-          width: 1px;
-          height: 1px;
-          overflow: hidden;
-          pointer-events: none;
+        .time-input {
+          width: 100%;
+          padding: 10px;
+          border: 2px solid #ddd;
+          border-radius: 8px;
+          font-size: 16px;
+          text-align: center;
+          direction: ltr;
+          background-color: white;
+        }
+        
+        .time-input:focus {
+          outline: none;
+          border-color: #4a6bff;
+          box-shadow: 0 0 0 3px rgba(74, 107, 255, 0.1);
+        }
+        
+        .time-input:disabled {
+          background-color: #f5f5f5;
+          color: #999;
+          cursor: not-allowed;
         }
         
         .alarm-time {
           position: relative;
-        }
-        
-        .alarm-time:hover .persian-time-display {
-          background-color: #e8f2ff;
-          transform: scale(1.02);
-          transition: all 0.2s ease;
         }
         
         @media (min-width: 768px) {
@@ -846,6 +858,27 @@ const BrushReminder = () => {
           font-family: 'Vazir', 'Tahoma', sans-serif;
         }
         
+        .timer-icon-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin: 20px 0;
+          height: 80px;
+        }
+        
+        .timer-icon {
+          width: 60px;
+          height: 60px;
+          object-fit: contain;
+          filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
+        }
+        
+        .timer-emoji-fallback {
+          font-size: 60px;
+          text-align: center;
+          filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
+        }
+        
         .timer-controls {
           display: flex;
           justify-content: center;
@@ -962,118 +995,6 @@ const BrushReminder = () => {
           background-color: #3a5aee;
         }
         
-        .hourglass-container {
-          display: flex;
-          justify-content: center;
-          margin: 15px 0;
-          height: 150px;
-        }
-        
-        .real-hourglass {
-          position: relative;
-          width: 80px;
-          height: 150px;
-        }
-        
-        .hourglass-frame {
-          position: relative;
-          width: 100%;
-          height: 100%;
-        }
-        
-        .hourglass-top-chamber {
-          position: absolute;
-          top: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 70px;
-          height: 70px;
-          border-radius: 10px 10px 35px 35px;
-          background-color: rgba(236, 236, 236, 0.7);
-          overflow: hidden;
-          border: 2px solid #aaa;
-          box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        .hourglass-neck {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 15px;
-          height: 15px;
-          background-color: #aaa;
-          border-radius: 50%;
-          z-index: 2;
-        }
-        
-        .hourglass-bottom-chamber {
-          position: absolute;
-          bottom: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 70px;
-          height: 70px;
-          border-radius: 35px 35px 10px 10px;
-          background-color: rgba(236, 236, 236, 0.7);
-          overflow: hidden;
-          border: 2px solid #aaa;
-          box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        .hourglass-top-sand {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          background: linear-gradient(to bottom, #FFD700, #FFA500);
-          transition: height 1s linear;
-        }
-        
-        .hourglass-bottom-sand {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          background: linear-gradient(to bottom, #FFD700, #FFA500);
-          transition: height 1s linear;
-        }
-        
-        .hourglass-top-chamber:before,
-        .hourglass-bottom-chamber:before {
-          content: '';
-          position: absolute;
-          top: 10%;
-          left: 10%;
-          width: 20%;
-          height: 20%;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.4);
-          z-index: 3;
-        }
-        
-        .hourglass-frame:before,
-        .hourglass-frame:after {
-          content: '';
-          position: absolute;
-          width: 2px;
-          height: 25px;
-          background-color: #aaa;
-          z-index: 1;
-        }
-        
-        .hourglass-frame:before {
-          top: 65px;
-          left: 24px;
-          transform: rotate(45deg);
-        }
-        
-        .hourglass-frame:after {
-          top: 65px;
-          right: 24px;
-          transform: rotate(-45deg);
-        }
-        
         @media (max-width: 768px) {
           .timer-controls {
             flex-direction: column;
@@ -1085,13 +1006,13 @@ const BrushReminder = () => {
             margin-bottom: 10px;
           }
           
-          .hourglass-container {
-            height: 120px;
+          .timer-icon {
+            width: 50px;
+            height: 50px;
           }
           
-          .real-hourglass {
-            width: 60px;
-            height: 120px;
+          .timer-emoji-fallback {
+            font-size: 50px;
           }
           
           .timer-time {
