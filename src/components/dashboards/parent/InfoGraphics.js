@@ -204,18 +204,74 @@ const InfoGraphics = () => {
       imageUrl: '/assets/images/fluoride.jpg',
       audioPath: 'fluoride-audio.mp3',
       content: `
-        <h2>فلوراید</h2>
-        <div class="fluoride-brochure-container">
-          <img 
-            src="/assets/images/fluoride-brochure-1.PNG" 
-            alt="بروشور فلوراید - قسمت اول" 
-            class="fluoride-brochure-image"
-          />
-          <img 
-            src="/assets/images/fluoride-brochure-2.PNG" 
-            alt="بروشور فلوراید - قسمت دوم" 
-            class="fluoride-brochure-image"
-          />
+        <div class="fluoride-content">
+          <h2>فلوراید چیست؟</h2>
+          <p>فلوراید یکی از عناصر معدنی موجود در طبیعت است که در آب و خاک و هوا یافت می‌شود. فلوراید در طبیعت به حال آزاد وجود ندارد و در ترکیب با سایر عناصر دیده می‌شود. وقتی که فلوراید به صورت خوراکی یا موضعی و یا هر دو مصرف شود، مقاومت دندان را در مقابل پوسیدگی زیاد می‌کند. میزان موفقیت در انجام این عمل بستگی به سن دندان کودک، غلظت، دوام و تعداد دفعات مصرف دارد.</p>
+          
+          <div class="fluoride-mechanism">
+            <h3>مکانیسم عمل فلوراید</h3>
+            <p>مطالعات نشان داده است که خواص ضدپوسیدگی فلوراید به روش‌های مختلفی اعمال می‌گردد:</p>
+            <ul>
+              <li>افزایش مقاومت نسج دندان به پوسیدگی</li>
+              <li>کاهش پتانسیل پوسیدگی‌زای پلاک دندان</li>
+            </ul>
+          </div>
+
+          <div class="fluoride-usage">
+            <h3>چگونه از فلوراید استفاده کنیم؟</h3>
+            <p>به طور اساسی دو روش در معالجه با فلوراید وجود دارد:</p>
+            
+            <div class="method-section">
+              <h4>روش سیستمی (فلوراید موجود در مواد غذایی و آب آشامیدنی)</h4>
+              
+              <div class="sub-method">
+                <h5>۱. فلوراید آب آشامیدنی:</h5>
+                <p>از نظر فلوراید حاصل از مصرف آب آشامیدنی برای سلامت دندان‌ها و از نظر اطمینان و اقتصادی بودن، نشان داده شده که مؤثرترین روش جلوگیری از پوسیدگی دندان، مصرف فلوراید از طریق آب آشامیدنی می‌باشد. استفاده از آب مستلزم هیچ همکاری خاصی از جانب افراد مصرف کننده نیست.</p>
+              </div>
+              
+              <div class="sub-method">
+                <h5>۲. فلوراید مکمل:</h5>
+                <p>به شکل قرص و قطره می‌باشد و فقط برای کودکانی که غلظت فلوراید آب آشامیدنی در منطقه آنها کمتر از حد مجاز است، با توجه به سن کودک، تحت نظر دندانپزشک تجویز می‌گردد.</p>
+              </div>
+            </div>
+
+            <div class="method-section">
+              <h4>روش موضعی</h4>
+              
+              <div class="sub-method">
+                <h5>۱. درمان با فلوراید توسط دندانپزشک:</h5>
+                <p>دندانپزشک محلول، ژل و وارنیش‌های تغلیظ شده فلوراید را بر اساس ریسک و شدت پوسیدگی به کار می‌برد. درمان با فلوراید در افراد فاقد پوسیدگی یا دارای پوسیدگی خفیف، هر ۶ ماه یکبار انجام شده و در پوسیدگی‌های متوسط و شدید، فاصله مصرف آن کمتر می‌باشد.</p>
+                <div class="warning-note">پس از درمان موضعی با فلوراید، به مدت ۲۰ دقیقه به کودک اجازه خوردن و نوشیدن داده نشود.</div>
+              </div>
+              
+              <div class="sub-method">
+                <h5>۲. فلورایدی که توسط خود بیمار استفاده می‌شود:</h5>
+                <p>سه نوع از فرآورده‌های فلوراید جهت مصرف در منزل در نظر گرفته شده است که عبارتند از: خمیردندان، دهان‌شویه و ژل‌های حاوی فلوراید. خمیردندان‌های حاوی فلوراید، رایج‌ترین و ساده‌ترین روش استفاده از فلوراید موضعی می‌باشد.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-effects">
+            <h3>عوارض جانبی فلوراید</h3>
+            <p>استفاده از میزان بالای فلوراید، مشابه هر داروی دیگر، عوارضی را در پی خواهد داشت (به ویژه در کودکان). مصرف فلوراید در مقدار زیاد و به مدت طولانی باعث عوارضی نظیر لکه‌دار شدن سطح دندان‌ها، مشکلات استخوانی و در مسمومیت‌های حاد، ایجاد تهوع و درد شکم می‌کند.</p>
+            <p>در مسمومیت مزمن (فلوروزیس دندانی) که عامل اصلی آن مصرف آب آشامیدنی حاوی مقادیر بالای فلوراید از زمان تولد به بعد است، در شکل خفیف، لکه‌های کوچک سفید روی سطح دندان دیده می‌آید و در موارد شدید، دندان‌ها قهوه‌ای شده و در آنها حفره و فرورفتگی ایجاد می‌شود.</p>
+          </div>
+
+          <div class="important-notes">
+            <h3>نکات مهم</h3>
+            <ul>
+              <li>کودکان زیر ۳ سال به علت خطر بلع، فلوراید به مقدار کم تجویز می‌شود و فقط به اندازه یک نخود استفاده گردد.</li>
+              <li>مقدار خمیردندان (برای پوشاندن موهای مسواک) ۲ گرم است که میزان ۲ میلی‌گرم فلوراید را فراهم می‌سازد.</li>
+              <li>دهان‌شویه‌های فلوراید: مصرف این دهان‌شویه‌ها در کودکان زیر ۶ سال به علت عدم توانایی در کنترل بلع توصیه نمی‌شوند.</li>
+              <li>در بیشتر مطالعات، دهان‌شویه ۷ درصد سدیم فلوراید به شکل هفتگی و ۰.۰۵ درصد سدیم فلوراید به صورت روزانه (قبل از خواب و پس از مسواک زدن دندان‌ها) تجویز می‌گردد.</li>
+              <li>ژل و دهان‌شویه در افرادی که دارای حساسیت زیاد به پوسیدگی هستند توصیه می‌شود.</li>
+            </ul>
+          </div>
+
+          <div class="source">
+            <h4>منابع</h4>
+            <p>برگرفته از کتاب اصول دندان پزشکی کودکان<br>وزارت بهداشت و درمان و آموزش پزشکی</p>
+          </div>
         </div>
       `
     },
@@ -1250,6 +1306,138 @@ const InfoGraphics = () => {
   max-width: 400px;
   margin: 0 auto;
   display: block;
+}
+  /* === FLUORIDE SECTION STYLES === */
+.fluoride-content {
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.fluoride-content h2 {
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.fluoride-content h3 {
+  color: #2980b9;
+  margin-top: 25px;
+  margin-bottom: 15px;
+  font-size: 1.2em;
+}
+
+.fluoride-content h4 {
+  color: #34495e;
+  margin-top: 20px;
+  margin-bottom: 12px;
+  font-size: 1.1em;
+}
+
+.fluoride-content h5 {
+  color: #7f8c8d;
+  margin-top: 15px;
+  margin-bottom: 8px;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.fluoride-mechanism {
+  background-color: #e8f6ff;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+  margin: 20px 0;
+}
+
+.fluoride-usage {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.method-section {
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 6px;
+  margin: 15px 0;
+  border: 1px solid #e9ecef;
+}
+
+.sub-method {
+  background-color: #f1f3f4;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 10px 0;
+  border-left: 3px solid #27ae60;
+}
+
+.warning-note {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ffeaa7;
+  margin-top: 10px;
+  font-weight: 500;
+}
+
+.side-effects {
+  background-color: #ffeaea;
+  padding: 18px;
+  border-radius: 8px;
+  border: 1px solid #e74c3c;
+  margin: 20px 0;
+}
+
+.side-effects h3 {
+  color: #c0392b;
+  margin-top: 0;
+}
+
+.important-notes {
+  background-color: #e8f5e8;
+  padding: 18px;
+  border-radius: 8px;
+  border: 1px solid #27ae60;
+  margin: 20px 0;
+}
+
+.important-notes h3 {
+  color: #27ae60;
+  margin-top: 0;
+}
+
+.important-notes ul {
+  margin: 10px 0;
+  padding-right: 20px;
+}
+
+.important-notes li {
+  margin-bottom: 8px;
+}
+
+.source {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  border-top: 3px solid #6c757d;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.source h4 {
+  color: #495057;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.source p {
+  color: #6c757d;
+  font-size: 0.9em;
+  margin: 0;
 }
       `}</style>
     </div>
