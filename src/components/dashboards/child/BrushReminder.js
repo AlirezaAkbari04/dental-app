@@ -858,25 +858,26 @@ const BrushReminder = () => {
           font-family: 'Vazir', 'Tahoma', sans-serif;
         }
         
+        /* EXTRA LARGE HOURGLASS - DOUBLED FROM PREVIOUS SIZE */
         .timer-icon-container {
           display: flex;
           justify-content: center;
           align-items: center;
-          margin: 20px 0;
-          height: 80px;
+          margin: 30px 0; /* INCREASED MARGIN */
+          height: 300px; /* DOUBLED FROM 150px */
         }
         
         .timer-icon {
-          width: 60px;
-          height: 60px;
+          width: 240px; /* DOUBLED FROM 120px */
+          height: 240px; /* DOUBLED FROM 120px */
           object-fit: contain;
-          filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
+          filter: drop-shadow(4px 4px 8px rgba(0,0,0,0.15)); /* ENHANCED SHADOW */
         }
         
         .timer-emoji-fallback {
-          font-size: 60px;
+          font-size: 240px; /* DOUBLED FROM 120px */
           text-align: center;
-          filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1));
+          filter: drop-shadow(4px 4px 8px rgba(0,0,0,0.15)); /* ENHANCED SHADOW */
         }
         
         .timer-controls {
@@ -995,6 +996,7 @@ const BrushReminder = () => {
           background-color: #3a5aee;
         }
         
+        /* MOBILE RESPONSIVE - STILL VERY LARGE */
         @media (max-width: 768px) {
           .timer-controls {
             flex-direction: column;
@@ -1006,13 +1008,18 @@ const BrushReminder = () => {
             margin-bottom: 10px;
           }
           
+          .timer-icon-container {
+            height: 240px; /* STILL VERY LARGE ON MOBILE */
+            margin: 25px 0;
+          }
+          
           .timer-icon {
-            width: 50px;
-            height: 50px;
+            width: 180px; /* STILL VERY LARGE ON MOBILE */
+            height: 180px; /* STILL VERY LARGE ON MOBILE */
           }
           
           .timer-emoji-fallback {
-            font-size: 50px;
+            font-size: 180px; /* STILL VERY LARGE ON MOBILE */
           }
           
           .timer-time {
@@ -1021,6 +1028,39 @@ const BrushReminder = () => {
           
           .persian-time-display {
             font-size: 16px;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .timer-icon-container {
+            height: 200px; /* LARGE EVEN ON VERY SMALL SCREENS */
+            margin: 20px 0;
+          }
+          
+          .timer-icon {
+            width: 160px; /* STILL MUCH BIGGER THAN ORIGINAL */
+            height: 160px; /* STILL MUCH BIGGER THAN ORIGINAL */
+          }
+          
+          .timer-emoji-fallback {
+            font-size: 160px; /* STILL MUCH BIGGER THAN ORIGINAL */
+          }
+        }
+        
+        /* EXTRA SMALL SCREENS */
+        @media (max-width: 360px) {
+          .timer-icon-container {
+            height: 180px;
+            margin: 15px 0;
+          }
+          
+          .timer-icon {
+            width: 140px; /* STILL SIGNIFICANTLY LARGER */
+            height: 140px; /* STILL SIGNIFICANTLY LARGER */
+          }
+          
+          .timer-emoji-fallback {
+            font-size: 140px; /* STILL SIGNIFICANTLY LARGER */
           }
         }
       `}</style>

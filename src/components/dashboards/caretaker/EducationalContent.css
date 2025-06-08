@@ -268,6 +268,8 @@
   height: auto;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  display: block;
+  margin: 0 auto;
 }
 
 .image-caption {
@@ -275,6 +277,65 @@
   font-style: italic;
   color: #6c757d;
   font-size: 13px;
+  text-align: center;
+}
+
+/* Side by Side Images - FIXED */
+.side-by-side-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 25px 0;
+  padding: 15px;
+}
+
+.tooth-image {
+  flex: 1;
+  min-width: 280px;
+  max-width: 450px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.tooth-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  display: block;
+  margin: 0 auto 10px auto;
+}
+
+/* Video Player Styling - FIXED */
+.video-player {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  background-color: #000;
+  display: block;
+  margin: 0 auto;
+}
+
+.molar-video {
+  aspect-ratio: 16/9;
+  width: 100%;
+  max-width: 400px;
+}
+
+.video-error {
+  background-color: #ffebee;
+  color: #f44336;
+  padding: 15px;
+  text-align: center;
+  border-radius: 8px;
+  margin: 10px 0;
+  font-size: 14px;
 }
 
 /* References Section */
@@ -435,148 +496,7 @@
   margin-bottom: 8px;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  .detail-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .detail-actions {
-    width: 100%;
-  }
-  
-  .back-button {
-    flex: 1;
-    text-align: center;
-  }
-  
-  .tooth-stages, .brushing-steps {
-    flex-direction: column;
-  }
-  
-  .tooth-stage, .step {
-    min-width: auto;
-  }
-
-  .content-section {
-    padding: 12px;
-    margin-bottom: 20px;
-  }
-
-  .document-header {
-    padding: 12px;
-  }
-
-  .document-header h1 {
-    font-size: 22px;
-  }
-
-  .document-header h2 {
-    font-size: 16px;
-  }
-
-  .explanation-box, .definitions, .important-notes, 
-  .method-box, .warning-box, .highlight-box {
-    padding: 12px;
-    margin: 12px 0;
-  }
-
-  .image-placeholder {
-    padding: 12px;
-    margin: 15px 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .educational-content {
-    padding: 10px;
-  }
-
-  .content-card {
-    flex-direction: column;
-    padding: 10px;
-  }
-  
-  .content-icon {
-    margin: 0 0 10px 0;
-    width: 40px;
-    height: 40px;
-    font-size: 24px;
-  }
-
-  .content-section {
-    padding: 10px;
-    margin-bottom: 15px;
-  }
-
-  .document-header {
-    padding: 10px;
-  }
-
-  .document-header h1 {
-    font-size: 20px;
-  }
-
-  .document-header h2 {
-    font-size: 15px;
-  }
-
-  .content-container h2 {
-    font-size: 18px;
-  }
-
-  .content-container h3 {
-    font-size: 15px;
-  }
-
-  .explanation-box, .definitions, .important-notes, 
-  .method-box, .warning-box, .highlight-box {
-    padding: 10px;
-    margin: 10px 0;
-  }
-
-  .image-placeholder {
-    padding: 10px;
-    margin: 12px 0;
-  }
-
-  .step-number {
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
-    top: -6px;
-    right: -6px;
-  }
-
-  .references {
-    padding: 10px;
-    margin-top: 15px;
-  }
-
-  .reference-list {
-    font-size: 11px;
-  }
-
-  .reference-list li {
-    margin-bottom: 6px;
-    padding: 5px;
-  }
-}
-.molar-video {
-  aspect-ratio: 16/9;
-  max-width: 100%;
-  border-radius: 8px;
-}
-
-/* Optional: If you want the video to be smaller */
-.tooth-image .video-player {
-  max-width: 400px;
-  margin: 0 auto;
-  display: block;
-}
-/* === FLUORIDE SECTION STYLES === */
+/* Fluoride Section Styles */
 .fluoride-content {
   max-width: 800px;
   margin: 0 auto;
@@ -707,4 +627,171 @@
   color: #6c757d;
   font-size: 0.9em;
   margin: 0;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .detail-actions {
+    width: 100%;
+  }
+  
+  .back-button {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .tooth-stages, .brushing-steps {
+    flex-direction: column;
+  }
+  
+  .tooth-stage, .step {
+    min-width: auto;
+  }
+
+  .content-section {
+    padding: 12px;
+    margin-bottom: 20px;
+  }
+
+  .document-header {
+    padding: 12px;
+  }
+
+  .document-header h1 {
+    font-size: 22px;
+  }
+
+  .document-header h2 {
+    font-size: 16px;
+  }
+
+  .explanation-box, .definitions, .important-notes, 
+  .method-box, .warning-box, .highlight-box {
+    padding: 12px;
+    margin: 12px 0;
+  }
+
+  .image-placeholder {
+    padding: 12px;
+    margin: 15px 0;
+  }
+
+  /* Side by side images responsive - FIXED */
+  .side-by-side-images {
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
+  }
+  
+  .tooth-image {
+    min-width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .molar-video {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .educational-content {
+    padding: 10px;
+  }
+
+  .content-card {
+    flex-direction: column;
+    padding: 10px;
+  }
+  
+  .content-icon {
+    margin: 0 0 10px 0;
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+  }
+
+  .content-section {
+    padding: 10px;
+    margin-bottom: 15px;
+  }
+
+  .document-header {
+    padding: 10px;
+  }
+
+  .document-header h1 {
+    font-size: 20px;
+  }
+
+  .document-header h2 {
+    font-size: 15px;
+  }
+
+  .content-container h2 {
+    font-size: 18px;
+  }
+
+  .content-container h3 {
+    font-size: 15px;
+  }
+
+  .explanation-box, .definitions, .important-notes, 
+  .method-box, .warning-box, .highlight-box {
+    padding: 10px;
+    margin: 10px 0;
+  }
+
+  .image-placeholder {
+    padding: 10px;
+    margin: 12px 0;
+  }
+
+  .step-number {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+    top: -6px;
+    right: -6px;
+  }
+
+  .references {
+    padding: 10px;
+    margin-top: 15px;
+  }
+
+  .reference-list {
+    font-size: 11px;
+  }
+
+  .reference-list li {
+    margin-bottom: 6px;
+    padding: 5px;
+  }
+
+  /* Mobile video and image adjustments - FIXED */
+  .side-by-side-images {
+    padding: 8px;
+    gap: 12px;
+  }
+  
+  .tooth-image {
+    padding: 12px;
+  }
+
+  .molar-video {
+    aspect-ratio: 16/9;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .video-player {
+    max-width: 100%;
+  }
 }

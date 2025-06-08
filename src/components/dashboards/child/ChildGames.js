@@ -15,7 +15,7 @@ const FOOD_ITEMS = [
   { id: 8, name: 'آب', type: 'healthy', emoji: '💧' },
   { id: 9, name: 'شکلات', type: 'unhealthy', emoji: '🍫' },
   { id: 10, name: 'چیپس', type: 'unhealthy', emoji: '🍟' },
-  { id: 11, name: 'پفک', type: 'unhealthy', emoji: '🍙' },
+  { id: 11, name: 'آبنبات', type: 'unhealthy', emoji: '🍭' },
   { id: 12, name: 'نوشابه', type: 'unhealthy', emoji: '🥤' },
   { id: 13, name: 'آبمیوه صنعتی', type: 'unhealthy', emoji: '🧃' },
   { id: 14, name: 'لواشک', type: 'unhealthy', emoji: '🍬' }
@@ -477,7 +477,7 @@ const ChildGames = () => {
           <div className="info-content">
             <p>🦷 میان‌وعده‌های سالم به دندان‌های شما کمک می‌کنند، اما میان‌وعده‌های ناسالم باعث پوسیدگی دندان می‌شوند.</p>
             <p>🥕 غذاهای سالم مانند میوه، سبزیجات، شیر و آب را به سمت صورت خندان بکشید.</p>
-            <p>🍫 غذاهای ناسالم مانند شکلات، چیپس، پفک و نوشابه را به سمت صورت ناراحت بکشید.</p>
+            <p>🍫 غذاهای ناسالم مانند شکلات، چیپس، آبنبات و نوشابه را به سمت صورت ناراحت بکشید.</p>
           </div>
         </div>
       </div>
@@ -593,20 +593,27 @@ const ChildGames = () => {
           text-align: center;
         }
 
+        /* FIXED FOOD CONTAINER LAYOUT */
         .food-container {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-          gap: 15px;
+          grid-template-columns: repeat(2, 1fr);
+          grid-template-rows: repeat(2, 1fr);
+          gap: 20px;
           margin: 25px 0;
-          padding: 20px;
+          padding: 25px;
           background: rgba(255, 255, 255, 0.5);
           border-radius: 20px;
           border: 2px dashed #ddd;
+          min-height: 280px; /* ADDED MINIMUM HEIGHT */
+          align-items: stretch; /* ENSURE ITEMS STRETCH TO FILL GRID */
         }
 
         .food-item {
           cursor: grab;
           transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          height: 100%; /* ENSURE FULL HEIGHT */
+          display: flex; /* ADDED FLEXBOX */
+          align-items: stretch; /* STRETCH CONTENT */
         }
 
         .food-item:active {
@@ -623,12 +630,19 @@ const ChildGames = () => {
           position: relative;
           background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
           border-radius: 15px;
-          padding: 15px;
+          padding: 20px;
           text-align: center;
           box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
           border: 2px solid transparent;
           overflow: hidden;
           transition: all 0.3s ease;
+          width: 100%; /* ENSURE FULL WIDTH */
+          height: 100%; /* ENSURE FULL HEIGHT */
+          display: flex; /* ADDED FLEXBOX */
+          flex-direction: column; /* COLUMN LAYOUT */
+          justify-content: center; /* CENTER CONTENT VERTICALLY */
+          align-items: center; /* CENTER CONTENT HORIZONTALLY */
+          min-height: 120px; /* MINIMUM HEIGHT FOR PROPER DISPLAY */
         }
 
         .food-card:hover {
@@ -637,18 +651,23 @@ const ChildGames = () => {
           border-color: #667eea;
         }
 
+        /* FIXED EMOJI SIZING */
         .food-emoji {
-          font-size: 3rem;
+          font-size: 3.5rem; /* INCREASED FROM 3rem */
           display: block;
-          margin-bottom: 8px;
+          margin-bottom: 10px; /* INCREASED MARGIN */
           animation: bounce 2s ease-in-out infinite;
+          line-height: 1; /* ENSURE PROPER LINE HEIGHT */
+          flex-shrink: 0; /* PREVENT SHRINKING */
         }
 
         .food-name {
-          font-size: 0.9rem;
+          font-size: 1rem; /* SLIGHTLY INCREASED */
           font-weight: 600;
           color: #333;
           display: block;
+          text-align: center;
+          margin-top: auto; /* PUSH TO BOTTOM */
         }
 
         .food-glow {
@@ -994,12 +1013,18 @@ const ChildGames = () => {
 
           .food-container {
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            padding: 15px;
+            gap: 15px;
+            padding: 20px;
+            min-height: 260px; /* ADJUSTED FOR MOBILE */
           }
 
           .food-emoji {
-            font-size: 2.5rem;
+            font-size: 3rem; /* ADJUSTED FOR MOBILE */
+          }
+
+          .food-card {
+            min-height: 110px; /* ADJUSTED FOR MOBILE */
+            padding: 15px;
           }
 
           .zone-emoji {
@@ -1027,6 +1052,23 @@ const ChildGames = () => {
         @media (max-width: 480px) {
           .food-container {
             grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 15px;
+            min-height: 240px; /* SMALLER FOR VERY SMALL SCREENS */
+          }
+
+          .food-card {
+            min-height: 100px; /* SMALLER FOR VERY SMALL SCREENS */
+            padding: 12px;
+          }
+
+          .food-emoji {
+            font-size: 2.5rem; /* SMALLER BUT STILL VISIBLE */
+            margin-bottom: 8px;
+          }
+
+          .food-name {
+            font-size: 0.9rem;
           }
 
           .drop-zones {

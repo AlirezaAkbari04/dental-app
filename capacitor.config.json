@@ -30,6 +30,7 @@
       "assets/audios",
       "assets/images",
       "assets/pdfs",
+      "assets/fonts",
       "*.svg"
     ]
   },
@@ -45,6 +46,10 @@
     {
       "src": "src/logo.svg",
       "dest": "assets/logo.svg"
+    },
+    {
+      "src": "public/assets/fonts/**/*",
+      "dest": "assets/fonts/"
     }
   ]
 }

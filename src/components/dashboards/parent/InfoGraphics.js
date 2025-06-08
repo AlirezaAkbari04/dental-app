@@ -462,12 +462,11 @@ const InfoGraphics = () => {
         <p>در این بخش، نحوه صحیح مسواک زدن دندان‌های کودکان توسط والدین آموزش داده می‌شود. این تکنیک‌ها به شما کمک می‌کند تا به عنوان والدین، دندان‌های فرزند خود را به درستی و بدون آسیب تمیز کنید.</p>
       `
     },
-    // ...existing code...
     {
       id: 6,
       title: 'نحوه مسواک زدن دندان‌های آسیا',
       description: 'راهنمای مسواک زدن تحت نظارت برای دندان‌های آسیای اول دائمی در کودکان',
-      imageUrl: '/assets/images/molar-brushing.jpg', // Direct path
+      imageUrl: '/assets/images/molar-brushing.jpg',
       content: `
         <div class="content-container">
           <div class="document-header">
@@ -528,7 +527,6 @@ const InfoGraphics = () => {
         </div>
       `
     }
-// ...existing code...
   ];
 
   // Initialize database and resources
@@ -760,6 +758,106 @@ const InfoGraphics = () => {
       </div>
       
       <style jsx>{`
+        /* Fixed Image and Video Styling */
+        .side-by-side-images {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 20px;
+          justify-content: center;
+          align-items: flex-start;
+          margin: 25px 0;
+          padding: 15px;
+        }
+
+        .tooth-image {
+          flex: 1;
+          min-width: 280px;
+          max-width: 450px;
+          text-align: center;
+          background-color: #f8f9fa;
+          border-radius: 12px;
+          padding: 15px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tooth-image img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          display: block;
+          margin: 0 auto 10px auto;
+        }
+
+        .anatomy-image {
+          max-width: 100%;
+          border-radius: 4px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Video Player Styling - FIXED */
+        .video-player {
+          width: 100%;
+          max-width: 100%;
+          border-radius: 8px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          background-color: #000;
+          display: block;
+          margin: 0 auto;
+        }
+
+        .molar-video {
+          aspect-ratio: 16/9;
+          width: 100%;
+          max-width: 400px;
+        }
+
+        .toothbrushing-video {
+          aspect-ratio: 9/16;
+        }
+
+        .fissure-sealant-video {
+          aspect-ratio: 1/1;
+        }
+
+        .video-error {
+          background-color: #ffebee;
+          color: #f44336;
+          padding: 15px;
+          text-align: center;
+          border-radius: 8px;
+          margin: 10px 0;
+          font-size: 14px;
+        }
+
+        .content-image {
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+          display: block;
+          margin: 0 auto;
+        }
+
+        .image-caption {
+          margin-top: 8px;
+          font-style: italic;
+          color: #6c757d;
+          font-size: 13px;
+          text-align: center;
+        }
+
+        /* Image Styling */
+        .image-placeholder {
+          text-align: center;
+          margin: 20px 0;
+          padding: 15px;
+          background-color: #f8f9fa;
+          border-radius: 8px;
+          border: 2px dashed #dee2e6;
+        }
+
+        /* Document Header Styling */
         .document-header {
           text-align: center;
           margin-bottom: 30px;
@@ -860,29 +958,6 @@ const InfoGraphics = () => {
           border: 2px solid #f39c12;
           margin: 20px 0;
           text-align: center;
-        }
-        
-        .image-placeholder {
-          text-align: center;
-          margin: 30px 0;
-          padding: 20px;
-          background-color: #f8f9fa;
-          border-radius: 8px;
-          border: 2px dashed #dee2e6;
-        }
-        
-        .content-image {
-          max-width: 100%;
-          height: auto;
-          border-radius: 8px;
-          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        .image-caption {
-          margin-top: 10px;
-          font-style: italic;
-          color: #6c757d;
-          font-size: 14px;
         }
         
         .references {
@@ -1066,32 +1141,6 @@ const InfoGraphics = () => {
           color: #2196f3;
         }
         
-        .video-player {
-          width: 100%;
-          max-width: 550px;
-          display: block;
-          margin: 0 auto;
-          border-radius: 4px;
-          background-color: #000;
-        }
-        
-        .toothbrushing-video {
-          aspect-ratio: 9/16;
-        }
-        
-        .fissure-sealant-video {
-          aspect-ratio: 1/1;
-        }
-        
-        .video-error {
-          background-color: #ffebee;
-          color: #f44336;
-          padding: 20px;
-          text-align: center;
-          border-radius: 4px;
-          margin: 10px 0;
-        }
-        
         /* Main container styles */
         .infographics-container {
           padding: 15px;
@@ -1223,40 +1272,137 @@ const InfoGraphics = () => {
           line-height: 1.5;
         }
         
-        .side-by-side-images {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 20px;
-          justify-content: center;
+        /* === FLUORIDE SECTION STYLES === */
+        .fluoride-content {
+          max-width: 800px;
+          margin: 0 auto;
+          line-height: 1.6;
+        }
+
+        .fluoride-content h2 {
+          color: #2c3e50;
+          border-bottom: 2px solid #3498db;
+          padding-bottom: 10px;
+          margin-bottom: 20px;
+        }
+
+        .fluoride-content h3 {
+          color: #2980b9;
+          margin-top: 25px;
+          margin-bottom: 15px;
+          font-size: 1.2em;
+        }
+
+        .fluoride-content h4 {
+          color: #34495e;
+          margin-top: 20px;
+          margin-bottom: 12px;
+          font-size: 1.1em;
+        }
+
+        .fluoride-content h5 {
+          color: #7f8c8d;
+          margin-top: 15px;
+          margin-bottom: 8px;
+          font-size: 1em;
+          font-weight: 600;
+        }
+
+        .fluoride-mechanism {
+          background-color: #e8f6ff;
+          padding: 15px;
+          border-radius: 8px;
+          border-left: 4px solid #3498db;
           margin: 20px 0;
         }
-        
-        .tooth-image {
-          flex: 1;
-          min-width: 280px;
-          max-width: 400px;
+
+        .fluoride-usage {
+          background-color: #f8f9fa;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+        }
+
+        .method-section {
+          background-color: #fff;
+          padding: 15px;
+          border-radius: 6px;
+          margin: 15px 0;
+          border: 1px solid #e9ecef;
+        }
+
+        .sub-method {
+          background-color: #f1f3f4;
+          padding: 12px;
+          border-radius: 4px;
+          margin: 10px 0;
+          border-left: 3px solid #27ae60;
+        }
+
+        .warning-note {
+          background-color: #fff3cd;
+          color: #856404;
+          padding: 10px;
+          border-radius: 4px;
+          border: 1px solid #ffeaa7;
+          margin-top: 10px;
+          font-weight: 500;
+        }
+
+        .side-effects {
+          background-color: #ffeaea;
+          padding: 18px;
+          border-radius: 8px;
+          border: 1px solid #e74c3c;
+          margin: 20px 0;
+        }
+
+        .side-effects h3 {
+          color: #c0392b;
+          margin-top: 0;
+        }
+
+        .important-notes {
+          background-color: #e8f5e8;
+          padding: 18px;
+          border-radius: 8px;
+          border: 1px solid #27ae60;
+          margin: 20px 0;
+        }
+
+        .important-notes h3 {
+          color: #27ae60;
+          margin-top: 0;
+        }
+
+        .important-notes ul {
+          margin: 10px 0;
+          padding-right: 20px;
+        }
+
+        .important-notes li {
+          margin-bottom: 8px;
+        }
+
+        .source {
+          background-color: #f8f9fa;
+          padding: 15px;
+          border-radius: 6px;
+          border-top: 3px solid #6c757d;
+          margin: 20px 0;
           text-align: center;
         }
-        
-        .anatomy-image {
-          max-width: 100%;
-          border-radius: 4px;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+        .source h4 {
+          color: #495057;
+          margin-top: 0;
+          margin-bottom: 10px;
         }
-        
-        .fluoride-brochure-container {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 15px;
-          justify-content: center;
-          margin: 20px 0;
-        }
-        
-        .fluoride-brochure-image {
-          max-width: 100%;
-          height: auto;
-          border-radius: 4px;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+        .source p {
+          color: #6c757d;
+          font-size: 0.9em;
+          margin: 0;
         }
         
         /* Responsive adjustments */
@@ -1278,10 +1424,17 @@ const InfoGraphics = () => {
           
           .side-by-side-images {
             flex-direction: column;
-            align-items: center;
+            gap: 15px;
+            padding: 10px;
           }
           
           .tooth-image {
+            min-width: auto;
+            max-width: 100%;
+            margin: 0 auto;
+          }
+
+          .molar-video {
             max-width: 100%;
           }
         }
@@ -1294,151 +1447,26 @@ const InfoGraphics = () => {
           .infographic-detail {
             padding: 15px;
           }
-        }
+
+          .side-by-side-images {
+            padding: 8px;
+            gap: 12px;
+          }
+          
+          .tooth-image {
+            padding: 12px;
+          }
+
           .molar-video {
-  aspect-ratio: 16/9;
-  max-width: 100%;
-  border-radius: 8px;
-}
+            aspect-ratio: 16/9;
+            width: 100%;
+            max-width: 100%;
+          }
 
-/* Optional: If you want the video to be smaller */
-.tooth-image .video-player {
-  max-width: 400px;
-  margin: 0 auto;
-  display: block;
-}
-  /* === FLUORIDE SECTION STYLES === */
-.fluoride-content {
-  max-width: 800px;
-  margin: 0 auto;
-  line-height: 1.6;
-}
-
-.fluoride-content h2 {
-  color: #2c3e50;
-  border-bottom: 2px solid #3498db;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-}
-
-.fluoride-content h3 {
-  color: #2980b9;
-  margin-top: 25px;
-  margin-bottom: 15px;
-  font-size: 1.2em;
-}
-
-.fluoride-content h4 {
-  color: #34495e;
-  margin-top: 20px;
-  margin-bottom: 12px;
-  font-size: 1.1em;
-}
-
-.fluoride-content h5 {
-  color: #7f8c8d;
-  margin-top: 15px;
-  margin-bottom: 8px;
-  font-size: 1em;
-  font-weight: 600;
-}
-
-.fluoride-mechanism {
-  background-color: #e8f6ff;
-  padding: 15px;
-  border-radius: 8px;
-  border-left: 4px solid #3498db;
-  margin: 20px 0;
-}
-
-.fluoride-usage {
-  background-color: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-  margin: 20px 0;
-}
-
-.method-section {
-  background-color: #fff;
-  padding: 15px;
-  border-radius: 6px;
-  margin: 15px 0;
-  border: 1px solid #e9ecef;
-}
-
-.sub-method {
-  background-color: #f1f3f4;
-  padding: 12px;
-  border-radius: 4px;
-  margin: 10px 0;
-  border-left: 3px solid #27ae60;
-}
-
-.warning-note {
-  background-color: #fff3cd;
-  color: #856404;
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid #ffeaa7;
-  margin-top: 10px;
-  font-weight: 500;
-}
-
-.side-effects {
-  background-color: #ffeaea;
-  padding: 18px;
-  border-radius: 8px;
-  border: 1px solid #e74c3c;
-  margin: 20px 0;
-}
-
-.side-effects h3 {
-  color: #c0392b;
-  margin-top: 0;
-}
-
-.important-notes {
-  background-color: #e8f5e8;
-  padding: 18px;
-  border-radius: 8px;
-  border: 1px solid #27ae60;
-  margin: 20px 0;
-}
-
-.important-notes h3 {
-  color: #27ae60;
-  margin-top: 0;
-}
-
-.important-notes ul {
-  margin: 10px 0;
-  padding-right: 20px;
-}
-
-.important-notes li {
-  margin-bottom: 8px;
-}
-
-.source {
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 6px;
-  border-top: 3px solid #6c757d;
-  margin: 20px 0;
-  text-align: center;
-}
-
-.source h4 {
-  color: #495057;
-  margin-top: 0;
-  margin-bottom: 10px;
-}
-
-.source p {
-  color: #6c757d;
-  font-size: 0.9em;
-  margin: 0;
-}
+          .video-player {
+            max-width: 100%;
+          }
+        }
       `}</style>
     </div>
   );
