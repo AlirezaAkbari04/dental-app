@@ -36,6 +36,8 @@ const CaretakerDashboard = () => {
     
     initDatabase();
     
+
+    
     // Load teacher profile data
     const loadTeacherProfile = async () => {
       try {
@@ -63,7 +65,7 @@ const CaretakerDashboard = () => {
     
     loadTeacherProfile();
   }, [currentUser]);
-  
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
@@ -115,6 +117,11 @@ const CaretakerDashboard = () => {
     // Save user role for returning to appropriate dashboard
     localStorage.setItem('userRole', 'teacher');
     navigate('/faq');
+  };
+  
+  const navigateToAboutUs = () => {
+    localStorage.setItem('userRole', 'teacher');
+    navigate('/about-us');
   };
   
   // Render the appropriate content based on the active tab
@@ -210,11 +217,17 @@ const CaretakerDashboard = () => {
       
       <footer className="dashboard-footer">
         <div className="footer-content">
-          <p>لبخند شاد دندان سالم &copy; {new Date().getFullYear()}</p>
-          <button onClick={navigateToFAQ} className="help-button">
-            <span className="help-icon">❓</span>
-            <span className="help-text">راهنما و سوالات متداول</span>
-          </button>
+          <p>دندان سالم لبخند شاد &copy; {new Date().getFullYear()}</p>
+          <div className="footer-buttons">
+            <button onClick={navigateToFAQ} className="help-button">
+              <span className="help-icon">❓</span>
+              <span className="help-text">راهنما و سوالات متداول</span>
+            </button>
+            <button onClick={navigateToAboutUs} className="about-button">
+              <span className="about-icon">ℹ️</span>
+              <span className="about-text">درباره ما</span>
+            </button>
+          </div>
         </div>
       </footer>
     </div>

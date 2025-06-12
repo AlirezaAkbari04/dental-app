@@ -16,6 +16,7 @@ import ChildDashboard from './components/dashboards/ChildDashboard';
 import CaretakerDashboard from './components/dashboards/CaretakerDashboard';
 import ParentDashboard from './components/dashboards/ParentDashboard';
 import FAQ from './components/FAQ';
+import AboutUs from './components/AboutUs';
 
 function AppContent() {
   const { currentUser, isLoading } = useUser();
@@ -199,8 +200,14 @@ function AppContent() {
           } 
         />
         
-        {/* FAQ route - accessible to all */}
+        {/* FAQ and About Us routes - accessible to all */}
         <Route path="/faq" element={<FAQ />} />
+        <Route path="/about-us" element={<AboutUs />} />
+        
+        {/* Additional dashboard routes for compatibility */}
+        <Route path="/child-dashboard" element={<Navigate to="/dashboard/child" replace />} />
+        <Route path="/parent-dashboard" element={<Navigate to="/dashboard/parent" replace />} />
+        <Route path="/caretaker-dashboard" element={<Navigate to="/dashboard/caretaker" replace />} />
         
         {/* Default redirect */}
         <Route path="/" element={<DefaultRoute />} />

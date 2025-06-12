@@ -1,36 +1,31 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/AboutUs.css';
+import './AboutUs.css';
 
 const AboutUs = () => {
   const navigate = useNavigate();
   
+  // کاربر از کدام داشبورد آمده است
+  const userRole = localStorage.getItem('userRole') || 'child';
+  
+  // برگشت به داشبورد مناسب بر اساس نقش کاربر
   const handleBackToDashboard = () => {
-    const userRole = localStorage.getItem('userRole');
-    
     switch (userRole) {
       case 'parent':
         navigate('/parent-dashboard');
-        break;
-      case 'child':
-        navigate('/child-dashboard');
         break;
       case 'teacher':
         navigate('/caretaker-dashboard');
         break;
       default:
-        navigate('/login');
+        navigate('/child-dashboard');
         break;
     }
   };
 
   return (
     <div className="about-us-container">
-      <div className="about-us-header">
-        <button onClick={handleBackToDashboard} className="back-button">
-          <span className="back-icon">←</span>
-          بازگشت به داشبورد
-        </button>
+      <header className="about-us-header">
         <div className="logo-container">
           <img 
             src="/assets/images/logo.png" 
@@ -41,20 +36,23 @@ const AboutUs = () => {
               e.target.src = "/logo.png";
             }}
           />
-          <h1 className="app-title">دندان سالم لبخند شاد</h1>
+          <span className="app-name">دندان سالم لبخند شاد</span>
         </div>
-      </div>
+        <button onClick={handleBackToDashboard} className="back-button">
+          بازگشت به داشبورد
+        </button>
+      </header>
 
-      <div className="about-us-content">
-        <div className="about-section">
+      <main className="about-us-content">
+        <section className="about-section">
           <h2 className="section-title">درباره این پروژه</h2>
           <div className="section-content">
             <h3>عنوان پایان نامه:</h3>
             <p>طراحی و ارزیابی برنامه کاربردی مبتنی بر موبایل جهت آموزش سلامت دهان به مربیان، والدین و کودکان</p>
           </div>
-        </div>
+        </section>
 
-        <div className="about-section">
+        <section className="about-section">
           <h2 className="section-title">اطلاعات تحصیلی</h2>
           <div className="section-content">
             <div className="info-grid">
@@ -72,9 +70,9 @@ const AboutUs = () => {
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="about-section">
+        <section className="about-section">
           <div className="section-content">
             <div className="team-grid">
               <div className="team-member">
@@ -99,9 +97,9 @@ const AboutUs = () => {
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="about-section">
+        <section className="about-section">
           <h2 className="section-title">مشخصات طرح پژوهشی</h2>
           <div className="section-content">
             <div className="research-info">
@@ -118,9 +116,9 @@ const AboutUs = () => {
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="about-section">
+        <section className="about-section">
           <h2 className="section-title">ارتباط با ما</h2>
           <div className="section-content">
             <div className="contact-info">
@@ -134,12 +132,12 @@ const AboutUs = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
 
-      <div className="about-us-footer">
-        <p>&copy; {new Date().getFullYear()} دندان سالم لبخند شاد - تمامی حقوق محفوظ است</p>
-      </div>
+      <footer className="about-us-footer">
+        <p>دندان سالم لبخند شاد &copy; {new Date().getFullYear()}</p>
+      </footer>
     </div>
   );
 };
