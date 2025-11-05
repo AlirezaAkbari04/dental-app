@@ -39,31 +39,31 @@ const ParentDashboard = () => {
       try {
         if (currentUser?.id) {
           const parentProfile = JSON.parse(localStorage.getItem('parentProfile') || '{}');
-          setParentName(parentProfile.fullName || 'والد گرامی');
-          
-          await DatabaseService.ensureChildExists(currentUser.id, "کودک");
-          
+          setParentName(parentProfile.fullName || 'Dear Parent');
+
+          await DatabaseService.ensureChildExists(currentUser.id, "Child");
+
           const childData = await DatabaseService.getChildForParent(currentUser.id);
           if (childData) {
-            setChildName(childData.name || 'فرزند شما');
+            setChildName(childData.name || 'Your Child');
           } else {
-            setChildName('فرزند شما');
+            setChildName('Your Child');
           }
         } else {
           const parentProfile = JSON.parse(localStorage.getItem('parentProfile') || '{}');
-          setParentName(parentProfile.fullName || 'والد گرامی');
-          
+          setParentName(parentProfile.fullName || 'Dear Parent');
+
           const childProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
-          setChildName(childProfile.fullName || 'فرزند شما');
+          setChildName(childProfile.fullName || 'Your Child');
         }
       } catch (error) {
         console.error('Error loading profile data:', error);
-        
+
         const parentProfile = JSON.parse(localStorage.getItem('parentProfile') || '{}');
-        setParentName(parentProfile.fullName || 'والد گرامی');
-        
+        setParentName(parentProfile.fullName || 'Dear Parent');
+
         const childProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
-        setChildName(childProfile.fullName || 'فرزند شما');
+        setChildName(childProfile.fullName || 'Your Child');
       }
     };
 
@@ -111,7 +111,7 @@ const ParentDashboard = () => {
   };
   
   const navigateToFAQ = () => {
-    // ذخیره نقش کاربر برای برگشت به داشبورد مناسب
+    // Save user role to return to appropriate dashboard
     localStorage.setItem('userRole', 'parent');
     navigate('/faq');
   };
@@ -141,20 +141,20 @@ const ParentDashboard = () => {
     <div className="parent-dashboard">
       <header className="dashboard-header">
         <div className="logo-container">
-          <img 
-            src="/assets/images/logo.png" 
-            alt="لبخند شاد دندان سالم" 
-            className="dashboard-logo" 
+          <img
+            src="/assets/images/logo.png"
+            alt="Healthy Teeth Happy Smile"
+            className="dashboard-logo"
             onError={(e) => {
               console.warn('Failed to load logo, trying alternative');
               e.target.src = "/logo.png";
             }}
           />
-          <span className="app-name">دندان سالم لبخند شاد</span>
+          <span className="app-name">Healthy Teeth Happy Smile</span>
         </div>
         <div className="user-info">
-          <span className="welcome-text">خوش آمدید {parentName}</span>
-          <button onClick={handleLogout} className="logout-button">خروج</button>
+          <span className="welcome-text">Welcome {parentName}</span>
+          <button onClick={handleLogout} className="logout-button">Logout</button>
         </div>
       </header>
 
@@ -163,37 +163,37 @@ const ParentDashboard = () => {
           <div className="user-profile">
             <div className="profile-icon">👨‍👩‍👧</div>
             <div className="profile-name">{parentName}</div>
-            <div className="child-name">والد {childName}</div>
+            <div className="child-name">Parent of {childName}</div>
           </div>
 
           <ul className="nav-menu">
-            <li 
+            <li
               className={`nav-item ${activeTab === 'report' ? 'active' : ''}`}
               onClick={() => handleTabChange('report')}
             >
               <span className="nav-icon">📊</span>
-              <span className="nav-text">گزارش مسواک</span>
+              <span className="nav-text">Brushing Report</span>
             </li>
-            <li 
+            <li
               className={`nav-item ${activeTab === 'reminders' ? 'active' : ''}`}
               onClick={() => handleTabChange('reminders')}
             >
               <span className="nav-icon">🔔</span>
-              <span className="nav-text">یادآوری‌ها</span>
+              <span className="nav-text">Reminders</span>
             </li>
-            <li 
+            <li
               className={`nav-item ${activeTab === 'infographics' ? 'active' : ''}`}
               onClick={() => handleTabChange('infographics')}
             >
               <span className="nav-icon">📚</span>
-              <span className="nav-text">اینفوگرافی</span>
+              <span className="nav-text">Infographics</span>
             </li>
-            <li 
+            <li
               className={`nav-item ${activeTab === 'questionnaire' ? 'active' : ''}`}
               onClick={() => handleTabChange('questionnaire')}
             >
               <span className="nav-icon">📝</span>
-              <span className="nav-text">پرسشنامه</span>
+              <span className="nav-text">Questionnaire</span>
             </li>
           </ul>
         </nav>
@@ -205,15 +205,15 @@ const ParentDashboard = () => {
 
       <footer className="dashboard-footer">
         <div className="footer-content">
-          <p>دندان سالم لبخند شاد &copy; {new Date().getFullYear()}</p>
+          <p>Healthy Teeth Happy Smile &copy; {new Date().getFullYear()}</p>
           <div className="footer-buttons">
             <button onClick={navigateToFAQ} className="help-button">
               <span className="help-icon">❓</span>
-              <span className="help-text">راهنما و سوالات متداول</span>
+              <span className="help-text">Help & FAQ</span>
             </button>
             <button onClick={navigateToAboutUs} className="about-button">
               <span className="about-icon">ℹ️</span>
-              <span className="about-text">درباره ما</span>
+              <span className="about-text">About Us</span>
             </button>
           </div>
         </div>

@@ -1,5 +1,5 @@
 /* ChildDashboard.css - Styles for child dashboard */
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
 
 :root {
   --primary-color: #4caf50;
@@ -22,9 +22,8 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  font-family: 'Vazirmatn', sans-serif;
+  font-family: 'Inter', sans-serif;
   background-color: var(--light-gray);
-  direction: rtl;
 }
 
 /* Header styles */

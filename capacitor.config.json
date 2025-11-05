@@ -1,6 +1,6 @@
 {
   "appId": "com.dentalhealth.app",
-  "appName": "لبخند شاد دندان سالم",
+  "appName": "Healthy Teeth Happy Smile",
   "webDir": "build",
   "plugins": {
     "CapacitorSQLite": {

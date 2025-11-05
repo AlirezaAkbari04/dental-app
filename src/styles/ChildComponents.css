@@ -1,5 +1,5 @@
 /* ChildComponents.css with Parent Dashboard colors */
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
 
 :root {
   --primary-color: #2196f3;
@@ -82,7 +82,7 @@
   text-align: center;
   width: 100%;
   max-width: 150px;
-  font-family: 'Vazirmatn', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 /* Toggle switch styles */
@@ -244,7 +244,7 @@ input:checked + .slider:before {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s;
-  font-family: 'Vazirmatn', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .start-button {
@@ -338,7 +338,7 @@ input:checked + .slider:before {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s;
-  font-family: 'Vazirmatn', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .congrats-button:hover {
@@ -420,16 +420,6 @@ input:checked + .slider:before {
   .alarm-time input {
     min-height: 44px;
   }
-}
-
-/* RTL support for Persian */
-[dir="rtl"] .slider:before {
-  left: auto;
-  right: 4px;
-}
-
-[dir="rtl"] input:checked + .slider:before {
-  transform: translateX(-24px);
 }
 
 /* Animations */
@@ -992,7 +982,7 @@ input:checked + .slider:before {
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s;
-  font-family: 'Vazirmatn', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .back-button:hover {

@@ -1,5 +1,5 @@
 /* Auth.css - Styles for authentication pages */
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
 
 :root {
   --primary-color: #4caf50;
@@ -17,7 +17,7 @@
   align-items: center;
   min-height: 100vh;
   background-color: var(--light-gray);
-  font-family: 'Vazirmatn', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .auth-form-container {
@@ -68,7 +68,7 @@
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s;
-  font-family: 'Vazirmatn', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .auth-form input:focus {
@@ -98,7 +98,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s;
-  font-family: 'Vazirmatn', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .auth-button:hover {

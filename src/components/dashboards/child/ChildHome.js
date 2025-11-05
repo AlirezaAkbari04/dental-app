@@ -46,28 +46,28 @@ const ChildHome = ({ childName }) => {
   // Medals based on achievements
   const medals = [
     {
-      name: 'مسواک طلایی',
+      name: 'Golden Toothbrush',
       icon: '🏆',
       earned: achievements.regularBrushing >= 7,
-      description: 'مسواک زدن منظم به مدت یک هفته'
+      description: 'Brushed regularly for one week'
     },
     {
-      name: 'دندان درخشان',
+      name: 'Shining Smile',
       icon: '⭐',
       earned: achievements.stars >= 10,
-      description: '10 ستاره کسب کردی'
+      description: 'Earned 10 stars'
     },
     {
-      name: 'خوراکی سالم',
+      name: 'Healthy Eater',
       icon: '🍎',
       earned: achievements.healthySnacks >= 15,
-      description: 'انتخاب 15 میان‌وعده سالم'
+      description: 'Chose 15 healthy snacks'
     },
     {
-      name: 'جواهر خوش‌اخلاق',
+      name: 'Diamond Champion',
       icon: '💎',
       earned: achievements.diamonds >= 5,
-      description: 'کسب 5 الماس'
+      description: 'Earned 5 diamonds'
     }
   ];
   
@@ -84,8 +84,8 @@ const ChildHome = ({ childName }) => {
 
       <div className="welcome-banner">
         <div className="welcome-content">
-          <h1>سلام {childName}! 👋</h1>
-          <p>به برنامه لبخند شاد دندان سالم خوش آمدی</p>
+          <h1>Hello {childName}! 👋</h1>
+          <p>Welcome to Healthy Teeth Happy Smile</p>
           <div className="welcome-decoration">
             <span className="deco-item">🎉</span>
             <span className="deco-item">🦷</span>
@@ -98,27 +98,27 @@ const ChildHome = ({ childName }) => {
         <div className="achievement-card stars-card">
           <div className="achievement-icon">⭐</div>
           <div className="achievement-value">{achievements.stars}</div>
-          <div className="achievement-label">ستاره</div>
+          <div className="achievement-label">Stars</div>
           <div className="card-sparkle"></div>
         </div>
-        
+
         <div className="achievement-card diamonds-card">
           <div className="achievement-icon">💎</div>
           <div className="achievement-value">{achievements.diamonds}</div>
-          <div className="achievement-label">الماس</div>
+          <div className="achievement-label">Diamonds</div>
           <div className="card-sparkle"></div>
         </div>
-        
+
         <div className="achievement-card brush-card">
           <div className="achievement-icon">🪥</div>
           <div className="achievement-value">{achievements.regularBrushing}</div>
-          <div className="achievement-label">مسواک منظم</div>
+          <div className="achievement-label">Regular Brushing</div>
           <div className="card-sparkle"></div>
         </div>
       </div>
       
       <div className="medals-section">
-        <h2>🏆 مدال‌های من</h2>
+        <h2>🏆 My Medals</h2>
         <div className="medals-container">
           {medals.map((medal, index) => (
             <div key={index} className={`medal-card ${medal.earned ? 'earned' : 'not-earned'}`}>
@@ -129,7 +129,7 @@ const ChildHome = ({ childName }) => {
               </div>
               {medal.earned && (
                 <div className="earned-badge">
-                  <span>کسب شده</span>
+                  <span>Earned</span>
                   <div className="badge-glow"></div>
                 </div>
               )}
@@ -140,15 +140,15 @@ const ChildHome = ({ childName }) => {
       </div>
       
       <div className="tip-of-day">
-        <h3>💡 نکته امروز</h3>
+        <h3>💡 Tip of the Day</h3>
         <div className="tip-content">
           <div className="tip-item">
             <span className="tip-emoji">🌅</span>
-            <p>روزی دو بار مسواک بزن، صبح و شب!</p>
+            <p>Brush your teeth twice a day, morning and night!</p>
           </div>
           <div className="tip-item">
             <span className="tip-emoji">😌</span>
-            <p>دندان‌هایت را با آرامی و به خوبی مسواک کن.</p>
+            <p>Brush gently and thoroughly for healthy teeth.</p>
           </div>
         </div>
       </div>

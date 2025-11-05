@@ -1,11 +1,10 @@
 /* استایل‌های کلی صفحه */
 .faq-container {
-  font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+  font-family: Inter, Tahoma, Arial, sans-serif;
   max-width: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  direction: rtl;
   background-color: #f7f9fc;
 }
 

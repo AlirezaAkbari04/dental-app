@@ -53,12 +53,12 @@ const ParentProfile = () => {
     ];
 
     if (formData.parentType === 'other' && !formData.relationship) {
-      newErrors.relationship = 'این فیلد الزامی است';
+      newErrors.relationship = 'This field is required';
     }
 
     requiredFields.forEach((field) => {
       if (!formData[field]) {
-        newErrors[field] = 'این فیلد الزامی است';
+        newErrors[field] = 'This field is required';
       }
     });
 
@@ -76,7 +76,7 @@ const ParentProfile = () => {
     }
 
     if (!currentUser?.id) {
-      setErrors({ general: 'خطا در احراز هویت. لطفاً دوباره وارد شوید.' });
+      setErrors({ general: 'Authentication error. Please login again.' });
       return;
     }
 
@@ -84,7 +84,7 @@ const ParentProfile = () => {
 
     try {
       console.log('[ParentProfile] Starting form submission...');
-      
+
       // Initialize database if needed
       if (!DatabaseService.initialized) {
         console.log('[ParentProfile] Initializing database...');
@@ -117,10 +117,10 @@ const ParentProfile = () => {
 
       // Mark profile as completed - THIS IS THE KEY FIX
       const profileCompleted = await markProfileAsCompleted();
-      
+
       if (profileCompleted) {
         console.log('[ParentProfile] Profile marked as completed successfully');
-        
+
         // Navigate to dashboard
         console.log('[ParentProfile] Navigating to parent dashboard...');
         navigate('/dashboard/parent');
@@ -132,12 +132,12 @@ const ParentProfile = () => {
 
     } catch (error) {
       console.error('[ParentProfile] Error saving parent profile:', error);
-      
+
       // Set a user-friendly error message
-      setErrors({ 
-        general: 'خطا در ذخیره اطلاعات. اطلاعات شما ذخیره شد و به داشبورد منتقل می‌شوید.' 
+      setErrors({
+        general: 'Error saving information. Your information has been saved and you will be redirected to the dashboard.'
       });
-      
+
       // Navigate anyway after a short delay to show the message
       setTimeout(() => {
         navigate('/dashboard/parent');
@@ -148,17 +148,17 @@ const ParentProfile = () => {
   };
 
   const educationOptions = [
-    { value: 'elementary', label: 'ابتدایی' },
-    { value: 'middle', label: 'سیکل' },
-    { value: 'diploma', label: 'دیپلم' },
-    { value: 'associate', label: 'فوق دیپلم' },
-    { value: 'bachelor', label: 'لیسانس' },
-    { value: 'master', label: 'فوق لیسانس' },
-    { value: 'phd', label: 'دکتری' },
+    { value: 'elementary', label: 'Elementary' },
+    { value: 'middle', label: 'Middle School' },
+    { value: 'diploma', label: 'High School Diploma' },
+    { value: 'associate', label: 'Associate Degree' },
+    { value: 'bachelor', label: "Bachelor's Degree" },
+    { value: 'master', label: "Master's Degree" },
+    { value: 'phd', label: 'PhD/Doctorate' },
   ];
 
   return (
-    <ProfileForm title="تکمیل پروفایل والدین" onSubmit={handleSubmit}>
+    <ProfileForm title="Complete Parent Profile" onSubmit={handleSubmit}>
       {errors.general && (
         <div style={{
           color: '#e74c3c',
@@ -173,7 +173,7 @@ const ParentProfile = () => {
       )}
 
       <div className="form-group">
-        <label htmlFor="parentType">نوع والد</label>
+        <label htmlFor="parentType">Parent Type</label>
         <div className="radio-group">
           <label className="radio-option">
             <input
@@ -184,7 +184,7 @@ const ParentProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            پدر
+            Father
           </label>
           <label className="radio-option">
             <input
@@ -195,7 +195,7 @@ const ParentProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            مادر
+            Mother
           </label>
           <label className="radio-option">
             <input
@@ -206,7 +206,7 @@ const ParentProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            سایر (سرپرست)
+            Other (Guardian)
           </label>
         </div>
         {errors.parentType && <div className="error-message">{errors.parentType}</div>}
@@ -214,28 +214,26 @@ const ParentProfile = () => {
 
       {formData.parentType === 'other' && (
         <div className="form-group">
-          <label htmlFor="relationship">نسبت خانوادگی</label>
+          <label htmlFor="relationship">Family Relationship</label>
           <input
             type="text"
             id="relationship"
             name="relationship"
             value={formData.relationship}
             onChange={handleChange}
-            placeholder="نسبت خانوادگی با کودک"
+            placeholder="Relationship to child"
             className={errors.relationship ? 'input-error' : ''}
-            pattern="[\u0600-\u06FF\s]+"
-            title="لطفاً فقط حروف فارسی وارد کنید"
             disabled={isSubmitting}
           />
           {errors.relationship && <div className="error-message">{errors.relationship}</div>}
         </div>
       )}
 
-      <h3 className="section-title">اطلاعات تحصیلی و شغلی والدین</h3>
+      <h3 className="section-title">Parents' Educational and Employment Information</h3>
 
       <div className="form-row">
         <div className="form-group">
-          <label htmlFor="fatherEducation">سطح تحصیلات پدر</label>
+          <label htmlFor="fatherEducation">Father's Education Level</label>
           <select
             id="fatherEducation"
             name="fatherEducation"
@@ -244,7 +242,7 @@ const ParentProfile = () => {
             className={errors.fatherEducation ? 'input-error' : ''}
             disabled={isSubmitting}
           >
-            <option value="">انتخاب کنید</option>
+            <option value="">Select</option>
             {educationOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -255,17 +253,15 @@ const ParentProfile = () => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="fatherJob">شغل پدر</label>
+          <label htmlFor="fatherJob">Father's Occupation</label>
           <input
             type="text"
             id="fatherJob"
             name="fatherJob"
             value={formData.fatherJob}
             onChange={handleChange}
-            placeholder="شغل پدر"
+            placeholder="Father's occupation"
             className={errors.fatherJob ? 'input-error' : ''}
-            pattern="[\u0600-\u06FF\s]+"
-            title="لطفاً فقط حروف فارسی وارد کنید"
             disabled={isSubmitting}
           />
           {errors.fatherJob && <div className="error-message">{errors.fatherJob}</div>}
@@ -274,7 +270,7 @@ const ParentProfile = () => {
 
       <div className="form-row">
         <div className="form-group">
-          <label htmlFor="motherEducation">سطح تحصیلات مادر</label>
+          <label htmlFor="motherEducation">Mother's Education Level</label>
           <select
             id="motherEducation"
             name="motherEducation"
@@ -283,7 +279,7 @@ const ParentProfile = () => {
             className={errors.motherEducation ? 'input-error' : ''}
             disabled={isSubmitting}
           >
-            <option value="">انتخاب کنید</option>
+            <option value="">Select</option>
             {educationOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -294,27 +290,25 @@ const ParentProfile = () => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="motherJob">شغل مادر</label>
+          <label htmlFor="motherJob">Mother's Occupation</label>
           <input
             type="text"
             id="motherJob"
             name="motherJob"
             value={formData.motherJob}
             onChange={handleChange}
-            placeholder="شغل مادر"
+            placeholder="Mother's occupation"
             className={errors.motherJob ? 'input-error' : ''}
-            pattern="[\u0600-\u06FF\s]+"
-            title="لطفاً فقط حروف فارسی وارد کنید"
             disabled={isSubmitting}
           />
           {errors.motherJob && <div className="error-message">{errors.motherJob}</div>}
         </div>
       </div>
 
-      <h3 className="section-title">سوالات تکمیلی</h3>
+      <h3 className="section-title">Additional Questions</h3>
 
       <div className="form-group">
-        <label>چه کسی اپلیکیشن را استفاده می‌کند؟</label>
+        <label>Who will be using the application?</label>
         <div className="radio-group">
           <label className="radio-option">
             <input
@@ -325,7 +319,7 @@ const ParentProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            پدر
+            Father
           </label>
           <label className="radio-option">
             <input
@@ -336,7 +330,7 @@ const ParentProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            مادر
+            Mother
           </label>
           <label className="radio-option">
             <input
@@ -347,14 +341,14 @@ const ParentProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            سایر
+            Other
           </label>
         </div>
         {errors.appUser && <div className="error-message">{errors.appUser}</div>}
       </div>
 
       <div className="form-group">
-        <label>از نظر اقتصادی خود را چگونه ارزیابی می‌کنید؟</label>
+        <label>How would you rate your family's economic situation?</label>
         <div className="radio-group">
           <label className="radio-option">
             <input
@@ -365,7 +359,7 @@ const ParentProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            خوب
+            Good
           </label>
           <label className="radio-option">
             <input
@@ -376,7 +370,7 @@ const ParentProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            متوسط
+            Average
           </label>
           <label className="radio-option">
             <input
@@ -387,14 +381,14 @@ const ParentProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            ضعیف
+            Poor
           </label>
         </div>
         {errors.economicStatus && <div className="error-message">{errors.economicStatus}</div>}
       </div>
 
       <div className="form-group">
-        <label>سلامت دهان و دندان خود را چگونه ارزیابی می‌کنید؟</label>
+        <label>How would you rate your oral health?</label>
         <div className="radio-group">
           <label className="radio-option">
             <input
@@ -405,7 +399,7 @@ const ParentProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            خوب
+            Good
           </label>
           <label className="radio-option">
             <input
@@ -416,7 +410,7 @@ const ParentProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            متوسط
+            Average
           </label>
           <label className="radio-option">
             <input
@@ -427,7 +421,7 @@ const ParentProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            ضعیف
+            Poor
           </label>
         </div>
         {errors.oralHealthStatus && <div className="error-message">{errors.oralHealthStatus}</div>}

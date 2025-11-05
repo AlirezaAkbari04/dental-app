@@ -36,22 +36,22 @@ const RoleSelection = () => {
   const handleRoleSelect = async (role) => {
     setIsLoading(true);
     setError('');
-    
+
     try {
       console.log("Selecting role:", role, "for user:", currentUser?.username);
-      
+
       if (!currentUser?.id) {
-        setError('لطفا ابتدا وارد شوید');
+        setError('Please login first');
         navigate('/login');
         return;
       }
-      
+
       // Update user role using UserContext
       const success = await updateUserRole(role);
-      
+
       if (success) {
         console.log(`Role updated to ${role}, navigating to profile completion`);
-        
+
         // Navigate to profile completion based on role
         switch (role) {
           case 'child':
@@ -65,14 +65,14 @@ const RoleSelection = () => {
             break;
           default:
             console.error(`Unknown role: ${role}`);
-            setError('نقش نامعتبر انتخاب شده است');
+            setError('Invalid role selected');
         }
       } else {
-        setError('خطا در انتخاب نقش. لطفا دوباره تلاش کنید.');
+        setError('Error selecting role. Please try again.');
       }
     } catch (error) {
       console.error("Error updating role:", error);
-      setError('خطا در انتخاب نقش. لطفا دوباره تلاش کنید.');
+      setError('Error selecting role. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -98,51 +98,51 @@ const RoleSelection = () => {
   if (currentUser.role && !currentUser.profileCompleted && !showRoleChange) {
     const getRoleName = (role) => {
       switch (role) {
-        case 'child': return 'کودک';
-        case 'parent': return 'والدین';
-        case 'teacher': return 'معلم/معلم بهداشت';
+        case 'child': return 'Child';
+        case 'parent': return 'Parent';
+        case 'teacher': return 'Teacher/Health Educator';
         default: return role;
       }
     };
 
     return (
-      <div className="auth-container" dir="rtl">
+      <div className="auth-container">
         <div className="auth-form-container">
           <div className="logo-container">
-            <img src={logoImage} alt="لبخند شاد دندان سالم" className="app-logo" />
-            <h1 className="app-title">لبخند شاد دندان سالم</h1>
+            <img src={logoImage} alt="Healthy Teeth Happy Smile" className="app-logo" />
+            <h1 className="app-title">Healthy Teeth Happy Smile</h1>
           </div>
-          
+
           <div style={{ textAlign: 'center', padding: '20px' }}>
             <h2 style={{ marginBottom: '15px', color: '#2c3e50' }}>
-              نقش انتخابی شما: {getRoleName(currentUser.role)}
+              Your Selected Role: {getRoleName(currentUser.role)}
             </h2>
             <p style={{ marginBottom: '20px', color: '#7f8c8d', lineHeight: '1.6' }}>
-              شما قبلاً نقش <strong>{getRoleName(currentUser.role)}</strong> را انتخاب کرده‌اید.
+              You have already selected the <strong>{getRoleName(currentUser.role)}</strong> role.
               <br />
-              می‌توانید پروفایل خود را تکمیل کنید یا نقش خود را تغییر دهید.
+              You can complete your profile or change your role.
             </p>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '300px', margin: '0 auto' }}>
-              <button 
-                className="auth-button" 
+              <button
+                className="auth-button"
                 onClick={handleContinueWithCurrentRole}
-                style={{ 
+                style={{
                   backgroundColor: '#27ae60',
                   marginBottom: '10px'
                 }}
               >
-                ادامه به تکمیل پروفایل {getRoleName(currentUser.role)}
+                Continue to Complete {getRoleName(currentUser.role)} Profile
               </button>
-              
-              <button 
-                className="auth-button" 
+
+              <button
+                className="auth-button"
                 onClick={handleChangeRole}
-                style={{ 
+                style={{
                   backgroundColor: '#e74c3c'
                 }}
               >
-                تغییر نقش
+                Change Role
               </button>
             </div>
           </div>
@@ -152,28 +152,28 @@ const RoleSelection = () => {
   }
 
   return (
-    <div className="auth-container" dir="rtl">
+    <div className="auth-container">
       <div className="auth-form-container" style={{ maxWidth: '500px' }}>
         <div className="logo-container">
-          <img src={logoImage} alt="لبخند شاد دندان سالم" className="app-logo" />
-          <h1 className="app-title">لبخند شاد دندان سالم</h1>
+          <img src={logoImage} alt="Healthy Teeth Happy Smile" className="app-logo" />
+          <h1 className="app-title">Healthy Teeth Happy Smile</h1>
         </div>
 
         <div className="role-selection">
           <h2>
-            {showRoleChange ? 'انتخاب نقش جدید' : 'لطفاً نقش خود را انتخاب کنید'}
+            {showRoleChange ? 'Select New Role' : 'Please Select Your Role'}
           </h2>
           <p className="role-instruction">
-            {showRoleChange 
-              ? 'نقش جدید خود را از گزینه‌های زیر انتخاب کنید'
-              : 'برای ادامه، نقش خود را از گزینه‌های زیر انتخاب کنید'
+            {showRoleChange
+              ? 'Choose your new role from the options below'
+              : 'To continue, select your role from the options below'
             }
           </p>
 
           {error && (
-            <div style={{ 
-              color: '#e74c3c', 
-              marginBottom: '15px', 
+            <div style={{
+              color: '#e74c3c',
+              marginBottom: '15px',
               textAlign: 'center',
               padding: '10px',
               backgroundColor: '#ffeaea',
@@ -191,7 +191,7 @@ const RoleSelection = () => {
             width: '100%',
             margin: '20px 0'
           }}>
-            
+
             {/* Child Role */}
             <div
               style={{
@@ -223,22 +223,22 @@ const RoleSelection = () => {
                 }
               }}
             >
-              <span style={{ fontSize: '40px', marginLeft: '20px' }}>👶</span>
+              <span style={{ fontSize: '40px', marginRight: '20px' }}>👶</span>
               <div>
-                <div style={{ 
-                  fontWeight: 'bold', 
-                  marginBottom: '8px', 
+                <div style={{
+                  fontWeight: 'bold',
+                  marginBottom: '8px',
                   fontSize: '18px',
                   color: '#2c3e50'
                 }}>
-                  کودک
+                  Child
                 </div>
-                <div style={{ 
-                  fontSize: '14px', 
+                <div style={{
+                  fontSize: '14px',
                   color: '#7f8c8d',
                   lineHeight: '1.4'
                 }}>
-                  آموزش بهداشت دهان و دندان برای کودکان
+                  Learn about oral health and dental care
                 </div>
               </div>
             </div>
@@ -274,22 +274,22 @@ const RoleSelection = () => {
                 }
               }}
             >
-              <span style={{ fontSize: '40px', marginLeft: '20px' }}>👨‍⚕️</span>
+              <span style={{ fontSize: '40px', marginRight: '20px' }}>👨‍⚕️</span>
               <div>
-                <div style={{ 
-                  fontWeight: 'bold', 
-                  marginBottom: '8px', 
+                <div style={{
+                  fontWeight: 'bold',
+                  marginBottom: '8px',
                   fontSize: '18px',
                   color: '#2c3e50'
                 }}>
-                  معلم بهداشت
+                  Health Educator
                 </div>
-                <div style={{ 
-                  fontSize: '14px', 
+                <div style={{
+                  fontSize: '14px',
                   color: '#7f8c8d',
                   lineHeight: '1.4'
                 }}>
-                  مدیریت آموزش بهداشت دهان و دندان برای کودکان
+                  Manage oral health education for children
                 </div>
               </div>
             </div>
@@ -325,45 +325,45 @@ const RoleSelection = () => {
                 }
               }}
             >
-              <span style={{ fontSize: '40px', marginLeft: '20px' }}>👨‍👩‍👧</span>
+              <span style={{ fontSize: '40px', marginRight: '20px' }}>👨‍👩‍👧</span>
               <div>
-                <div style={{ 
-                  fontWeight: 'bold', 
-                  marginBottom: '8px', 
+                <div style={{
+                  fontWeight: 'bold',
+                  marginBottom: '8px',
                   fontSize: '18px',
                   color: '#2c3e50'
                 }}>
-                  والدین
+                  Parent
                 </div>
-                <div style={{ 
-                  fontSize: '14px', 
+                <div style={{
+                  fontSize: '14px',
                   color: '#7f8c8d',
                   lineHeight: '1.4'
                 }}>
-                  نظارت بر بهداشت دهان و دندان فرزندان
+                  Monitor your children's oral health
                 </div>
               </div>
             </div>
           </div>
 
           {isLoading && (
-            <div style={{ 
-              textAlign: 'center', 
+            <div style={{
+              textAlign: 'center',
               margin: '20px 0',
               padding: '15px',
               backgroundColor: '#f8f9fa',
               borderRadius: '8px',
               color: '#6c757d'
             }}>
-              <div style={{ marginBottom: '10px' }}>در حال پردازش...</div>
-              <div style={{ fontSize: '12px' }}>لطفا صبر کنید</div>
+              <div style={{ marginBottom: '10px' }}>Processing...</div>
+              <div style={{ fontSize: '12px' }}>Please wait</div>
             </div>
           )}
 
           {/* Show cancel button when changing role */}
           {showRoleChange && (
             <div style={{ textAlign: 'center', marginTop: '20px' }}>
-              <button 
+              <button
                 onClick={() => setShowRoleChange(false)}
                 style={{
                   backgroundColor: '#95a5a6',
@@ -376,7 +376,7 @@ const RoleSelection = () => {
                 }}
                 disabled={isLoading}
               >
-                انصراف از تغییر نقش
+                Cancel Role Change
               </button>
             </div>
           )}

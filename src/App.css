@@ -3,11 +3,10 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Vazir', Tahoma, Arial, sans-serif;
+    font-family: 'Inter', Tahoma, Arial, sans-serif;
   }
-  
+
   body {
-    direction: rtl;
     background-color: #f5f8ff;
     color: #333;
   }

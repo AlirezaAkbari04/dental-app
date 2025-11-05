@@ -124,18 +124,18 @@ const BrushReminder = () => {
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
       
-      if (alarms.morning.enabled && 
-          currentHour === alarms.morning.hour && 
-          currentMinute === alarms.morning.minute && 
+      if (alarms.morning.enabled &&
+          currentHour === alarms.morning.hour &&
+          currentMinute === alarms.morning.minute &&
           !alarmActive) {
-        triggerAlarm('صبح');
+        triggerAlarm('morning');
       }
-      
-      if (alarms.evening.enabled && 
-          currentHour === alarms.evening.hour && 
-          currentMinute === alarms.evening.minute && 
+
+      if (alarms.evening.enabled &&
+          currentHour === alarms.evening.hour &&
+          currentMinute === alarms.evening.minute &&
           !alarmActive) {
-        triggerAlarm('شب');
+        triggerAlarm('evening');
       }
     }, 10000);
     
@@ -149,10 +149,10 @@ const BrushReminder = () => {
   // Function to trigger alarm
   const triggerAlarm = (timeOfDay) => {
     setAlarmActive(true);
-    
+
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(`یادآوری مسواک ${timeOfDay}`, {
-        body: `زمان مسواک زدن ${timeOfDay} رسیده است!`,
+      new Notification(`Brushing Reminder - ${timeOfDay}`, {
+        body: `Time to brush your teeth!`,
         icon: '/logo192.png'
       });
     }
@@ -339,10 +339,10 @@ const BrushReminder = () => {
     if ('Notification' in window) {
       Notification.requestPermission().then(permission => {
         console.log(`Notification permission: ${permission}`);
-        alert(`وضعیت دسترسی به اعلان‌ها: ${permission === 'granted' ? 'تأیید شد' : 'رد شد'}`);
+        alert(`Notification permission: ${permission === 'granted' ? 'Granted' : 'Denied'}`);
       });
     } else {
-      alert('این مرورگر از اعلان‌ها پشتیبانی نمی‌کند');
+      alert('This browser does not support notifications');
       console.log('This browser does not support notifications');
     }
   };
@@ -359,7 +359,7 @@ const BrushReminder = () => {
   };
   
   const testAlarm = () => {
-    triggerAlarm('تست');
+    triggerAlarm('test');
   };
   
   // Direct path
@@ -370,12 +370,12 @@ const BrushReminder = () => {
   return (
     <div className="brush-reminder-container">
       <div className="brush-section">
-        <h2>یادآوری مسواک</h2>
-        
+        <h2>Brushing Reminder</h2>
+
         <div className="alarm-cards">
           <div className="alarm-card">
             <div className="alarm-header">
-              <h3><span className="sun-icon">☀️</span> مسواک صبح</h3>
+              <h3><span className="sun-icon">☀️</span> Morning Brush</h3>
               <label className="switch">
                 <input
                   type="checkbox"
@@ -387,7 +387,7 @@ const BrushReminder = () => {
             </div>
             <div className="alarm-time">
               <div className="persian-time-display">
-                ساعت: {formatPersianTime(alarms.morning.hour, alarms.morning.minute)}
+                Time: {formatPersianTime(alarms.morning.hour, alarms.morning.minute)}
               </div>
               <input
                 type="time"
@@ -401,7 +401,7 @@ const BrushReminder = () => {
           
           <div className="alarm-card">
             <div className="alarm-header">
-              <h3><span className="moon-icon">🌙</span> مسواک شب</h3>
+              <h3><span className="moon-icon">🌙</span> Evening Brush</h3>
               <label className="switch">
                 <input
                   type="checkbox"
@@ -413,7 +413,7 @@ const BrushReminder = () => {
             </div>
             <div className="alarm-time">
               <div className="persian-time-display">
-                ساعت: {formatPersianTime(alarms.evening.hour, alarms.evening.minute)}
+                Time: {formatPersianTime(alarms.evening.hour, alarms.evening.minute)}
               </div>
               <input
                 type="time"
@@ -427,50 +427,50 @@ const BrushReminder = () => {
         </div>
         
         <div className="notification-permission">
-          <button 
-            className="permission-button" 
+          <button
+            className="permission-button"
             onClick={requestNotificationPermission}
           >
-            درخواست مجوز اعلان‌ها
+            Request Notification Permission
           </button>
           <p className="permission-info">
-            برای دریافت یادآوری مسواک، لطفاً مجوز اعلان‌ها را تأیید کنید.
+            To receive brushing reminders, please allow notifications.
           </p>
-          
-          <button 
-            className="test-button" 
+
+          <button
+            className="test-button"
             onClick={testAlarm}
             style={{ marginTop: '10px', backgroundColor: '#666' }}
           >
-            تست آلارم
+            Test Alarm
           </button>
         </div>
         
         {alarmActive && (
           <div className="alarm-notification">
             <div className="alarm-message">
-              <p>زمان مسواک زدن رسیده است!</p>
-              <button 
+              <p>It's time to brush your teeth!</p>
+              <button
                 className="dismiss-button"
                 onClick={stopAlarm}
               >
-                متوجه شدم
+                Got it
               </button>
             </div>
           </div>
         )}
       </div>
-      
+
       <div className="timer-section">
-        <h2>تایمر مسواک</h2>
+        <h2>Brushing Timer</h2>
         
         <div className="timer-display">
           <div className="timer-time">{formatTime(timeLeft)}</div>
           
           <div className="timer-icon-container">
-            <img 
+            <img
               src='/assets/images/hourglass.png' // Direct path
-              alt="توثبرش آیکون" 
+              alt="Brush timer icon"
               className="timer-icon"
               onError={(e) => {
                 // Fallback to emoji if image doesn't load
@@ -484,55 +484,55 @@ const BrushReminder = () => {
         
         <div className="timer-controls">
           {!timerRunning ? (
-            <button 
-              className="timer-button start-button" 
+            <button
+              className="timer-button start-button"
               onClick={startTimer}
-              aria-label="شروع مسواک زدن"
+              aria-label="Start brushing"
             >
-              {timeLeft === 120 || timeLeft === 0 ? "شروع مسواک زدن" : "ادامه"}
+              {timeLeft === 120 || timeLeft === 0 ? "Start Brushing" : "Continue"}
             </button>
           ) : (
-            <button 
-              className="timer-button stop-button" 
+            <button
+              className="timer-button stop-button"
               onClick={stopTimer}
-              aria-label="توقف"
+              aria-label="Stop"
             >
-              توقف
+              Stop
             </button>
           )}
-          <button 
-            className="timer-button reset-button" 
-            onClick={resetTimer} 
+          <button
+            className="timer-button reset-button"
+            onClick={resetTimer}
             disabled={timerRunning}
-            aria-label="شروع مجدد"
+            aria-label="Reset"
             style={{ opacity: timerRunning ? 0.5 : 1 }}
           >
-            شروع مجدد
+            Reset
           </button>
         </div>
         
         {audioError && (
           <div className="audio-error-message">
-            خطا در پخش موسیقی. تایمر بدون موسیقی ادامه می‌دهد.
+            Error playing music. Timer will continue without music.
           </div>
         )}
-        
+
         {showCongrats && (
           <div className="congrats-overlay" role="dialog" aria-labelledby="congrats-title">
             <div className="congrats-content">
-              <h3 id="congrats-title">آفرین!</h3>
-              <p>تو مسواک زدن رو با موفقیت به پایان رسوندی</p>
+              <h3 id="congrats-title">Well Done!</h3>
+              <p>You successfully completed brushing your teeth!</p>
               <div className="reward-info">
                 <span className="reward-item">
-                  <span className="reward-icon" aria-hidden="true">⭐</span> ۱ ستاره
+                  <span className="reward-icon" aria-hidden="true">⭐</span> 1 star
                 </span>
               </div>
-              <button 
+              <button
                 className="congrats-button"
                 onClick={() => setShowCongrats(false)}
-                aria-label="بستن"
+                aria-label="Close"
               >
-                بستن
+                Close
               </button>
             </div>
           </div>
@@ -540,12 +540,12 @@ const BrushReminder = () => {
       </div>
       
       <div className="educational-video">
-        <h3>آموزش مسواک زدن</h3>
+        <h3>How to Brush Your Teeth</h3>
         <div className="videos-container">
           <div className="video-item">
             <div className="video-wrapper">
-              <video 
-                controls 
+              <video
+                controls
                 preload="metadata"
                 className="video-player"
                 poster="/assets/images/video-thumbnail-1.jpg"
@@ -554,7 +554,7 @@ const BrushReminder = () => {
                 Your browser does not support the video tag.
               </video>
             </div>
-            <p>ویدیوی مسواک</p>
+            <p>Brushing Tutorial Video</p>
           </div>
         </div>
       </div>
@@ -633,8 +633,7 @@ const BrushReminder = () => {
           font-weight: bold;
           color: #4a6bff;
           margin-bottom: 10px;
-          font-family: 'Vazir', 'Tahoma', sans-serif;
-          direction: rtl;
+          font-family: 'Inter', sans-serif;
         }
         
         .time-input {
@@ -855,7 +854,7 @@ const BrushReminder = () => {
           font-size: 36px;
           font-weight: bold;
           color: #333;
-          font-family: 'Vazir', 'Tahoma', sans-serif;
+          font-family: 'Inter', sans-serif;
         }
         
         /* EXTRA LARGE HOURGLASS - DOUBLED FROM PREVIOUS SIZE */
@@ -973,7 +972,7 @@ const BrushReminder = () => {
           padding: 10px 15px;
           border-radius: 8px;
           font-weight: bold;
-          font-family: 'Vazir', 'Tahoma', sans-serif;
+          font-family: 'Inter', sans-serif;
         }
         
         .reward-icon {

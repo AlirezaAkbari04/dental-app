@@ -46,20 +46,20 @@ const CaretakerDashboard = () => {
           const teacherProfile = await DatabaseService.getUserById(currentUser.id);
           if (teacherProfile && teacherProfile.profile_data) {
             const profileData = JSON.parse(teacherProfile.profile_data);
-            setTeacherName(profileData.name || 'معلم بهداشت');
+            setTeacherName(profileData.name || 'Health Educator');
           } else {
             // Fallback to localStorage
             const storedProfile = JSON.parse(localStorage.getItem('teacherProfile') || '{}');
-            setTeacherName(storedProfile.name || 'معلم بهداشت');
+            setTeacherName(storedProfile.name || 'Health Educator');
           }
         } else {
           // Fallback to localStorage if no currentUser
           const storedProfile = JSON.parse(localStorage.getItem('teacherProfile') || '{}');
-          setTeacherName(storedProfile.name || 'معلم بهداشت');
+          setTeacherName(storedProfile.name || 'Health Educator');
         }
       } catch (error) {
         console.error('Error loading teacher profile:', error);
-        setTeacherName('معلم بهداشت');
+        setTeacherName('Health Educator');
       }
     };
     
@@ -146,20 +146,20 @@ const CaretakerDashboard = () => {
     <div className="caretaker-dashboard">
       <header className="dashboard-header">
         <div className="logo-container">
-          <img 
-            src="/assets/images/logo.png" 
-            alt="لبخند شاد دندان سالم" 
+          <img
+            src="/assets/images/logo.png"
+            alt="Healthy Teeth Happy Smile"
             className="dashboard-logo"
             onError={(e) => {
               console.warn('Failed to load logo, trying alternative');
               e.target.src = "/logo.png";
             }}
           />
-          <span className="app-name">دندان سالم لبخند شاد</span>
+          <span className="app-name">Healthy Teeth Happy Smile</span>
         </div>
         <div className="user-info">
-          <span className="welcome-text">خوش آمدید {teacherName}</span>
-          <button onClick={handleLogout} className="logout-button">خروج</button>
+          <span className="welcome-text">Welcome {teacherName}</span>
+          <button onClick={handleLogout} className="logout-button">Logout</button>
         </div>
       </header>
       
@@ -168,44 +168,44 @@ const CaretakerDashboard = () => {
           <div className="user-profile">
             <div className="profile-icon">👨‍⚕️</div>
             <div className="profile-name">{teacherName}</div>
-            <div className="profile-title">معلم/معلم بهداشت</div>
+            <div className="profile-title">Teacher/Health Educator</div>
           </div>
-          
+
           <ul className="nav-menu">
-            <li 
+            <li
               className={`nav-item ${activeTab === 'schools' ? 'active' : ''}`}
               onClick={() => handleTabChange('schools')}
             >
               <span className="nav-icon">🏫</span>
-              <span className="nav-text">مدارس من</span>
+              <span className="nav-text">My Schools</span>
             </li>
-            <li 
+            <li
               className={`nav-item ${activeTab === 'students' ? 'active' : ''}`}
               onClick={() => handleTabChange('students')}
             >
               <span className="nav-icon">👧</span>
-              <span className="nav-text">لیست دانش‌آموزان</span>
+              <span className="nav-text">Students List</span>
             </li>
-            <li 
+            <li
               className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`}
               onClick={() => handleTabChange('reports')}
             >
               <span className="nav-icon">📋</span>
-              <span className="nav-text">گزارش سلامت</span>
+              <span className="nav-text">Health Reports</span>
             </li>
-            <li 
+            <li
               className={`nav-item ${activeTab === 'referrals' ? 'active' : ''}`}
               onClick={() => handleTabChange('referrals')}
             >
               <span className="nav-icon">🔴</span>
-              <span className="nav-text">ارجاع‌های فوری</span>
+              <span className="nav-text">Urgent Referrals</span>
             </li>
-            <li 
+            <li
               className={`nav-item ${activeTab === 'educational' ? 'active' : ''}`}
               onClick={() => handleTabChange('educational')}
             >
               <span className="nav-icon">📚</span>
-              <span className="nav-text">محتوای آموزشی</span>
+              <span className="nav-text">Educational Content</span>
             </li>
           </ul>
         </nav>
@@ -217,15 +217,15 @@ const CaretakerDashboard = () => {
       
       <footer className="dashboard-footer">
         <div className="footer-content">
-          <p>دندان سالم لبخند شاد &copy; {new Date().getFullYear()}</p>
+          <p>Healthy Teeth Happy Smile &copy; {new Date().getFullYear()}</p>
           <div className="footer-buttons">
             <button onClick={navigateToFAQ} className="help-button">
               <span className="help-icon">❓</span>
-              <span className="help-text">راهنما و سوالات متداول</span>
+              <span className="help-text">Help & FAQ</span>
             </button>
             <button onClick={navigateToAboutUs} className="about-button">
               <span className="about-icon">ℹ️</span>
-              <span className="about-text">درباره ما</span>
+              <span className="about-text">About Us</span>
             </button>
           </div>
         </div>

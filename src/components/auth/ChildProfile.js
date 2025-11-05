@@ -37,23 +37,23 @@ const ChildProfile = () => {
     const newErrors = {};
 
     if (!formData.age) {
-      newErrors.age = 'لطفاً سن خود را انتخاب کنید';
+      newErrors.age = 'Please select your age';
     }
 
     if (!formData.gender) {
-      newErrors.gender = 'لطفاً جنسیت خود را انتخاب کنید';
+      newErrors.gender = 'Please select your gender';
     }
 
     if (!formData.grade) {
-      newErrors.grade = 'لطفاً مقطع تحصیلی خود را انتخاب کنید';
+      newErrors.grade = 'Please select your grade level';
     }
 
     if (!formData.schoolName) {
-      newErrors.schoolName = 'لطفاً نام مدرسه خود را وارد کنید';
+      newErrors.schoolName = 'Please enter your school name';
     }
 
     if (!formData.educationDistrict) {
-      newErrors.educationDistrict = 'لطفاً منطقه آموزش و پرورش خود را وارد کنید';
+      newErrors.educationDistrict = 'Please enter your education district';
     }
 
     return newErrors;
@@ -70,7 +70,7 @@ const ChildProfile = () => {
     }
 
     if (!currentUser?.id) {
-      setErrors({ general: 'خطا در احراز هویت. لطفاً دوباره وارد شوید.' });
+      setErrors({ general: 'Authentication error. Please login again.' });
       return;
     }
 
@@ -78,7 +78,7 @@ const ChildProfile = () => {
 
     try {
       console.log('[ChildProfile] Starting form submission...');
-      
+
       // Initialize database if needed
       if (!DatabaseService.initialized) {
         console.log('[ChildProfile] Initializing database...');
@@ -101,7 +101,7 @@ const ChildProfile = () => {
         if (currentUser?.id) {
           const childId = await DatabaseService.createChild(
             currentUser.id,
-            formData.name || 'کودک',
+            formData.name || 'Child',
             formData.age,
             formData.gender,
             null
@@ -110,7 +110,7 @@ const ChildProfile = () => {
           await DatabaseService.initializeChildAchievements(childId);
           console.log('[ChildProfile] Child created and achievements initialized');
         }
-        
+
         await DatabaseService.updateUserProfile(currentUser.id, profileData);
         console.log('[ChildProfile] Profile saved to database successfully');
       } catch (dbError) {
@@ -124,10 +124,10 @@ const ChildProfile = () => {
 
       // Mark profile as completed - THIS IS THE KEY FIX
       const profileCompleted = await markProfileAsCompleted();
-      
+
       if (profileCompleted) {
         console.log('[ChildProfile] Profile marked as completed successfully');
-        
+
         // Navigate to dashboard
         console.log('[ChildProfile] Navigating to child dashboard...');
         navigate('/dashboard/child');
@@ -139,12 +139,12 @@ const ChildProfile = () => {
 
     } catch (error) {
       console.error('[ChildProfile] Error saving child profile:', error);
-      
+
       // Set a user-friendly error message
-      setErrors({ 
-        general: 'خطا در ذخیره اطلاعات. اطلاعات شما ذخیره شد و به داشبورد منتقل می‌شوید.' 
+      setErrors({
+        general: 'Error saving information. Your information has been saved and you will be redirected to the dashboard.'
       });
-      
+
       // Navigate anyway after a short delay to show the message
       setTimeout(() => {
         navigate('/dashboard/child');
@@ -158,13 +158,13 @@ const ChildProfile = () => {
   for (let age = 6; age <= 12; age++) {
     ageOptions.push(
       <option key={age} value={age}>
-        {age} سال
+        {age} years old
       </option>
     );
   }
 
   return (
-    <ProfileForm title="تکمیل پروفایل کودک" onSubmit={handleSubmit}>
+    <ProfileForm title="Complete Child Profile" onSubmit={handleSubmit}>
       {errors.general && (
         <div style={{
           color: '#e74c3c',
@@ -180,7 +180,7 @@ const ChildProfile = () => {
 
       <div className="form-row">
         <div className="form-group">
-          <label htmlFor="age">سن</label>
+          <label htmlFor="age">Age</label>
           <select
             id="age"
             name="age"
@@ -189,14 +189,14 @@ const ChildProfile = () => {
             className={errors.age ? 'input-error' : ''}
             disabled={isSubmitting}
           >
-            <option value="">انتخاب کنید</option>
+            <option value="">Select</option>
             {ageOptions}
           </select>
           {errors.age && <div className="error-message">{errors.age}</div>}
         </div>
 
         <div className="form-group">
-          <label htmlFor="gender">جنسیت</label>
+          <label htmlFor="gender">Gender</label>
           <div className="radio-group">
             <label className="radio-option">
               <input
@@ -207,7 +207,7 @@ const ChildProfile = () => {
                 onChange={handleChange}
                 disabled={isSubmitting}
               />
-              پسر
+              Boy
             </label>
             <label className="radio-option">
               <input
@@ -218,7 +218,7 @@ const ChildProfile = () => {
                 onChange={handleChange}
                 disabled={isSubmitting}
               />
-              دختر
+              Girl
             </label>
           </div>
           {errors.gender && <div className="error-message">{errors.gender}</div>}
@@ -226,7 +226,7 @@ const ChildProfile = () => {
       </div>
 
       <div className="form-group">
-        <label htmlFor="grade">مقطع تحصیلی</label>
+        <label htmlFor="grade">Grade Level</label>
         <select
           id="grade"
           name="grade"
@@ -235,28 +235,28 @@ const ChildProfile = () => {
           className={errors.grade ? 'input-error' : ''}
           disabled={isSubmitting}
         >
-          <option value="">انتخاب کنید</option>
-          <option value="preschool">پیش دبستانی</option>
-          <option value="first">کلاس اول</option>
-          <option value="second">کلاس دوم</option>
-          <option value="third">کلاس سوم</option>
-          <option value="fourth">کلاس چهارم</option>
-          <option value="fifth">کلاس پنجم</option>
-          <option value="sixth">کلاس ششم</option>
+          <option value="">Select</option>
+          <option value="preschool">Preschool</option>
+          <option value="first">First Grade</option>
+          <option value="second">Second Grade</option>
+          <option value="third">Third Grade</option>
+          <option value="fourth">Fourth Grade</option>
+          <option value="fifth">Fifth Grade</option>
+          <option value="sixth">Sixth Grade</option>
         </select>
         {errors.grade && <div className="error-message">{errors.grade}</div>}
       </div>
 
       <div className="form-row">
         <div className="form-group">
-          <label htmlFor="schoolName">نام مدرسه</label>
+          <label htmlFor="schoolName">School Name</label>
           <input
             type="text"
             id="schoolName"
             name="schoolName"
             value={formData.schoolName}
             onChange={handleChange}
-            placeholder="نام مدرسه خود را وارد کنید"
+            placeholder="Enter your school name"
             className={errors.schoolName ? 'input-error' : ''}
             disabled={isSubmitting}
           />
@@ -264,14 +264,14 @@ const ChildProfile = () => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="educationDistrict">منطقه آموزش و پرورش</label>
+          <label htmlFor="educationDistrict">Education District</label>
           <input
             type="text"
             id="educationDistrict"
             name="educationDistrict"
             value={formData.educationDistrict}
             onChange={handleChange}
-            placeholder="منطقه آموزش و پرورش"
+            placeholder="Education district"
             className={errors.educationDistrict ? 'input-error' : ''}
             disabled={isSubmitting}
           />
@@ -280,9 +280,9 @@ const ChildProfile = () => {
       </div>
 
       <div className="achievements-section">
-        <h3 className="section-title">امتیازات و دستاوردها</h3>
+        <h3 className="section-title">Points and Achievements</h3>
         <div className="achievements-display">
-          <p>پس از ثبت نام و شروع فعالیت در برنامه، امتیازات و مدال‌های شما در این قسمت نمایش داده خواهند شد.</p>
+          <p>After registration and starting activities in the app, your points and medals will be displayed in this section.</p>
         </div>
       </div>
 

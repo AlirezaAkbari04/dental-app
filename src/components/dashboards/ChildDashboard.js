@@ -47,7 +47,7 @@ const ChildDashboard = () => {
         
         // Fallback to localStorage
         const storedProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
-        setChildName(storedProfile.fullName || 'کودک عزیز');
+        setChildName(storedProfile.fullName || 'Dear Child');
       }
     };
     
@@ -58,22 +58,22 @@ const ChildDashboard = () => {
           const userProfile = await DatabaseService.getUserById(currentUser.id);
           if (userProfile && userProfile.profile_data) {
             const profileData = JSON.parse(userProfile.profile_data);
-            setChildName(profileData.fullName || profileData.name || 'کودک عزیز');
+            setChildName(profileData.fullName || profileData.name || 'Dear Child');
           } else {
             // Fallback to localStorage
             const storedProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
-            setChildName(storedProfile.fullName || 'کودک عزیز');
+            setChildName(storedProfile.fullName || 'Dear Child');
           }
         } else {
           // Fallback to localStorage if no currentUser
           const storedProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
-          setChildName(storedProfile.fullName || 'کودک عزیز');
+          setChildName(storedProfile.fullName || 'Dear Child');
         }
       } catch (error) {
         console.error('Error loading child profile:', error);
         // Final fallback
         const storedProfile = JSON.parse(localStorage.getItem('childProfile') || '{}');
-        setChildName(storedProfile.fullName || 'کودک عزیز');
+        setChildName(storedProfile.fullName || 'Dear Child');
       }
     };
     
@@ -161,9 +161,9 @@ const ChildDashboard = () => {
     <div className="child-dashboard">
       <header className="dashboard-header">
         <div className="logo-container">
-          <img 
-            src="/assets/images/logo.png" 
-            alt="لبخند شاد دندان سالم" 
+          <img
+            src="/assets/images/logo.png"
+            alt="Healthy Teeth Happy Smile"
             className="dashboard-logo"
             onError={(e) => {
               console.warn('Failed to load logo, trying alternative');
@@ -172,38 +172,38 @@ const ChildDashboard = () => {
           />
           {showMessage && (
             <div className="logo-message">
-              هر 6 ماه یک بار به دندان پزشک مراجعه کنید
+              Visit your dentist every 6 months
             </div>
           )}
         </div>
         <div className="user-info">
-          <span className="welcome-text">خوش آمدی {childName}!</span>
-          <button onClick={handleLogout} className="logout-button">خروج</button>
+          <span className="welcome-text">Welcome {childName}!</span>
+          <button onClick={handleLogout} className="logout-button">Logout</button>
         </div>
       </header>
       
       <nav className="dashboard-nav">
         <ul className="nav-list">
-          <li 
+          <li
             className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
             onClick={() => handleTabChange('home')}
           >
             <span className="nav-icon">🏠</span>
-            <span className="nav-text">خانه</span>
+            <span className="nav-text">Home</span>
           </li>
-          <li 
+          <li
             className={`nav-item ${activeTab === 'brush' ? 'active' : ''}`}
             onClick={() => handleTabChange('brush')}
           >
             <span className="nav-icon">🪥</span>
-            <span className="nav-text">یادآوری مسواک</span>
+            <span className="nav-text">Brushing Reminder</span>
           </li>
-          <li 
+          <li
             className={`nav-item ${activeTab === 'games' ? 'active' : ''}`}
             onClick={() => handleTabChange('games')}
           >
             <span className="nav-icon">🎮</span>
-            <span className="nav-text">بازی</span>
+            <span className="nav-text">Games</span>
           </li>
         </ul>
       </nav>
@@ -214,15 +214,15 @@ const ChildDashboard = () => {
       
       <footer className="dashboard-footer">
         <div className="footer-content">
-          <p>دندان سالم لبخند شاد &copy; {new Date().getFullYear()}</p>
+          <p>Healthy Teeth Happy Smile &copy; {new Date().getFullYear()}</p>
           <div className="footer-buttons">
             <button onClick={navigateToFAQ} className="help-button">
               <span className="help-icon">❓</span>
-              <span className="help-text">راهنما و سوالات متداول</span>
+              <span className="help-text">Help & FAQ</span>
             </button>
             <button onClick={navigateToAboutUs} className="about-button">
               <span className="about-icon">ℹ️</span>
-              <span className="about-text">درباره ما</span>
+              <span className="about-text">About Us</span>
             </button>
           </div>
         </div>

@@ -5,20 +5,20 @@ import DatabaseService from '../../../services/DatabaseService';
 
 // Food items array defined outside the component to avoid dependency issues
 const FOOD_ITEMS = [
-  { id: 1, name: 'سیب', type: 'healthy', emoji: '🍎' },
-  { id: 2, name: 'موز', type: 'healthy', emoji: '🍌' },
-  { id: 3, name: 'پرتقال', type: 'healthy', emoji: '🍊' },
-  { id: 4, name: 'هویج', type: 'healthy', emoji: '🥕' },
-  { id: 5, name: 'خیار', type: 'healthy', emoji: '🥒' },
-  { id: 6, name: 'شیر', type: 'healthy', emoji: '🥛' },
-  { id: 7, name: 'نان و پنیر', type: 'healthy', emoji: '🧀' },
-  { id: 8, name: 'آب', type: 'healthy', emoji: '💧' },
-  { id: 9, name: 'شکلات', type: 'unhealthy', emoji: '🍫' },
-  { id: 10, name: 'چیپس', type: 'unhealthy', emoji: '🍟' },
-  { id: 11, name: 'آبنبات', type: 'unhealthy', emoji: '🍭' },
-  { id: 12, name: 'نوشابه', type: 'unhealthy', emoji: '🥤' },
-  { id: 13, name: 'آبمیوه صنعتی', type: 'unhealthy', emoji: '🧃' },
-  { id: 14, name: 'لواشک', type: 'unhealthy', emoji: '🍬' }
+  { id: 1, name: 'Apple', type: 'healthy', emoji: '🍎' },
+  { id: 2, name: 'Banana', type: 'healthy', emoji: '🍌' },
+  { id: 3, name: 'Orange', type: 'healthy', emoji: '🍊' },
+  { id: 4, name: 'Carrot', type: 'healthy', emoji: '🥕' },
+  { id: 5, name: 'Cucumber', type: 'healthy', emoji: '🥒' },
+  { id: 6, name: 'Milk', type: 'healthy', emoji: '🥛' },
+  { id: 7, name: 'Bread & Cheese', type: 'healthy', emoji: '🧀' },
+  { id: 8, name: 'Water', type: 'healthy', emoji: '💧' },
+  { id: 9, name: 'Chocolate', type: 'unhealthy', emoji: '🍫' },
+  { id: 10, name: 'Chips', type: 'unhealthy', emoji: '🍟' },
+  { id: 11, name: 'Candy', type: 'unhealthy', emoji: '🍭' },
+  { id: 12, name: 'Soda', type: 'unhealthy', emoji: '🥤' },
+  { id: 13, name: 'Juice', type: 'unhealthy', emoji: '🧃' },
+  { id: 14, name: 'Gummy Candy', type: 'unhealthy', emoji: '🍬' }
 ];
 
 const ChildGames = () => {
@@ -273,9 +273,9 @@ const ChildGames = () => {
       );
       
       setFeedbackMessage(
-        targetType === 'healthy' 
-          ? `آفرین! ${item.name} یک میان‌وعده سالم است.` 
-          : `درست است! ${item.name} برای دندان‌های شما خوب نیست.`
+        targetType === 'healthy'
+          ? `Great! ${item.name} is a healthy snack.`
+          : `Correct! ${item.name} is not good for your teeth.`
       );
       
       // Fix for animation feedback - Add DOM manipulation to force animation
@@ -310,9 +310,9 @@ const ChildGames = () => {
       // Wrong answer - same fix for animation
       setIsCorrect(false);
       setFeedbackMessage(
-        targetType === 'healthy' 
-          ? `اشتباه! ${item.name} یک میان‌وعده ناسالم است.` 
-          : `اشتباه! ${item.name} یک میان‌وعده سالم است.`
+        targetType === 'healthy'
+          ? `Oops! ${item.name} is actually an unhealthy snack.`
+          : `Oops! ${item.name} is actually a healthy snack.`
       );
       
       // Fix for animation feedback - Add DOM manipulation
@@ -366,10 +366,10 @@ const ChildGames = () => {
 
       <div className="game-section">
         <div className="game-header">
-          <h2>🎮 بازی میان‌وعده سالم و ناسالم</h2>
+          <h2>🎮 Healthy & Unhealthy Snacks Game</h2>
           <div className="game-score">
             <div className="score-container">
-              <span className="score-label">امتیاز شما</span>
+              <span className="score-label">Your Score</span>
               <div className="score-badge">
                 <span className="score-value">{score}</span>
                 <span className="score-star">⭐</span>
@@ -377,13 +377,13 @@ const ChildGames = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="game-instruction">
           <div className="instruction-card">
             <p>
-              {touchDevice 
-                ? "غذاها را به سمت صورت خوشحال یا ناراحت بکشید یا روی صورت‌ها کلیک کنید" 
-                : "غذاها را به سمت صورت خوشحال یا ناراحت بکشید"}
+              {touchDevice
+                ? "Drag food items to the happy or sad face, or click on the faces"
+                : "Drag food items to the happy or sad face"}
             </p>
           </div>
         </div>
@@ -409,7 +409,7 @@ const ChildGames = () => {
         </div>
         
         <div className="drop-zones">
-          <div 
+          <div
             ref={healthyZoneRef}
             className={`drop-zone healthy-zone ${showFeedback && isCorrect && draggedItem?.type === 'healthy' ? 'pulsing' : ''}`}
             onDragOver={handleDragOver}
@@ -422,12 +422,12 @@ const ChildGames = () => {
                 <span className="zone-face" aria-hidden="true">😊</span>
                 <div className="emoji-glow healthy-glow"></div>
               </div>
-              <span className="zone-label">سالم</span>
+              <span className="zone-label">Healthy</span>
               <div className="zone-border"></div>
             </div>
           </div>
-          
-          <div 
+
+          <div
             ref={unhealthyZoneRef}
             className={`drop-zone unhealthy-zone ${showFeedback && isCorrect && draggedItem?.type === 'unhealthy' ? 'pulsing' : ''}`}
             onDragOver={handleDragOver}
@@ -440,7 +440,7 @@ const ChildGames = () => {
                 <span className="zone-face" aria-hidden="true">😢</span>
                 <div className="emoji-glow unhealthy-glow"></div>
               </div>
-              <span className="zone-label">ناسالم</span>
+              <span className="zone-label">Unhealthy</span>
               <div className="zone-border"></div>
             </div>
           </div>
@@ -473,11 +473,11 @@ const ChildGames = () => {
       
       <div className="game-info">
         <div className="info-card">
-          <h3>🏆 راهنمای بازی</h3>
+          <h3>🏆 Game Guide</h3>
           <div className="info-content">
-            <p>🦷 میان‌وعده‌های سالم به دندان‌های شما کمک می‌کنند، اما میان‌وعده‌های ناسالم باعث پوسیدگی دندان می‌شوند.</p>
-            <p>🥕 غذاهای سالم مانند میوه، سبزیجات، شیر و آب را به سمت صورت خندان بکشید.</p>
-            <p>🍫 غذاهای ناسالم مانند شکلات، چیپس، آبنبات و نوشابه را به سمت صورت ناراحت بکشید.</p>
+            <p>🦷 Healthy snacks help your teeth, but unhealthy snacks cause tooth decay.</p>
+            <p>🥕 Drag healthy foods like fruits, vegetables, milk, and water to the happy face.</p>
+            <p>🍫 Drag unhealthy foods like chocolate, chips, candy, and soda to the sad face.</p>
           </div>
         </div>
       </div>

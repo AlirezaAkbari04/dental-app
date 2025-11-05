@@ -3,8 +3,7 @@
 .educational-content {
   max-width: 100%;
   padding: 12px;
-  font-family: 'Vazir', 'Tahoma', sans-serif;
-  direction: rtl;
+  font-family: 'Inter', 'Tahoma', sans-serif;
 }
 
 .content-header {
@@ -365,7 +364,6 @@
 .content-container {
   line-height: 1.5;
   color: #333;
-  direction: rtl;
   text-align: right;
 }
 

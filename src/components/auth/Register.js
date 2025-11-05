@@ -7,7 +7,7 @@ import { useUser } from '../../contexts/UserContext';
 function Register() {
   const navigate = useNavigate();
   const { register } = useUser();
-  
+
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
@@ -15,7 +15,7 @@ function Register() {
     password: '',
     confirmPassword: ''
   });
-  
+
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,7 +25,7 @@ function Register() {
       ...prevState,
       [name]: value
     }));
-    
+
     // Clear error when user starts typing in any field
     setError('');
   };
@@ -36,7 +36,7 @@ function Register() {
 
     // Basic validation
     if (!formData.name || !formData.password || !formData.confirmPassword || (!formData.email && !formData.phone)) {
-      setError('لطفا تمام فیلدهای الزامی را پر کنید');
+      setError('Please fill in all required fields');
       setIsLoading(false);
       return;
     }
@@ -45,7 +45,7 @@ function Register() {
     if (formData.email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        setError('لطفا ایمیل معتبر وارد کنید');
+        setError('Please enter a valid email address');
         setIsLoading(false);
         return;
       }
@@ -55,7 +55,7 @@ function Register() {
     if (formData.phone) {
       const phoneRegex = /^09[0-9]{9}$/; // Persian mobile format: 09XXXXXXXXX
       if (!phoneRegex.test(formData.phone)) {
-        setError('لطفا شماره موبایل معتبر وارد کنید (مثال: 09123456789)');
+        setError('Please enter a valid mobile number (example: 09123456789)');
         setIsLoading(false);
         return;
       }
@@ -63,14 +63,14 @@ function Register() {
 
     // Password validation - at least 6 characters
     if (formData.password.length < 6) {
-      setError('رمز عبور باید حداقل ۶ کاراکتر باشد');
+      setError('Password must be at least 6 characters long');
       setIsLoading(false);
       return;
     }
 
     // Password confirmation validation
     if (formData.password !== formData.confirmPassword) {
-      setError('رمزهای عبور مطابقت ندارند');
+      setError('Passwords do not match');
       setIsLoading(false);
       return;
     }
@@ -83,9 +83,9 @@ function Register() {
         name: formData.name,
         password: formData.password // Password included for future use
       };
-      
+
       const success = await register(userData);
-      
+
       if (success) {
         console.log('Registration successful, navigating to role selection');
         // Navigate to role selection for new users
@@ -93,55 +93,55 @@ function Register() {
       } else {
         // Registration failed - user might already exist
         if (formData.email && formData.phone) {
-          setError('کاربری با این ایمیل یا شماره موبایل قبلاً ثبت نام کرده است');
+          setError('A user with this email or mobile number already exists');
         } else if (formData.email) {
-          setError('کاربری با این ایمیل قبلاً ثبت نام کرده است');
+          setError('A user with this email already exists');
         } else {
-          setError('کاربری با این شماره موبایل قبلاً ثبت نام کرده است');
+          setError('A user with this mobile number already exists');
         }
       }
     } catch (err) {
       console.error("Registration error:", err);
-      setError('خطایی رخ داده است. لطفا دوباره تلاش کنید.');
+      setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="auth-container" dir="rtl">
+    <div className="auth-container">
       <div className="auth-form-container">
         <div className="logo-container">
-          <img 
-            src="/assets/images/logo.png" 
-            alt="لبخند شاد دندان سالم" 
-            className="app-logo" 
+          <img
+            src="/assets/images/logo.png"
+            alt="Healthy Teeth Happy Smile"
+            className="app-logo"
             onError={(e) => {
               console.warn('Failed to load logo, trying alternative');
               e.target.src = "/logo.png";
             }}
           />
-          <h1 className="app-title">ثبت‌نام در برنامه سلامت دندان</h1>
+          <h1 className="app-title">Register for Dental Health App</h1>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label htmlFor="name">نام</label>
+            <label htmlFor="name">Name</label>
             <input
               type="text"
               id="name"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="نام خود را وارد کنید"
+              placeholder="Enter your name"
               className={error && !formData.name ? 'input-error' : ''}
               disabled={isLoading}
               required
             />
           </div>
-          
+
           <div className="form-group">
-            <label htmlFor="email">ایمیل (اختیاری اگر شماره موبایل وارد شود)</label>
+            <label htmlFor="email">Email (Optional if mobile number is provided)</label>
             <input
               type="email"
               id="email"
@@ -150,13 +150,12 @@ function Register() {
               onChange={handleChange}
               placeholder="example@mail.com"
               className={error && !formData.email && !formData.phone ? 'input-error' : ''}
-              dir="ltr"
               disabled={isLoading}
             />
           </div>
-          
+
           <div className="form-group">
-            <label htmlFor="phone">شماره موبایل (اختیاری اگر ایمیل وارد شود)</label>
+            <label htmlFor="phone">Mobile Number (Optional if email is provided)</label>
             <input
               type="tel"
               id="phone"
@@ -165,50 +164,49 @@ function Register() {
               onChange={handleChange}
               placeholder="09123456789"
               className={error && !formData.phone && !formData.email ? 'input-error' : ''}
-              dir="ltr"
               disabled={isLoading}
             />
           </div>
-          
+
           <div className="form-group">
-            <label htmlFor="password">رمز عبور</label>
+            <label htmlFor="password">Password</label>
             <input
               type="password"
               id="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="رمز عبور خود را وارد کنید"
+              placeholder="Enter your password"
               className={error && !formData.password ? 'input-error' : ''}
               disabled={isLoading}
               required
             />
           </div>
-          
+
           <div className="form-group">
-            <label htmlFor="confirmPassword">تکرار رمز عبور</label>
+            <label htmlFor="confirmPassword">Confirm Password</label>
             <input
               type="password"
               id="confirmPassword"
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              placeholder="رمز عبور را دوباره وارد کنید"
+              placeholder="Re-enter your password"
               className={error && !formData.confirmPassword ? 'input-error' : ''}
               disabled={isLoading}
               required
             />
           </div>
-          
+
           {error && <div className="error-message">{error}</div>}
-          
+
           <button type="submit" className="auth-button" disabled={isLoading}>
-            {isLoading ? 'در حال ثبت‌نام...' : 'ثبت‌نام'}
+            {isLoading ? 'Registering...' : 'Register'}
           </button>
         </form>
-        
+
         <div className="auth-links">
-          قبلاً ثبت‌نام کرده‌اید؟ <Link to="/login">ورود به حساب</Link>
+          Already registered? <Link to="/login">Login to your account</Link>
         </div>
       </div>
     </div>

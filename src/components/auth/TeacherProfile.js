@@ -65,41 +65,41 @@ const TeacherProfile = () => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'لطفاً نام و نام خانوادگی خود را وارد کنید';
+      newErrors.name = 'Please enter your full name';
     }
 
     if (!formData.gender) {
-      newErrors.gender = 'لطفاً جنسیت خود را انتخاب کنید';
+      newErrors.gender = 'Please select your gender';
     }
 
     if (!formData.careType) {
-      newErrors.careType = 'لطفاً نوع مراقبت را انتخاب کنید';
+      newErrors.careType = 'Please select care type';
     }
 
     if (!formData.daysPerWeek) {
-      newErrors.daysPerWeek = 'لطفاً تعداد روزهای فعالیت در هفته را وارد کنید';
+      newErrors.daysPerWeek = 'Please enter number of days active per week';
     } else if (isNaN(formData.daysPerWeek) || formData.daysPerWeek < 1 || formData.daysPerWeek > 7) {
-      newErrors.daysPerWeek = 'تعداد روزها باید بین 1 تا 7 باشد';
+      newErrors.daysPerWeek = 'Number of days must be between 1 and 7';
     }
 
     if (!formData.isRegular) {
-      newErrors.isRegular = 'لطفاً منظم یا نامنظم بودن فعالیت را مشخص کنید';
+      newErrors.isRegular = 'Please specify if activity is regular or irregular';
     }
 
     if (!formData.daysPerSchool) {
-      newErrors.daysPerSchool = 'لطفاً تعداد روزهای حضور در هر مدرسه را وارد کنید';
+      newErrors.daysPerSchool = 'Please enter number of days present at each school';
     } else if (isNaN(formData.daysPerSchool) || formData.daysPerSchool < 1 || formData.daysPerSchool > 7) {
-      newErrors.daysPerSchool = 'تعداد روزها باید بین 1 تا 7 باشد';
+      newErrors.daysPerSchool = 'Number of days must be between 1 and 7';
     }
 
     if (!formData.schoolsCount) {
-      newErrors.schoolsCount = 'لطفاً تعداد مدارس تحت پوشش را وارد کنید';
+      newErrors.schoolsCount = 'Please enter number of schools covered';
     } else if (isNaN(formData.schoolsCount) || formData.schoolsCount < 1) {
-      newErrors.schoolsCount = 'تعداد مدارس باید حداقل 1 باشد';
+      newErrors.schoolsCount = 'Number of schools must be at least 1';
     }
 
     if (formData.schoolTypes.length === 0) {
-      newErrors.schoolTypes = 'لطفاً نوع مدارس تحت پوشش را انتخاب کنید';
+      newErrors.schoolTypes = 'Please select type of schools covered';
     }
 
     return newErrors;
@@ -116,7 +116,7 @@ const TeacherProfile = () => {
     }
 
     if (!currentUser?.id) {
-      setErrors({ general: 'خطا در احراز هویت. لطفاً دوباره وارد شوید.' });
+      setErrors({ general: 'Authentication error. Please login again.' });
       return;
     }
 
@@ -124,7 +124,7 @@ const TeacherProfile = () => {
 
     try {
       console.log('[TeacherProfile] Starting form submission...');
-      
+
       // Initialize database if needed
       if (!DatabaseService.initialized) {
         console.log('[TeacherProfile] Initializing database...');
@@ -157,10 +157,10 @@ const TeacherProfile = () => {
 
       // Mark profile as completed - THIS IS THE KEY FIX
       const profileCompleted = await markProfileAsCompleted();
-      
+
       if (profileCompleted) {
         console.log('[TeacherProfile] Profile marked as completed successfully');
-        
+
         // Navigate to dashboard
         console.log('[TeacherProfile] Navigating to caretaker dashboard...');
         navigate('/dashboard/caretaker');
@@ -172,12 +172,12 @@ const TeacherProfile = () => {
 
     } catch (error) {
       console.error('[TeacherProfile] Error saving teacher profile:', error);
-      
+
       // Set a user-friendly error message
-      setErrors({ 
-        general: 'خطا در ذخیره اطلاعات. اطلاعات شما ذخیره شد و به داشبورد منتقل می‌شوید.' 
+      setErrors({
+        general: 'Error saving information. Your information has been saved and you will be redirected to the dashboard.'
       });
-      
+
       // Navigate anyway after a short delay to show the message
       setTimeout(() => {
         navigate('/dashboard/caretaker');
@@ -188,7 +188,7 @@ const TeacherProfile = () => {
   };
 
   return (
-    <ProfileForm title="تکمیل پروفایل معلم بهداشت" onSubmit={handleSubmit}>
+    <ProfileForm title="Complete Health Educator Profile" onSubmit={handleSubmit}>
       {errors.general && (
         <div style={{
           color: '#e74c3c',
@@ -203,14 +203,14 @@ const TeacherProfile = () => {
       )}
 
       <div className="form-group">
-        <label htmlFor="name">نام</label>
+        <label htmlFor="name">Name</label>
         <input
           type="text"
           id="name"
           name="name"
           value={formData.name}
           onChange={handleChange}
-          placeholder="نام و نام خانوادگی خود را وارد کنید"
+          placeholder="Enter your full name"
           className={errors.name ? 'input-error' : ''}
           disabled={isSubmitting}
         />
@@ -218,7 +218,7 @@ const TeacherProfile = () => {
       </div>
 
       <div className="form-group">
-        <label htmlFor="gender">جنسیت</label>
+        <label htmlFor="gender">Gender</label>
         <div className="radio-group">
           <label className="radio-option">
             <input
@@ -229,7 +229,7 @@ const TeacherProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            مرد
+            Male
           </label>
           <label className="radio-option">
             <input
@@ -240,14 +240,14 @@ const TeacherProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            زن
+            Female
           </label>
         </div>
         {errors.gender && <div className="error-message">{errors.gender}</div>}
       </div>
 
       <div className="form-group">
-        <label htmlFor="careType">نوع مراقبت</label>
+        <label htmlFor="careType">Care Type</label>
         <div className="radio-group">
           <label className="radio-option">
             <input
@@ -258,7 +258,7 @@ const TeacherProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            پاره‌وقت
+            Part-Time
           </label>
           <label className="radio-option">
             <input
@@ -269,7 +269,7 @@ const TeacherProfile = () => {
               onChange={handleChange}
               disabled={isSubmitting}
             />
-            تمام‌وقت
+            Full-Time
           </label>
         </div>
         {errors.careType && <div className="error-message">{errors.careType}</div>}
@@ -277,7 +277,7 @@ const TeacherProfile = () => {
 
       <div className="form-row">
         <div className="form-group">
-          <label htmlFor="daysPerWeek">تعداد روزهای فعالیت در هفته</label>
+          <label htmlFor="daysPerWeek">Days Active Per Week</label>
           <input
             type="number"
             id="daysPerWeek"
@@ -286,7 +286,7 @@ const TeacherProfile = () => {
             max="7"
             value={formData.daysPerWeek}
             onChange={handleChange}
-            placeholder="بین 1 تا 7 روز"
+            placeholder="Between 1 to 7 days"
             className={errors.daysPerWeek ? 'input-error' : ''}
             disabled={isSubmitting}
           />
@@ -294,7 +294,7 @@ const TeacherProfile = () => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="isRegular">منظم یا نامنظم بودن فعالیت</label>
+          <label htmlFor="isRegular">Activity Schedule</label>
           <div className="radio-group">
             <label className="radio-option">
               <input
@@ -305,7 +305,7 @@ const TeacherProfile = () => {
                 onChange={handleChange}
                 disabled={isSubmitting}
               />
-              منظم
+              Regular
             </label>
             <label className="radio-option">
               <input
@@ -316,7 +316,7 @@ const TeacherProfile = () => {
                 onChange={handleChange}
                 disabled={isSubmitting}
               />
-              نامنظم
+              Irregular
             </label>
           </div>
           {errors.isRegular && <div className="error-message">{errors.isRegular}</div>}
@@ -325,7 +325,7 @@ const TeacherProfile = () => {
 
       <div className="form-row">
         <div className="form-group">
-          <label htmlFor="daysPerSchool">تعداد روزهای حضور در هر مدرسه</label>
+          <label htmlFor="daysPerSchool">Days Present Per School</label>
           <input
             type="number"
             id="daysPerSchool"
@@ -334,7 +334,7 @@ const TeacherProfile = () => {
             max="7"
             value={formData.daysPerSchool}
             onChange={handleChange}
-            placeholder="بین 1 تا 7 روز"
+            placeholder="Between 1 to 7 days"
             className={errors.daysPerSchool ? 'input-error' : ''}
             disabled={isSubmitting}
           />
@@ -342,7 +342,7 @@ const TeacherProfile = () => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="schoolsCount">تعداد مدارس تحت پوشش</label>
+          <label htmlFor="schoolsCount">Number of Schools Covered</label>
           <input
             type="number"
             id="schoolsCount"
@@ -350,7 +350,7 @@ const TeacherProfile = () => {
             min="1"
             value={formData.schoolsCount}
             onChange={handleChange}
-            placeholder="تعداد مدارس"
+            placeholder="Number of schools"
             className={errors.schoolsCount ? 'input-error' : ''}
             disabled={isSubmitting}
           />
@@ -359,7 +359,7 @@ const TeacherProfile = () => {
       </div>
 
       <div className="form-group">
-        <label>نوع مدارس تحت پوشش</label>
+        <label>Type of Schools Covered</label>
         <div className="checkbox-group">
           <label className="checkbox-option">
             <input
@@ -370,7 +370,7 @@ const TeacherProfile = () => {
               onChange={handleCheckboxChange}
               disabled={isSubmitting}
             />
-            دخترانه
+            Girls' Schools
           </label>
           <label className="checkbox-option">
             <input
@@ -381,7 +381,7 @@ const TeacherProfile = () => {
               onChange={handleCheckboxChange}
               disabled={isSubmitting}
             />
-            پسرانه
+            Boys' Schools
           </label>
         </div>
         {errors.schoolTypes && <div className="error-message">{errors.schoolTypes}</div>}

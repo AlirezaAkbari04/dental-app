@@ -51,49 +51,48 @@ const Login = () => {
           navigate('/role-selection');
         }
       } else {
-        setError('خطا در ورود. لطفاً دوباره تلاش کنید');
+        setError('Login error. Please try again.');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('خطا در ورود. لطفاً دوباره تلاش کنید');
+      setError('Login error. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="auth-container" dir="rtl">
+    <div className="auth-container">
       <div className="auth-form-container">
         <div className="logo-container">
-          <img src={logoImage} alt="دندان سالم لبخند شاد" className="app-logo" />
-          <h1 className="app-title">دندان سالم لبخند شاد</h1>
+          <img src={logoImage} alt="Healthy Teeth Happy Smile" className="app-logo" />
+          <h1 className="app-title">Healthy Teeth Happy Smile</h1>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label htmlFor="credentials">ایمیل یا شماره موبایل</label>
+            <label htmlFor="credentials">Email or Mobile Number</label>
             <input
               type="text"
               id="credentials"
               value={credentials}
               onChange={handleInputChange}
-              placeholder="ایمیل یا شماره موبایل خود را وارد کنید"
+              placeholder="Enter your email or mobile number"
               className={error ? 'input-error' : ''}
-              dir="ltr" // Input direction is LTR even in RTL layout
               disabled={isLoading}
               required
             />
             {error && <div className="error-message">{error}</div>}
           </div>
-          
+
           <button type="submit" className="auth-button" disabled={isLoading || !credentials.trim()}>
-            {isLoading ? 'در حال ورود...' : 'ادامه'}
+            {isLoading ? 'Logging in...' : 'Continue'}
           </button>
         </form>
-        
+
         <div className="auth-links">
           <Link to="/register" className="register-link">
-            حساب ندارید؟ ثبت‌نام کنید
+            Don't have an account? Register
           </Link>
         </div>
       </div>

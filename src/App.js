@@ -25,7 +25,7 @@ function AppContent() {
     return (
       <div className="loading-screen">
         <div className="loading-indicator"></div>
-        <p>در حال بارگذاری...</p>
+        <p>Loading...</p>
       </div>
     );
   }
@@ -128,7 +128,7 @@ function AppContent() {
   };
 
   return (
-    <div className="app" dir="rtl">
+    <div className="app">
       <Routes>
         {/* Public auth routes */}
         <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />

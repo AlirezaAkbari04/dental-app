@@ -6,7 +6,6 @@
   padding: 15px;
   max-width: 1200px;
   margin: 0 auto;
-  direction: rtl;
 }
 
 .infographics-header {
@@ -312,7 +311,6 @@
 
 /* Content Container Styles */
 .content-container {
-  direction: rtl;
   text-align: right;
   line-height: 1.6;
   color: #333;
@@ -794,7 +792,7 @@
   border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
-  font-family: 'Vazirmatn', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .reminder-field input:focus,
@@ -888,7 +886,6 @@
 /* BrushingReport Component Styles */
 .parent-brushing-dashboard {
   font-family: 'Tahoma', 'Arial', sans-serif;
-  direction: rtl;
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
@@ -1180,7 +1177,6 @@
   padding: 30px;
   width: 90%;
   max-width: 500px;
-  direction: rtl;
 }
 
 .modal-date {
