@@ -285,6 +285,7 @@ const EducationalContent = () => {
               <li>Caries incidence of the first permanent molars according to the Caries Assessment Spectrum and Treatment (CAST) index and its determinants in children: a cohort study. Z Mahboobi, A Pakdaman, R Yazdani, L Azadbakht, AR Shamshiri, ... BMC Oral Health 21 (1), 259, 2021</li>
               <li>Effect of an Oral Health Promotion Program Including Supervised Toothbrushing on 6 to 7-Year-Old School Children: A Randomized Controlled Trial. A Babaei, A Pakdaman, H Hessari. Frontiers in dentistry 17, 19, 2020</li>
               <li>One-year oral health outcome of a community-based trial in schoolchildren aged 6–7 years old in Tehran, Iran. A Babaei, A Pakdaman, AR Shamshiri, P Khazaei, H Hessari. Plos one 18 (4), e0284366</li>
+              <li>Dickson-Swift V, Kenny A, Gussy M, de Silva AM, Farmer J, Bracksley-O’Grady S. Supervised toothbrushing programs in primary schools and early childhood settings: A scoping review. Community Dental Health. 2017;34(04):208-225. doi:10.1922/CDH_4057Dickson-Swift18</li>              
             </ul>
           </section>
         </div>
